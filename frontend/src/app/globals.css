@@ -1,0 +1,103 @@
+@import "tailwindcss";
+
+/**
+ * 디자인 토큰.
+ *
+ * 한양대 상징색(크림슨)을 기준으로 잡되, 트랙마다 고유색을 하나씩 배정해
+ * 화면 어디서든 같은 색이 같은 트랙을 가리키도록 한다.
+ */
+@theme {
+  --color-crimson-50: #fef2f3;
+  --color-crimson-100: #fde3e5;
+  --color-crimson-200: #fbccd1;
+  --color-crimson-300: #f7a5ae;
+  --color-crimson-400: #f17385;
+  --color-crimson-500: #e6425e;
+  --color-crimson-600: #d12148;
+  --color-crimson-700: #b0163c;
+  --color-crimson-800: #931538;
+  --color-crimson-900: #7e1535;
+  --color-crimson-950: #460618;
+
+  /* 트랙 고유색 */
+  --color-spark: #f59e0b;
+  --color-spark-soft: #fef3c7;
+  --color-sprint: #3b82f6;
+  --color-sprint-soft: #dbeafe;
+  --color-summit: #8b5cf6;
+  --color-summit-soft: #ede9fe;
+
+  --font-sans: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont,
+    "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+}
+
+:root {
+  --bg: #ffffff;
+  --bg-subtle: #fafafa;
+  --bg-muted: #f4f4f5;
+  --border: #e4e4e7;
+  --border-strong: #d4d4d8;
+  --text: #18181b;
+  --text-muted: #52525b;
+  --text-subtle: #71717a;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0a0a0b;
+    --bg-subtle: #131316;
+    --bg-muted: #1c1c21;
+    --border: #27272a;
+    --border-strong: #3f3f46;
+    --text: #fafafa;
+    --text-muted: #a1a1aa;
+    --text-subtle: #71717a;
+  }
+}
+
+* {
+  border-color: var(--border);
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* 키보드 사용자에게만 포커스 링을 보여준다 */
+:focus-visible {
+  outline: 2px solid var(--color-crimson-500);
+  outline-offset: 2px;
+}
+
+@utility surface {
+  background: var(--bg-subtle);
+  border: 1px solid var(--border);
+}
+
+@utility text-muted {
+  color: var(--text-muted);
+}
+
+@utility text-subtle {
+  color: var(--text-subtle);
+}
+
+/* 스크롤 시 섹션 제목이 상단 헤더에 가리지 않도록 */
+[id] {
+  scroll-margin-top: 5rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

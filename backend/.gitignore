@@ -1,0 +1,7 @@
+build/
+.gradle/
+bin/
+out/
+!gradle/wrapper/gradle-wrapper.jar
+application-prod.yml
+application-local.yml
