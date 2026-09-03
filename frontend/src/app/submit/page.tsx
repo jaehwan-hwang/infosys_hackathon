@@ -53,7 +53,7 @@ function SubmitContent() {
           action={
             <Link
               href="/register"
-              className="inline-flex h-10 items-center rounded-lg bg-crimson-600 px-5 text-sm font-semibold text-white hover:bg-crimson-700"
+              className="inline-flex h-10 items-center rounded-lg bg-brand-600 px-5 text-sm font-semibold text-white hover:bg-brand-700"
             >
               팀 등록하러 가기
             </Link>
@@ -463,7 +463,7 @@ function SubmissionSlot({
         <div>
           <p className="text-sm font-semibold">
             {field.label}
-            {field.required && <span className="ml-1 text-crimson-600">*</span>}
+            {field.required && <span className="ml-1 text-brand-600">*</span>}
           </p>
           <p className="mt-0.5 text-xs text-muted">{field.description}</p>
         </div>

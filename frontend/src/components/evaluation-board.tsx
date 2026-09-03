@@ -110,7 +110,7 @@ export function EvaluationBoard({ evaluatorType }: { evaluatorType: EvaluatorTyp
                   className={cx(
                     "w-full rounded-xl border p-3.5 text-left transition-colors",
                     target.teamId === selectedTeamId
-                      ? "border-crimson-500 bg-crimson-50 dark:bg-crimson-950/30"
+                      ? "border-brand-500 bg-brand-50 dark:bg-brand-950/30"
                       : "border-[var(--border)] hover:bg-[var(--bg-muted)]",
                   )}
                 >

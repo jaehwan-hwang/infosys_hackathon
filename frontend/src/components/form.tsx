@@ -15,7 +15,7 @@ type ButtonProps = {
 
 const BUTTON_VARIANTS = {
   primary:
-    "bg-crimson-600 text-white hover:bg-crimson-700 disabled:bg-crimson-300 dark:disabled:bg-crimson-900",
+    "bg-brand-600 text-white hover:bg-brand-700 disabled:bg-brand-300 dark:disabled:bg-brand-900",
   secondary:
     "border border-[var(--border-strong)] bg-[var(--bg)] hover:bg-[var(--bg-muted)]",
   ghost: "hover:bg-[var(--bg-muted)]",
@@ -82,7 +82,7 @@ export function Field({ label, hint, error, required, children }: FieldProps) {
     <div>
       <label htmlFor={id} className="block text-sm font-medium">
         {label}
-        {required && <span className="ml-1 text-crimson-600">*</span>}
+        {required && <span className="ml-1 text-brand-600">*</span>}
       </label>
       {hint && (
         <p id={hintId} className="mt-1 text-xs text-subtle">
@@ -101,8 +101,8 @@ export function Field({ label, hint, error, required, children }: FieldProps) {
 
 const CONTROL_CLASS =
   "w-full rounded-lg border border-[var(--border-strong)] bg-[var(--bg)] px-3 py-2 text-sm " +
-  "placeholder:text-[var(--text-subtle)] focus:border-crimson-500 focus:outline-none " +
-  "focus:ring-2 focus:ring-crimson-500/20 disabled:opacity-60";
+  "placeholder:text-[var(--text-subtle)] focus:border-brand-500 focus:outline-none " +
+  "focus:ring-2 focus:ring-brand-500/20 disabled:opacity-60";
 
 export function TextInput({
   invalid,
@@ -152,7 +152,7 @@ export function CheckCard({
       className={cx(
         "flex cursor-pointer gap-3 rounded-xl border p-4 transition-colors",
         checked
-          ? "border-crimson-400 bg-crimson-50 dark:bg-crimson-950/30"
+          ? "border-brand-400 bg-brand-50 dark:bg-brand-950/30"
           : "border-[var(--border)] hover:bg-[var(--bg-muted)]",
       )}
     >
@@ -160,7 +160,7 @@ export function CheckCard({
         type="checkbox"
         checked={checked}
         onChange={(e) => onChange(e.target.checked)}
-        className="mt-0.5 size-4 shrink-0 accent-crimson-600"
+        className="mt-0.5 size-4 shrink-0 accent-brand-600"
       />
       <span>
         <span className="block text-sm font-medium">{label}</span>
@@ -207,7 +207,7 @@ export function ScoreSelector({
             className={cx(
               "h-10 min-w-10 rounded-lg border text-sm font-semibold transition-colors",
               selected
-                ? "border-crimson-600 bg-crimson-600 text-white"
+                ? "border-brand-600 bg-brand-600 text-white"
                 : "border-[var(--border-strong)] hover:bg-[var(--bg-muted)]",
             )}
           >

@@ -29,7 +29,7 @@ export function Section({
       {(eyebrow || title || description) && (
         <header className="mb-10">
           {eyebrow && (
-            <p className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-crimson-600">
+            <p className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-brand-600">
               {eyebrow}
             </p>
           )}
@@ -64,21 +64,25 @@ export function Card({
 
 // ---- 트랙 표시 ----
 
+/**
+ * 트랙 표시는 파랑 한 계열 안에서 농도로만 구분한다.
+ * 랜딩이 흰색·파란색 반전 단색 체계라, 트랙마다 다른 색을 쓰면 규칙이 무너진다.
+ */
 const TRACK_STYLES: Record<Track, { badge: string; accent: string; ring: string }> = {
   SPARK: {
-    badge: "bg-spark-soft text-amber-900 dark:bg-amber-950 dark:text-amber-200",
-    accent: "text-amber-600 dark:text-amber-400",
-    ring: "ring-amber-500/30",
+    badge: "bg-brand-50 text-brand-700 dark:bg-brand-950 dark:text-brand-200",
+    accent: "text-brand-500 dark:text-brand-300",
+    ring: "ring-brand-400/30",
   },
   SPRINT: {
-    badge: "bg-sprint-soft text-blue-900 dark:bg-blue-950 dark:text-blue-200",
-    accent: "text-blue-600 dark:text-blue-400",
-    ring: "ring-blue-500/30",
+    badge: "bg-brand-100 text-brand-800 dark:bg-brand-900 dark:text-brand-100",
+    accent: "text-brand-600 dark:text-brand-300",
+    ring: "ring-brand-500/30",
   },
   SUMMIT: {
-    badge: "bg-summit-soft text-violet-900 dark:bg-violet-950 dark:text-violet-200",
-    accent: "text-violet-600 dark:text-violet-400",
-    ring: "ring-violet-500/30",
+    badge: "bg-brand-600 text-white dark:bg-brand-500 dark:text-white",
+    accent: "text-brand-700 dark:text-brand-200",
+    ring: "ring-brand-600/40",
   },
 };
 
@@ -192,7 +196,7 @@ export function EmptyState({
 export function Spinner({ label = "불러오는 중" }: { label?: string }) {
   return (
     <div role="status" className="flex items-center justify-center gap-3 py-14">
-      <span className="size-4 animate-spin rounded-full border-2 border-crimson-500 border-t-transparent" />
+      <span className="size-4 animate-spin rounded-full border-2 border-brand-500 border-t-transparent" />
       <span className="text-sm text-muted">{label}</span>
     </div>
   );

@@ -77,7 +77,7 @@ export default function SelfCheckPage() {
               <strong>{CHECKLIST_THRESHOLD}개 이상</strong> 해당하면 Summit 트랙으로 배정됩니다.
             </p>
             {result.instantSummit && (
-              <p className="mt-2 text-xs font-medium text-crimson-600">
+              <p className="mt-2 text-xs font-medium text-brand-600">
                 이미 즉시 배정 사유에 해당하여 이 항목은 결과에 반영되지 않습니다.
               </p>
             )}
@@ -138,7 +138,7 @@ export default function SelfCheckPage() {
 
             <Link
               href="/register"
-              className="mt-5 inline-flex h-11 w-full items-center justify-center rounded-lg bg-crimson-600 px-5 text-sm font-semibold text-white transition-colors hover:bg-crimson-700"
+              className="mt-5 inline-flex h-11 w-full items-center justify-center rounded-lg bg-brand-600 px-5 text-sm font-semibold text-white transition-colors hover:bg-brand-700"
             >
               이 트랙으로 팀 등록하기
             </Link>

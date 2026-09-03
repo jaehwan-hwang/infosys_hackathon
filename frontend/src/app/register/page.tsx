@@ -290,7 +290,7 @@ function RegisterForm({
 
             <Card className="mt-4">
               <div className="flex items-center gap-2">
-                <span className="rounded bg-crimson-100 px-2 py-0.5 text-xs font-bold text-crimson-700 dark:bg-crimson-950 dark:text-crimson-300">
+                <span className="rounded bg-brand-100 px-2 py-0.5 text-xs font-bold text-brand-700 dark:bg-brand-950 dark:text-brand-300">
                   조장
                 </span>
                 <span className="text-sm font-medium">{leaderName}</span>
@@ -503,12 +503,12 @@ function TrackChoiceCard({
       className={cx(
         "rounded-xl border p-4 text-left transition-colors",
         selected
-          ? "border-crimson-500 bg-crimson-50 dark:bg-crimson-950/30"
+          ? "border-brand-500 bg-brand-50 dark:bg-brand-950/30"
           : "border-[var(--border)] hover:bg-[var(--bg-muted)]",
       )}
     >
       <p className="font-bold">{title}</p>
-      <p className="mt-0.5 text-xs font-medium text-crimson-600">{subtitle}</p>
+      <p className="mt-0.5 text-xs font-medium text-brand-600">{subtitle}</p>
       <p className="mt-2 text-xs leading-relaxed text-muted">{description}</p>
     </button>
   );
@@ -547,7 +547,7 @@ function MyTeamView({ team }: { team: Team }) {
                 className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm"
               >
                 {member.role === "LEADER" && (
-                  <span className="rounded bg-crimson-100 px-1.5 py-0.5 text-[10px] font-bold text-crimson-700 dark:bg-crimson-950 dark:text-crimson-300">
+                  <span className="rounded bg-brand-100 px-1.5 py-0.5 text-[10px] font-bold text-brand-700 dark:bg-brand-950 dark:text-brand-300">
                     조장
                   </span>
                 )}
@@ -569,7 +569,7 @@ function MyTeamView({ team }: { team: Team }) {
       <div className="mt-5 flex flex-wrap gap-3">
         <Link
           href="/submit"
-          className="inline-flex h-11 items-center rounded-lg bg-crimson-600 px-5 text-sm font-semibold text-white hover:bg-crimson-700"
+          className="inline-flex h-11 items-center rounded-lg bg-brand-600 px-5 text-sm font-semibold text-white hover:bg-brand-700"
         >
           산출물 제출하기
         </Link>

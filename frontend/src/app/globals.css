@@ -3,55 +3,58 @@
 /**
  * 디자인 토큰.
  *
- * 한양대 상징색(크림슨)을 기준으로 잡되, 트랙마다 고유색을 하나씩 배정해
- * 화면 어디서든 같은 색이 같은 트랙을 가리키도록 한다.
+ * 흰색과 파란색이 슬라이드마다 반전되는 것이 이 디자인의 골자다.
+ * 색은 파랑 하나로 통일하고, 트랙 구분은 위치와 타이포그래피가 맡는다.
+ *
+ * 글씨 3단:
+ *   가장 큰 글씨  → RiaSans Bold        (--font-display)
+ *   그 다음       → Freesentation Bold  (--font-sans, weight 700)
+ *   가장 작은 글씨 → Freesentation Medium (--font-sans, weight 500)
  */
 @theme {
-  --color-crimson-50: #fef2f3;
-  --color-crimson-100: #fde3e5;
-  --color-crimson-200: #fbccd1;
-  --color-crimson-300: #f7a5ae;
-  --color-crimson-400: #f17385;
-  --color-crimson-500: #e6425e;
-  --color-crimson-600: #d12148;
-  --color-crimson-700: #b0163c;
-  --color-crimson-800: #931538;
-  --color-crimson-900: #7e1535;
-  --color-crimson-950: #460618;
+  --color-brand-50: #eef2ff;
+  --color-brand-100: #dfe6fe;
+  --color-brand-200: #c4d0fd;
+  --color-brand-300: #9fb1fa;
+  --color-brand-400: #7a8ef5;
+  --color-brand-500: #4f66ea;
+  --color-brand-600: #1e3fd8;
+  --color-brand-700: #1832b4;
+  --color-brand-800: #172c92;
+  --color-brand-900: #182a75;
+  --color-brand-950: #101b4e;
 
-  /* 트랙 고유색 */
-  --color-spark: #f59e0b;
-  --color-spark-soft: #fef3c7;
-  --color-sprint: #3b82f6;
-  --color-sprint-soft: #dbeafe;
-  --color-summit: #8b5cf6;
-  --color-summit-soft: #ede9fe;
+  /* 히어로 그라데이션 (첨부 이미지에서 뽑은 값) */
+  --color-hero-1: #6f97ee;
+  --color-hero-2: #a6c0f5;
+  --color-hero-3: #cfe4fa;
+  --color-hero-4: #dceef9;
 
-  --font-sans: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont,
-    "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+  --font-display: var(--font-riasans), "Freesentation", system-ui, sans-serif;
+  --font-sans: var(--font-freesentation), system-ui, -apple-system, sans-serif;
 }
 
 :root {
   --bg: #ffffff;
-  --bg-subtle: #fafafa;
-  --bg-muted: #f4f4f5;
-  --border: #e4e4e7;
-  --border-strong: #d4d4d8;
-  --text: #18181b;
-  --text-muted: #52525b;
-  --text-subtle: #71717a;
+  --bg-subtle: #f7f8fc;
+  --bg-muted: #eef1f8;
+  --border: #dfe3ee;
+  --border-strong: #c6cde0;
+  --text: #101b4e;
+  --text-muted: #4a5578;
+  --text-subtle: #7a84a3;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #0a0a0b;
-    --bg-subtle: #131316;
-    --bg-muted: #1c1c21;
-    --border: #27272a;
-    --border-strong: #3f3f46;
-    --text: #fafafa;
-    --text-muted: #a1a1aa;
-    --text-subtle: #71717a;
+    --bg: #0a0d1c;
+    --bg-subtle: #101427;
+    --bg-muted: #171c33;
+    --border: #232a45;
+    --border-strong: #343c5e;
+    --text: #f2f4fb;
+    --text-muted: #a8b0cb;
+    --text-subtle: #7a84a3;
   }
 }
 
@@ -63,14 +66,22 @@ body {
   background: var(--bg);
   color: var(--text);
   font-family: var(--font-sans);
+  font-weight: 500;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+  /* 한국어는 어절 중간에서 끊으면 "세 트/랙"처럼 어색해진다 */
+  word-break: keep-all;
+  overflow-wrap: break-word;
 }
 
-/* 키보드 사용자에게만 포커스 링을 보여준다 */
 :focus-visible {
-  outline: 2px solid var(--color-crimson-500);
+  outline: 2px solid var(--color-brand-600);
   outline-offset: 2px;
+}
+
+@utility font-display {
+  font-family: var(--font-display);
+  font-weight: 700;
 }
 
 @utility surface {

@@ -1,0 +1,41 @@
+{
+  "artboards": [
+    {
+      "file": "Main.dc.html",
+      "x": 0,
+      "y": 0,
+      "w": 1440,
+      "h": 8160,
+      "title": "Desktop — 9 슬라이드",
+      "print": "flow"
+    },
+    {
+      "file": "Mobile.dc.html",
+      "x": 1620,
+      "y": 0,
+      "w": 390,
+      "h": 7350,
+      "title": "Mobile 390",
+      "print": "flow"
+    }
+  ],
+  "annotations": [
+    {
+      "id": "note-slides",
+      "x": 0,
+      "y": -230,
+      "w": 660,
+      "text": "슬라이드 9장. 히어로 다음부터 한 장마다 흰↔파랑이 반전됩니다.\n① 히어로 ② Three Tracks ③ SPARK ④ SPRINT ⑤ SUMMIT ⑥ DAY 1 ⑦ DAY 2 ⑧ Professor ⑨ Join\n\n글씨 3단: 가장 큰 글씨 RiaSans Bold / 그 다음 Freesentation Bold / 가장 작은 글씨 Freesentation Medium."
+    },
+    {
+      "id": "note-mobile",
+      "x": 1620,
+      "y": -230,
+      "w": 390,
+      "text": "PC에 있는 문구는 모바일에도 전부 들어갑니다 (빌드할 때 자동 검증).\n\n히어로는 InfoSys 세로(왼쪽) · HACKATHON 세로(오른쪽)."
+    }
+  ],
+  "launch": {
+    "view": "canvas"
+  }
+}

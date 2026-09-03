@@ -62,7 +62,7 @@ function AdminDashboard() {
             className={cx(
               "-mb-px border-b-2 px-4 py-2.5 text-sm font-semibold transition-colors",
               tab === t.id
-                ? "border-crimson-600 text-crimson-700 dark:text-crimson-400"
+                ? "border-brand-600 text-brand-700 dark:text-brand-400"
                 : "border-transparent text-muted hover:text-[var(--text)]",
             )}
           >
@@ -285,7 +285,7 @@ function TeamsPanel() {
             className={cx(
               "rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors",
               filter === t
-                ? "border-crimson-500 bg-crimson-50 text-crimson-700 dark:bg-crimson-950/40 dark:text-crimson-300"
+                ? "border-brand-500 bg-brand-50 text-brand-700 dark:bg-brand-950/40 dark:text-brand-300"
                 : "border-[var(--border)] hover:bg-[var(--bg-muted)]",
             )}
           >

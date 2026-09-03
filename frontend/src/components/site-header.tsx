@@ -36,12 +36,8 @@ export function SiteHeader() {
   return (
     <header className="sticky top-0 z-40 border-b border-[var(--border)] bg-[var(--bg)]/85 backdrop-blur">
       <div className="mx-auto flex h-16 w-full max-w-6xl items-center gap-4 px-5">
-        <Link href="/" className="flex items-center gap-2 font-bold tracking-tight">
-          <span className="grid size-7 place-items-center rounded-lg bg-crimson-600 text-xs font-black text-white">
-            IS
-          </span>
-          <span className="hidden sm:inline">정보시스템학과 해커톤</span>
-          <span className="sm:hidden">해커톤</span>
+        <Link href="/" className="font-display text-base tracking-tight text-brand-600">
+          IS HACKATHON
         </Link>
 
         <nav aria-label="주요 메뉴" className="ml-auto hidden items-center gap-1 lg:flex">
@@ -56,7 +52,7 @@ export function SiteHeader() {
                 className={cx(
                   "rounded-lg px-3 py-2 text-sm font-medium transition-colors",
                   active
-                    ? "bg-crimson-50 text-crimson-700 dark:bg-crimson-950/50 dark:text-crimson-300"
+                    ? "bg-brand-50 text-brand-700 dark:bg-brand-950/50 dark:text-brand-300"
                     : "text-muted hover:bg-[var(--bg-muted)]",
                 )}
               >
@@ -74,7 +70,7 @@ export function SiteHeader() {
               <span className="hidden text-sm text-muted sm:inline">
                 {session.user.name}
                 {isStaff && (
-                  <span className="ml-1.5 rounded bg-crimson-100 px-1.5 py-0.5 text-[10px] font-bold text-crimson-700 dark:bg-crimson-950 dark:text-crimson-300">
+                  <span className="ml-1.5 rounded bg-brand-100 px-1.5 py-0.5 text-[10px] font-bold text-brand-700 dark:bg-brand-950 dark:text-brand-300">
                     {role === "ADMIN" ? "운영진" : "교수"}
                   </span>
                 )}
