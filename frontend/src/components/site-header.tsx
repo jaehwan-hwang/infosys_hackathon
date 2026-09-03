@@ -20,6 +20,9 @@ export function SiteHeader() {
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
 
+  // 랜딩은 히어로 안에 자체 내비를 갖고 있고, 스냅 컨테이너가 화면 전체를 써야 한다.
+  if (pathname === "/") return null;
+
   const role = session?.user?.role;
   const isStaff = role === "ADMIN" || role === "PROFESSOR";
 

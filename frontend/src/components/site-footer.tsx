@@ -1,6 +1,14 @@
+"use client";
+
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 export function SiteFooter() {
+  const pathname = usePathname();
+
+  // 랜딩은 마지막 Join 슬라이드가 푸터 역할을 한다
+  if (pathname === "/") return null;
+
   return (
     <footer className="border-t border-[var(--border)] bg-[var(--bg-subtle)]">
       <div className="mx-auto w-full max-w-6xl px-5 py-10">

@@ -84,6 +84,13 @@ body {
   font-weight: 700;
 }
 
+/* 세로쓰기. 글자를 눕히지 않고 위에서 아래로 쌓는다 (모바일 히어로) */
+@utility vertical {
+  writing-mode: vertical-rl;
+  text-orientation: upright;
+  display: inline-block;
+}
+
 @utility surface {
   background: var(--bg-subtle);
   border: 1px solid var(--border);
