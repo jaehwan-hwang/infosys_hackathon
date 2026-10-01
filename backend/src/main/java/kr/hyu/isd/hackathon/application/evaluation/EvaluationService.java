@@ -37,7 +37,7 @@ import java.util.Set;
  *
  * 부정 투표를 막는 세 겹의 방어선:
  *   1. (평가자, 대상팀) 유니크 제약으로 DB가 중복 행을 거부한다.
- *   2. 같은 평가자가 다시 제출하면 새 행을 만들지 않고 기존 평가를 덮어쓴다.
+ *   2. 한 계정은 한 팀을 한 번만 평가한다. 이미 낸 평가는 고칠 수 없다.
  *   3. 자기 팀 투표는 Team.hasMember()로 걸러낸다.
  *
  * 점수는 제출 순간에 가중 환산되어 저장되므로, 집계는 단순 평균으로 끝난다.
@@ -55,7 +55,7 @@ public class EvaluationService {
     private final EventService eventService;
 
     /**
-     * 평가를 제출한다. 이미 같은 팀을 평가했다면 덮어쓴다.
+     * 평가를 제출한다. 한 계정은 한 팀을 한 번만 평가할 수 있고, 낸 뒤에는 고칠 수 없다.
      *
      * @param evaluatorType 학생 투표인지 교수 평가인지. 컨트롤러가 경로에 따라 정한다.
      */
@@ -84,10 +84,13 @@ public class EvaluationService {
                     "이 트랙에 설정된 평가 항목이 없습니다.");
         }
 
-        Evaluation evaluation = evaluationRepository
-                .findByEvaluatorIdAndTargetTeamId(userId, targetTeam.getId())
-                .orElseGet(() -> saveNewEvaluation(evaluator, targetTeam, evaluatorType));
+        // 한 번 낸 평가는 그대로 둔다. 다시 매기려면 운영진이 지워 줘야 한다.
+        if (evaluationRepository.findByEvaluatorIdAndTargetTeamId(userId, targetTeam.getId()).isPresent()) {
+            throw new HackathonException(ErrorCode.ALREADY_EVALUATED,
+                    "이미 평가한 팀입니다. 평가는 팀당 한 번만 가능합니다.");
+        }
 
+        Evaluation evaluation = saveNewEvaluation(evaluator, targetTeam, evaluatorType);
         evaluation.replaceScores(buildScores(evaluation, criteria, request.scores()), request.comment());
 
         log.info("평가 제출: evaluator={}, team={}, type={}, total={}",

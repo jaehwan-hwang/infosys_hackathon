@@ -14,6 +14,13 @@ public interface EvaluationRepository extends JpaRepository<Evaluation, Long> {
 
     Optional<Evaluation> findByEvaluatorIdAndTargetTeamId(Long evaluatorId, Long targetTeamId);
 
+    /**
+     * 이 팀을 대상으로 한 평가 전부.
+     * 팀 삭제 시 함께 지우려고 쓴다. 벌크 삭제 대신 엔티티로 읽어야
+     * 항목 점수(scores)까지 cascade로 정리된다.
+     */
+    List<Evaluation> findAllByTargetTeamId(Long targetTeamId);
+
     @Query("""
             select e from Evaluation e
               join fetch e.targetTeam t

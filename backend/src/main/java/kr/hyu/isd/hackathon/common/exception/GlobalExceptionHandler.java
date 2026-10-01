@@ -20,9 +20,13 @@ public class GlobalExceptionHandler {
         ErrorCode errorCode = e.getErrorCode();
         log.warn("HackathonException: code={}, message={}", errorCode.getCode(), e.getMessage());
 
+        // 상황을 구체적으로 적어 던진 예외는 그 문장을 그대로 내려준다.
+        // 기본 문구만 돌려주면 "팀 인원은 1~5명이어야 합니다" 같은 안내가 사라진다.
+        String message = e.getDisplayMessage();
+
         ApiResponse<?> response = (e.getErrorDataList() != null && !e.getErrorDataList().isEmpty())
-                ? ApiResponse.error(errorCode.getCode(), errorCode.getMessage(), e.getErrorDataList())
-                : ApiResponse.error(errorCode.getCode(), errorCode.getMessage());
+                ? ApiResponse.error(errorCode.getCode(), message, e.getErrorDataList())
+                : ApiResponse.error(errorCode.getCode(), message);
 
         return new ResponseEntity<>(response, errorCode.getHttpStatus());
     }

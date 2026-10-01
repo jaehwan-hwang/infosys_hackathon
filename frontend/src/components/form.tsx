@@ -185,11 +185,14 @@ export function ScoreSelector({
   value,
   maxScore,
   onChange,
+  readOnly = false,
 }: {
   name: string;
   value: number | null;
   maxScore: number;
   onChange: (score: number) => void;
+  /** 이미 제출한 평가처럼 더는 고칠 수 없는 경우 */
+  readOnly?: boolean;
 }) {
   const options = Array.from({ length: maxScore + 1 }, (_, i) => i);
 
@@ -203,12 +206,16 @@ export function ScoreSelector({
             type="button"
             role="radio"
             aria-checked={selected}
+            disabled={readOnly}
             onClick={() => onChange(score)}
             className={cx(
               "h-10 min-w-10 rounded-lg border text-sm font-semibold transition-colors",
               selected
                 ? "border-brand-600 bg-brand-600 text-white"
-                : "border-[var(--border-strong)] hover:bg-[var(--bg-muted)]",
+                : "border-[var(--border-strong)]",
+              readOnly
+                ? "cursor-default disabled:opacity-60"
+                : !selected && "hover:bg-[var(--bg-muted)]",
             )}
           >
             {score}

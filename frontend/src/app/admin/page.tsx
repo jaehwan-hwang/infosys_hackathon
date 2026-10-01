@@ -268,6 +268,13 @@ function TeamsPanel() {
     return api.admin.overrideTrack(token, teamId, track, "운영진 수동 배정");
   });
 
+  // 되돌릴 수 없는 작업이라 한 번 더 누르게 한다
+  const [confirmingId, setConfirmingId] = useState<number | null>(null);
+  const deleteMutation = useApiMutation(async (teamId: number) => {
+    if (!token) throw new Error("no token");
+    return api.admin.deleteTeam(token, teamId);
+  });
+
   if (teamsQuery.loading) return <Spinner />;
   if (teamsQuery.error) return <Alert tone="error">{teamsQuery.error}</Alert>;
 
@@ -351,8 +358,50 @@ function TeamsPanel() {
                     </option>
                   ))}
                 </select>
+
+                {confirmingId === team.teamId ? (
+                  <>
+                    <Button
+                      variant="secondary"
+                      className="h-9 px-3 text-sm"
+                      onClick={() => setConfirmingId(null)}
+                    >
+                      취소
+                    </Button>
+                    <Button
+                      className="h-9 bg-red-600 px-3 text-sm hover:bg-red-700"
+                      loading={deleteMutation.pending}
+                      onClick={async () => {
+                        await deleteMutation.run(team.teamId);
+                        setConfirmingId(null);
+                        teamsQuery.reload();
+                      }}
+                    >
+                      정말 삭제
+                    </Button>
+                  </>
+                ) : (
+                  <Button
+                    variant="secondary"
+                    className="h-9 px-3 text-sm text-red-600"
+                    onClick={() => setConfirmingId(team.teamId)}
+                  >
+                    삭제
+                  </Button>
+                )}
               </div>
             </div>
+
+            {confirmingId === team.teamId && (
+              <p className="mt-3 text-xs text-amber-600">
+                {team.teamName} 팀과 이 팀의 제출물·받은 평가·수상 기록이 모두 지워집니다.
+                되돌릴 수 없습니다. 팀원 계정 자체는 남습니다.
+              </p>
+            )}
+
+            {deleteMutation.error && confirmingId === team.teamId && (
+              <p className="mt-2 text-xs text-red-600">{deleteMutation.error.message}</p>
+            )}
           </Card>
         ))}
       </div>

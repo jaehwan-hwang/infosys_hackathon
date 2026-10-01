@@ -25,6 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -126,12 +127,21 @@ public class TeamService {
         return TeamResponse.publicView(findTeamWithMembers(teamId));
     }
 
-    /** 트랙별 팀 목록(공개용). 평가 대상 선택 화면이 쓴다. */
+    /**
+     * 팀 목록(공개용). track이 null이면 전체를 준다.
+     *
+     * 정렬은 Spark → Sprint → Summit 순이고 같은 트랙 안에서는 등록이 빠른 순이다.
+     * 개인정보(학번·이메일)와 배정 근거는 publicView가 빼고 내려준다.
+     */
     @Transactional(readOnly = true)
-    public List<TeamResponse> getTeamsByTrack(Track track) {
+    public List<TeamResponse> getTeams(Track track) {
         HackathonEvent event = eventService.getActiveEvent();
-        return teamRepository.findByEventIdAndTrackWithMembers(event.getId(), track)
-                .stream()
+        List<Team> teams = track != null
+                ? teamRepository.findByEventIdAndTrackWithMembers(event.getId(), track)
+                : teamRepository.findAllByEventIdWithMembers(event.getId());
+
+        return teams.stream()
+                .sorted(Comparator.comparing(Team::getTrack).thenComparing(Team::getId))
                 .map(TeamResponse::publicView)
                 .toList();
     }

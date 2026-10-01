@@ -21,11 +21,11 @@ export function SiteFooter() {
           </div>
 
           <nav aria-label="푸터 메뉴" className="flex flex-wrap gap-x-6 gap-y-2 text-sm">
-            <Link href="/self-check" className="text-muted hover:underline">
-              트랙 자가진단
+            <Link href="/team" className="text-muted hover:underline">
+              팀
             </Link>
-            <Link href="/register" className="text-muted hover:underline">
-              팀 등록
+            <Link href="/evaluate" className="text-muted hover:underline">
+              평가
             </Link>
             <Link href="/results" className="text-muted hover:underline">
               결과

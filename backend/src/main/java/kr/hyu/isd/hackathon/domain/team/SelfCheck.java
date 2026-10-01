@@ -10,7 +10,8 @@ import lombok.NoArgsConstructor;
  * 트랙 배정 자가진단. 기획서 2-1의 규칙을 그대로 코드로 옮긴 값 객체다.
  *
  * 즉시 Summit 배정 사유(3개) 중 하나라도 해당하면 무조건 Summit,
- * 그렇지 않으면 체크리스트 4개 중 3개 이상 해당 시 Summit, 아니면 Sprint.
+ * 그렇지 않으면 체크리스트 4개 중 3개 이상이면 Summit, 1~2개면 Sprint,
+ * 하나도 해당하지 않으면 개발 경험이 거의 없다고 보고 Spark(아이디어톤)를 권한다.
  *
  * 프론트에서도 같은 계산을 즉시 보여주지만, 실제 배정은 항상 서버가 다시 계산한다.
  */
@@ -82,10 +83,12 @@ public class SelfCheck {
         return count;
     }
 
-    /** Sprint/Summit 지원 팀의 최종 배정 트랙 */
+    /** 자가진단이 권하는 트랙 */
     public Track resolveTrack() {
         if (hasInstantSummitReason()) return Track.SUMMIT;
-        return checkedCount() >= CHECKLIST_THRESHOLD ? Track.SUMMIT : Track.SPRINT;
+        int count = checkedCount();
+        if (count >= CHECKLIST_THRESHOLD) return Track.SUMMIT;
+        return count == 0 ? Track.SPARK : Track.SPRINT;
     }
 
     /**
@@ -102,8 +105,6 @@ public class SelfCheck {
             return sb.toString();
         }
         int count = checkedCount();
-        return count >= CHECKLIST_THRESHOLD
-                ? "자가진단 %d/4 항목 해당 → Summit".formatted(count)
-                : "자가진단 %d/4 항목 해당 → Sprint".formatted(count);
+        return "자가진단 %d/4 항목 해당 → %s".formatted(count, resolveTrack().getLabel());
     }
 }

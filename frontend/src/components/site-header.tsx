@@ -7,11 +7,15 @@ import { useState } from "react";
 import { Button } from "./form";
 import { cx } from "./ui";
 
+/**
+ * 상단 메뉴는 네 개로 끝낸다.
+ *
+ * 트랙 자가진단은 랜딩 마지막 슬라이드에서만 들어가고, 거기서 팀 등록으로 이어진다.
+ * 팀 등록·결과물 제출은 "팀" 한 곳에 모였고, 교수 평가는 "평가" 안에서 권한에 따라 갈린다.
+ */
 const NAV_ITEMS = [
   { href: "/", label: "홈" },
-  { href: "/self-check", label: "트랙 자가진단" },
-  { href: "/register", label: "팀 등록" },
-  { href: "/submit", label: "산출물 제출" },
+  { href: "/team", label: "팀" },
   { href: "/evaluate", label: "평가" },
 ];
 
@@ -26,13 +30,9 @@ export function SiteHeader() {
   const role = session?.user?.role;
   const isStaff = role === "ADMIN" || role === "PROFESSOR";
 
-  // 교수·운영진 전용 링크는 해당 권한일 때만 노출한다.
-  // (실제 접근 차단은 각 페이지와 백엔드가 담당한다)
+  // 운영진 메뉴는 운영진에게만 보인다. 주소를 직접 쳐서 들어오면 페이지가 막는다.
   const navItems = [
     ...NAV_ITEMS,
-    ...(role === "PROFESSOR" || role === "ADMIN"
-      ? [{ href: "/evaluate/professor", label: "교수 평가" }]
-      : []),
     ...(role === "ADMIN" ? [{ href: "/admin", label: "운영진" }] : []),
   ];
 

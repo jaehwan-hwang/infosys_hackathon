@@ -93,7 +93,7 @@ export function EvaluationBoard({ evaluatorType }: { evaluatorType: EvaluatorTyp
           {evaluatedCount} / {targets.length} 팀 평가 완료
         </Badge>
         <p className="text-sm text-muted">
-          제출한 평가는 마감 전까지 언제든 수정할 수 있습니다.
+          한 팀당 한 번만 평가할 수 있고, 제출 후에는 고칠 수 없습니다.
         </p>
       </div>
 
@@ -199,6 +199,9 @@ function ScoreForm({
     [criteriaQuery.data],
   );
 
+  // 이미 제출했으면 점수만 보여주고 더 건드리지 못하게 한다
+  const locked = target.evaluated || savedScore !== null;
+
   // 모든 항목을 채워야 제출할 수 있다 (서버도 같은 조건을 검사한다)
   const allScored =
     criteria.length > 0 && criteria.every((c) => scores[c.criterionId] !== undefined);
@@ -274,6 +277,7 @@ function ScoreForm({
             key={criterion.criterionId}
             criterion={criterion}
             value={scores[criterion.criterionId] ?? null}
+            readOnly={locked}
             onChange={(score) =>
               setScores((prev) => ({ ...prev, [criterion.criterionId]: score }))
             }
@@ -293,6 +297,7 @@ function ScoreForm({
           value={comment}
           onChange={(e) => setComment(e.target.value)}
           maxLength={1000}
+          disabled={locked}
           className="mt-3"
         />
       </Card>
@@ -305,26 +310,32 @@ function ScoreForm({
         </div>
       )}
 
-      <div className="mt-5 flex flex-wrap items-center gap-4">
-        <Button type="submit" size="lg" loading={pending} disabled={!allScored}>
-          {target.evaluated ? "평가 수정하기" : "평가 제출하기"}
-        </Button>
+      {locked ? (
+        <div className="mt-5">
+          <Alert tone="success" title="평가를 제출했습니다">
+            이 팀의 평가는 끝났습니다. 제출한 점수는 고칠 수 없습니다.
+            {savedScore !== null && ` 환산 점수 ${formatScore(savedScore)} / 100`}
+          </Alert>
+        </div>
+      ) : (
+        <div className="mt-5 flex flex-wrap items-center gap-4">
+          <Button type="submit" size="lg" loading={pending} disabled={!allScored}>
+            평가 제출하기
+          </Button>
 
-        {previewTotal !== null && (
-          <p className="text-sm text-muted">
-            환산 점수{" "}
-            <strong className="text-[var(--text)]">{formatScore(previewTotal)}</strong> / 100
+          {previewTotal !== null && (
+            <p className="text-sm text-muted">
+              환산 점수{" "}
+              <strong className="text-[var(--text)]">{formatScore(previewTotal)}</strong> / 100
+            </p>
+          )}
+          {!allScored && (
+            <p className="text-sm text-amber-600">모든 항목에 점수를 매겨주세요.</p>
+          )}
+          <p className="w-full text-xs text-amber-600">
+            제출하면 수정할 수 없습니다. 점수를 한 번 더 확인해 주세요.
           </p>
-        )}
-        {!allScored && (
-          <p className="text-sm text-amber-600">모든 항목에 점수를 매겨주세요.</p>
-        )}
-      </div>
-
-      {savedScore !== null && (
-        <p className="mt-3 text-xs text-emerald-600">
-          저장된 점수 — {formatScore(savedScore)} / 100
-        </p>
+        </div>
       )}
     </form>
   );
@@ -334,10 +345,12 @@ function CriterionRow({
   criterion,
   value,
   onChange,
+  readOnly = false,
 }: {
   criterion: Criterion;
   value: number | null;
   onChange: (score: number) => void;
+  readOnly?: boolean;
 }) {
   return (
     <Card>
@@ -360,6 +373,7 @@ function CriterionRow({
           name={criterion.name}
           value={value}
           maxScore={criterion.maxScore}
+          readOnly={readOnly}
           onChange={onChange}
         />
       </div>

@@ -108,45 +108,69 @@ openssl rand -base64 32
 
 ---
 
-## 무료로 배포하기
+## 배포하기
 
-세 조각 모두 무료 티어로 운영할 수 있습니다.
+세 조각으로 나뉩니다. 프론트엔드는 Vercel, DB와 파일은 Supabase, 백엔드는 컨테이너를 받는 곳이면 어디든 됩니다.
 
 | 조각 | 서비스 | 비고 |
 |---|---|---|
 | 프론트엔드 | **Vercel** Hobby | Next.js 기본 지원, 무료 |
-| DB + 파일 | **Supabase** Free | 500MB DB, 1GB 스토리지. 7일 미사용 시 일시정지되나 재개 가능 |
-| 백엔드 | **Oracle Cloud Always Free** (권장) 또는 **Google Cloud Run** | 아래 참고 |
+| DB + 파일 | **Supabase** Free | 500MB DB, 1GB 스토리지 |
+| 백엔드 | **Google Cloud Run** 또는 **Oracle Cloud Always Free** | `backend/Dockerfile` 그대로 사용 |
 
-### 백엔드 호스팅 선택
+행사 당일에는 전원이 동시에 투표하므로 **콜드 스타트가 없는 쪽**이 안전합니다. Cloud Run은 평소 0원으로 두고 행사 이틀만 `--min-instances=1`로 올리면 됩니다(이틀치 1달러 미만).
 
-행사 당일에는 전원이 동시에 투표하므로 **콜드 스타트가 없는 쪽**이 안전합니다.
+### 순서
 
-- **Oracle Cloud Always Free** — ARM 4코어/24GB VM이 영구 무료. 항상 켜져 있어 행사 당일에 가장 안정적입니다. 카드 등록(과금 없음)이 필요하고, 서울 리전은 용량이 없을 때가 있습니다.
-- **Google Cloud Run** — 월 200만 요청까지 무료. 0으로 축소되어 첫 요청이 느립니다(Java 콜드 스타트 수 초). 행사 당일만 `--min-instances=1`로 올리면 콜드 스타트가 사라지고, 이틀치 비용은 1달러 미만입니다.
-- **Render Free** — 15분 미사용 시 잠들고 깨어나는 데 약 50초가 걸립니다. 512MB 메모리도 빠듯해 행사 당일 용도로는 권장하지 않습니다.
+**1. Supabase**
 
-**권장 조합**: 평소에는 Cloud Run(0원), 행사 이틀만 `min-instances=1`로 전환.
+1. [supabase.com](https://supabase.com)에서 프로젝트 생성
+2. **Project Settings → Database → Connection string → JDBC**에서 주소·비밀번호 확인
+3. **Storage → New bucket**으로 `submissions` 버킷 생성, **Public** 체크
+4. **Project Settings → API**에서 `service_role` 키 확인 (서버에만 둡니다)
 
-### 배포 절차 요약
+테이블은 백엔드가 처음 뜰 때 `JPA_DDL_AUTO=update`로 만듭니다. 한 번 뜬 뒤에는 `validate`로 바꾸는 편이 안전합니다.
 
-```bash
-# 백엔드 JAR 빌드
-cd backend && ./gradlew bootJar
-```
+**2. 백엔드**
 
 ```bash
-# 프론트엔드는 Vercel에 저장소를 연결하면 자동 배포됩니다
+cd backend && docker build -t isd-hackathon-backend .
 ```
 
-배포 후 반드시 확인할 것:
+Cloud Run이라면 이미지를 올린 뒤 아래 환경변수를 넣습니다. **`JWT_SECRET`을 넣지 않으면 기동 자체가 멈춥니다** — 기본값이 저장소에 공개돼 있어 그대로 배포하면 누구나 운영진 토큰을 만들 수 있기 때문입니다(`ProductionGuard`).
 
-1. Google OAuth 리디렉션 URI에 배포 도메인 추가
-2. 백엔드 `CORS_ALLOWED_ORIGINS`에 프론트엔드 도메인 추가
-3. 프론트엔드 `NEXT_PUBLIC_API_BASE_URL`을 백엔드 도메인으로 변경
-4. `JPA_DDL_AUTO=update`로 최초 1회 기동해 테이블 생성 후, `validate`로 변경 권장
+| 변수 | 값 |
+|---|---|
+| `DB_URL` | `jdbc:postgresql://db.xxx.supabase.co:5432/postgres` |
+| `DB_USERNAME` / `DB_PASSWORD` | Supabase 접속 정보 |
+| `JPA_DDL_AUTO` | 최초 1회 `update`, 이후 `validate` |
+| `JWT_SECRET` | 32바이트 이상 임의 문자열 (`openssl rand -base64 32`) |
+| `GOOGLE_CLIENT_ID` | Google OAuth 클라이언트 ID |
+| `ALLOWED_EMAIL_DOMAINS` | `hanyang.ac.kr` |
+| `ADMIN_EMAILS` | 운영진 이메일 (쉼표 구분) |
+| `PROFESSOR_EMAILS` | 교수 이메일 (쉼표 구분) |
+| `CORS_ALLOWED_ORIGINS` | 프론트엔드 도메인 |
+| `SUPABASE_URL` / `SUPABASE_SERVICE_KEY` / `SUPABASE_BUCKET` | 파일 업로드용 |
 
----
+**3. 프론트엔드 (Vercel)**
+
+저장소를 연결하고 **Root Directory를 `frontend`로** 지정합니다. 환경변수는 네 개입니다.
+
+| 변수 | 값 |
+|---|---|
+| `NEXT_PUBLIC_API_BASE_URL` | 백엔드 도메인 |
+| `AUTH_SECRET` | `openssl rand -base64 32` |
+| `AUTH_GOOGLE_ID` / `AUTH_GOOGLE_SECRET` | Google OAuth 클라이언트 |
+| `NEXT_PUBLIC_ALLOWED_EMAIL_DOMAIN` | `hanyang.ac.kr` |
+
+`AUTH_URL`은 Vercel이 자동으로 잡으므로 넣지 않아도 됩니다.
+
+**4. 배포 후 반드시 확인**
+
+1. Google OAuth 리디렉션 URI에 `https://<프론트 도메인>/api/auth/callback/google` 추가
+2. 백엔드 `CORS_ALLOWED_ORIGINS`에 프론트 도메인이 들어 있는지
+3. 한양대 계정으로 로그인 → 팀 등록까지 한 번 통과시켜 보기
+4. 운영진 계정으로 `/admin` 접근 확인, 테스트로 만든 팀 삭제
 
 ## 행사 당일 운영 순서
 
@@ -170,9 +194,9 @@ cd backend && ./gradlew bootJar
 
 `SelfCheck.java` / `track-rules.ts` — 두 구현이 128개 입력 조합 전부에서 일치하는 것을 확인했습니다.
 
-- 즉시 Summit 사유(실무 경험 / 수상 이력 / 배포 서비스) 중 **하나라도** 해당 → Summit
-- 아니면 체크리스트 4개 중 **3개 이상** → Summit, 그 외 Sprint
-- Spark를 직접 고르면 자가진단과 무관하게 Spark 확정
+- 개발 경험 항목(실무 경험 / 수상 이력 / 배포 서비스) 중 **하나라도** 해당 → Summit
+- 아니면 체크리스트 4개 중 **3개 이상** → Summit, **1~2개** → Sprint, **0개** → Spark
+- 자가진단 결과는 권고다. 실제 트랙은 팀 등록 폼에서 참가자가 직접 고른다
 
 ### 제출
 

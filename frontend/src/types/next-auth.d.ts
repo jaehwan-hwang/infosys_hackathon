@@ -34,5 +34,7 @@ declare module "next-auth/jwt" {
     role?: Role;
     studentId?: string | null;
     profileCompleted?: boolean;
+    /** 백엔드에서 사용자 정보를 마지막으로 다시 읽은 시각 (epoch ms) */
+    syncedAt?: number;
   }
 }

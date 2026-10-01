@@ -52,7 +52,7 @@ export const CHECKLIST_ITEMS = [
   {
     key: "advancedCourse" as const,
     label: "심화 프로젝트 과목 이수",
-    description: "개발 산출물이 필수인 심화 전공 과목을 이수했다",
+    description: "개발 결과물이 필수인 심화 전공 과목을 이수했다",
   },
   {
     key: "externalApi" as const,
@@ -74,9 +74,18 @@ export function countChecklist(check: SelfCheckPayload): number {
   ].filter(Boolean).length;
 }
 
+/**
+ * 자가진단이 권하는 트랙.
+ *   즉시 사유 하나라도  → Summit
+ *   체크리스트 3~4개    → Summit
+ *   1~2개              → Sprint
+ *   0개                → Spark (개발 경험이 거의 없다고 본다)
+ */
 export function resolveTrack(check: SelfCheckPayload): Track {
   if (hasInstantSummitReason(check)) return "SUMMIT";
-  return countChecklist(check) >= CHECKLIST_THRESHOLD ? "SUMMIT" : "SPRINT";
+  const count = countChecklist(check);
+  if (count >= CHECKLIST_THRESHOLD) return "SUMMIT";
+  return count === 0 ? "SPARK" : "SPRINT";
 }
 
 export function describeReason(check: SelfCheckPayload): string {
@@ -89,9 +98,7 @@ export function describeReason(check: SelfCheckPayload): string {
     return `즉시 Summit 배정: ${reasons.join(", ")}`;
   }
   const count = countChecklist(check);
-  return count >= CHECKLIST_THRESHOLD
-    ? `자가진단 ${count}/4 항목 해당 → Summit`
-    : `자가진단 ${count}/4 항목 해당 → Sprint`;
+  return `자가진단 ${count}/4 항목 해당 → ${TRACK_LABEL[resolveTrack(check)]}`;
 }
 
 /** 서버 응답과 같은 형태로 자가진단 결과를 만든다. */
@@ -131,9 +138,9 @@ export const TRACK_GOAL: Record<Track, string> = {
 };
 
 export const TRACK_EVALUATION: Record<Track, string> = {
-  SPARK: "학생 투표 100%",
-  SPRINT: "학생 투표 100%",
-  SUMMIT: "교수 평가 70% + 학생 투표 30%",
+  SPARK: "해커톤 참가자 투표 100%",
+  SPRINT: "해커톤 참가자 투표 100%",
+  SUMMIT: "교수 평가 70% + 참가자 투표 30%",
 };
 
 /**
@@ -152,56 +159,70 @@ export interface SubmissionField {
   uploadable: boolean;
 }
 
+/**
+ * 트랙별 제출 항목.
+ *
+ * required는 랜딩의 "필수 제출물"과 정확히 같아야 한다(서버 Submission.findMissingRequirements도 같은 목록).
+ * 나머지는 내고 싶은 팀만 내는 선택 사항이다.
+ */
 export const SUBMISSION_FIELDS: Record<Track, SubmissionField[]> = {
   SPARK: [
+    {
+      field: "deckFileUrl",
+      slot: "deck",
+      label: "발표 자료",
+      description: "아이디어와 기획, 예상 효과를 담은 발표 자료 (PDF/PPT)",
+      required: true,
+      uploadable: true,
+    },
     {
       field: "planFileUrl",
       slot: "plan",
       label: "서비스 기획서",
-      description: "문제 정의와 해결 방안을 담은 문서 (PDF/PPT/한글)",
-      required: true,
+      description: "선택 — 발표 자료와 별도로 기획 문서를 내고 싶다면",
+      required: false,
       uploadable: true,
     },
     {
       field: "prototypeUrl",
       slot: "prototype",
       label: "프로토타입",
-      description: "목업·와이어프레임 파일 또는 Figma 링크",
-      required: true,
-      uploadable: true,
-    },
-    {
-      field: "deckFileUrl",
-      slot: "deck",
-      label: "발표자료",
-      description: "선택 항목입니다",
+      description: "선택 — 목업·와이어프레임 파일 또는 Figma 링크",
       required: false,
       uploadable: true,
     },
   ],
   SPRINT: [
     {
-      field: "sourceCodeUrl",
-      slot: "source",
-      label: "소스코드",
-      description: "GitHub 저장소 링크 또는 zip 업로드",
+      field: "prototypeUrl",
+      slot: "prototype",
+      label: "프로토타입",
+      description: "동작하는 프로토타입 링크 또는 파일",
       required: true,
       uploadable: true,
     },
     {
       field: "deckFileUrl",
       slot: "deck",
-      label: "발표자료",
+      label: "발표 자료",
       description: "PPT 또는 PDF",
       required: true,
+      uploadable: true,
+    },
+    {
+      field: "sourceCodeUrl",
+      slot: "source",
+      label: "소스코드",
+      description: "선택 — GitHub 저장소 링크 또는 zip 업로드",
+      required: false,
       uploadable: true,
     },
     {
       field: "demoUrl",
       slot: "demo",
       label: "핵심 기능 시연",
-      description: "시연 영상 링크 또는 영상 파일",
-      required: true,
+      description: "선택 — 시연 영상 링크 또는 영상 파일",
+      required: false,
       uploadable: true,
     },
     {
@@ -217,7 +238,7 @@ export const SUBMISSION_FIELDS: Record<Track, SubmissionField[]> = {
     {
       field: "deployUrl",
       slot: "deploy",
-      label: "배포 링크",
+      label: "프로덕트",
       description: "실제 접속 가능한 서비스 주소",
       required: true,
       uploadable: false,
@@ -225,8 +246,16 @@ export const SUBMISSION_FIELDS: Record<Track, SubmissionField[]> = {
     {
       field: "sourceCodeUrl",
       slot: "source",
-      label: "전체 소스코드",
+      label: "소스코드",
       description: "GitHub 저장소 링크 또는 zip 업로드",
+      required: true,
+      uploadable: true,
+    },
+    {
+      field: "deckFileUrl",
+      slot: "deck",
+      label: "발표 자료",
+      description: "PPT 또는 PDF",
       required: true,
       uploadable: true,
     },
@@ -234,31 +263,23 @@ export const SUBMISSION_FIELDS: Record<Track, SubmissionField[]> = {
       field: "architectureFileUrl",
       slot: "architecture",
       label: "시스템 아키텍처 다이어그램",
-      description: "이미지 또는 PDF",
-      required: true,
+      description: "선택 — 이미지 또는 PDF",
+      required: false,
       uploadable: true,
     },
     {
       field: "techSpecFileUrl",
       slot: "techspec",
       label: "기술 명세서",
-      description: "사용 기술과 설계 결정을 정리한 문서",
-      required: true,
-      uploadable: true,
-    },
-    {
-      field: "deckFileUrl",
-      slot: "deck",
-      label: "발표자료",
-      description: "PPT 또는 PDF",
-      required: true,
+      description: "선택 — 사용 기술과 설계 결정을 정리한 문서",
+      required: false,
       uploadable: true,
     },
     {
       field: "demoUrl",
       slot: "demo",
       label: "핵심 기능 시연",
-      description: "선택 항목입니다",
+      description: "선택 — 시연 영상 링크 또는 영상 파일",
       required: false,
       uploadable: true,
     },

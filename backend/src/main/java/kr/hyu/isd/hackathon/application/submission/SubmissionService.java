@@ -23,7 +23,7 @@ import java.time.Instant;
 import java.util.List;
 
 /**
- * 산출물 제출.
+ * 결과물 제출.
  *
  * 마감 판정은 언제나 서버 시계로 한다. 프론트가 카운트다운을 보여주더라도
  * 실제 잠금은 여기서만 일어나므로, 클라이언트 시계를 조작해도 마감 후 제출은 통과하지 못한다.
@@ -164,7 +164,7 @@ public class SubmissionService {
     private void requireLeader(Team team, Long userId) {
         if (!team.isLedBy(userId)) {
             throw new HackathonException(ErrorCode.NOT_TEAM_LEADER,
-                    "산출물 제출은 조장만 할 수 있습니다.");
+                    "결과물 제출은 조장만 할 수 있습니다.");
         }
     }
 

@@ -5,6 +5,7 @@ import kr.hyu.isd.hackathon.common.exception.ErrorCode;
 import kr.hyu.isd.hackathon.common.exception.HackathonException;
 import kr.hyu.isd.hackathon.domain.evaluation.Award;
 import kr.hyu.isd.hackathon.domain.evaluation.Criterion;
+import kr.hyu.isd.hackathon.domain.evaluation.Evaluation;
 import kr.hyu.isd.hackathon.domain.evaluation.EvaluatorType;
 import kr.hyu.isd.hackathon.domain.event.HackathonEvent;
 import kr.hyu.isd.hackathon.domain.submission.Submission;
@@ -246,6 +247,27 @@ public class AdminService {
         log.info("트랙 수동 변경: team={}, {} -> {}", team.getName(), previous, track);
 
         return toAdminResponse(team, submissionRepository.findByTeamId(teamId).orElse(null));
+    }
+
+    /**
+     * 팀을 지운다. 테스트로 만든 팀을 정리하거나, 참가를 취소한 팀을 뺄 때 쓴다.
+     *
+     * 팀을 가리키는 기록(제출물·받은 평가·수상)을 먼저 정리해야 외래키가 끊기지 않는다.
+     * 팀원 행은 Team에 cascade로 묶여 있어 함께 지워진다.
+     * 계정 자체는 남는다 — 팀을 해체하는 것이지 사람을 지우는 것이 아니다.
+     */
+    @Transactional
+    public void deleteTeam(Long teamId) {
+        Team team = teamRepository.findById(teamId)
+                .orElseThrow(() -> new HackathonException(ErrorCode.TEAM_NOT_FOUND));
+
+        List<Evaluation> received = evaluationRepository.findAllByTargetTeamId(teamId);
+        evaluationRepository.deleteAll(received);
+        submissionRepository.findByTeamId(teamId).ifPresent(submissionRepository::delete);
+        awardRepository.deleteByTeamId(teamId);
+        teamRepository.delete(team);
+
+        log.warn("팀 삭제: id={}, name={}, 함께 지운 평가 {}건", teamId, team.getName(), received.size());
     }
 
     // ---- 수상 ----

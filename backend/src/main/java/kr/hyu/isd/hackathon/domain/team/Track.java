@@ -21,4 +21,9 @@ public enum Track {
     public int getDay() {
         return day;
     }
+
+    /** 화면과 안내 문구에 쓰는 이름 (Spark / Sprint / Summit) */
+    public String getLabel() {
+        return name().charAt(0) + name().substring(1).toLowerCase();
+    }
 }

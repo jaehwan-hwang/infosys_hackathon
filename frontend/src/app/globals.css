@@ -3,58 +3,65 @@
 /**
  * 디자인 토큰.
  *
- * 흰색과 파란색이 슬라이드마다 반전되는 것이 이 디자인의 골자다.
- * 색은 파랑 하나로 통일하고, 트랙 구분은 위치와 타이포그래피가 맡는다.
+ * 색은 web design.svg에서 뽑았다.
+ *   배경   흰색 — 디자인 파일은 #ECECEC였지만 화면이 어두워 보여 흰색으로 올렸다
+ *   강조   #117AAF → #2B35BA 세로 그라데이션 (70.19%에서 끝 색에 닿는다)
+ *   글자   검정
+ * 파랑 계열(brand)은 그라데이션 두 끝 색 사이를 채워 만든 것이라,
+ * 토큰만 바꾸면 하위 페이지 색이 함께 따라온다.
  *
- * 글씨 3단:
- *   가장 큰 글씨  → RiaSans Bold        (--font-display)
- *   그 다음       → Freesentation Bold  (--font-sans, weight 700)
- *   가장 작은 글씨 → Freesentation Medium (--font-sans, weight 500)
+ * 글씨는 원래대로 되돌렸다. 큰 제목은 RiaSans Bold, 나머지는 Freesentation.
+ * Inter(--font-hero-*)는 첫 화면에서만 쓴다 — 디자인 파일의 조판이 그 서체 기준이라서다.
  */
 @theme {
-  --color-brand-50: #eef2ff;
-  --color-brand-100: #dfe6fe;
-  --color-brand-200: #c4d0fd;
-  --color-brand-300: #9fb1fa;
-  --color-brand-400: #7a8ef5;
-  --color-brand-500: #4f66ea;
-  --color-brand-600: #1e3fd8;
-  --color-brand-700: #1832b4;
-  --color-brand-800: #172c92;
-  --color-brand-900: #182a75;
-  --color-brand-950: #101b4e;
+  --color-brand-50: #eef5fb;
+  --color-brand-100: #d7e8f5;
+  --color-brand-200: #b0d0e9;
+  --color-brand-300: #7fb2d9;
+  --color-brand-400: #4a93c6;
+  --color-brand-500: #117aaf;
+  --color-brand-600: #2b35ba;
+  --color-brand-700: #242d9c;
+  --color-brand-800: #1e257f;
+  --color-brand-900: #191e66;
+  --color-brand-950: #101340;
 
-  /* 히어로 그라데이션 (첨부 이미지에서 뽑은 값) */
-  --color-hero-1: #6f97ee;
-  --color-hero-2: #a6c0f5;
-  --color-hero-3: #cfe4fa;
-  --color-hero-4: #dceef9;
+  /* 디자인 파일의 그라데이션 원본 값 */
+  --color-grad-from: #117aaf;
+  --color-grad-to: #2b35ba;
 
-  --font-display: var(--font-riasans), "Freesentation", system-ui, sans-serif;
+  --font-display: var(--font-riasans), var(--font-freesentation), system-ui, sans-serif;
   --font-sans: var(--font-freesentation), system-ui, -apple-system, sans-serif;
+
+  /* 첫 화면 전용. 한글은 스택 뒤의 Freesentation이 받는다. */
+  --font-hero-display: var(--font-inter-display), var(--font-freesentation), system-ui, sans-serif;
+  --font-hero: var(--font-inter), var(--font-freesentation), system-ui, sans-serif;
 }
 
 :root {
   --bg: #ffffff;
-  --bg-subtle: #f7f8fc;
-  --bg-muted: #eef1f8;
-  --border: #dfe3ee;
-  --border-strong: #c6cde0;
-  --text: #101b4e;
-  --text-muted: #4a5578;
-  --text-subtle: #7a84a3;
+  --bg-subtle: #f6f6f7;
+  --bg-muted: #ededee;
+  --border: #e2e2e4;
+  --border-strong: #c4c4c8;
+  --text: #000000;
+  --text-muted: #4a4a4a;
+  --text-subtle: #767676;
+
+  /* 디자인 파일의 큰 원 세 개가 쓰는 그라데이션 */
+  --grad-brand: linear-gradient(180deg, #117aaf 0%, #2b35ba 70.19%);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #0a0d1c;
-    --bg-subtle: #101427;
-    --bg-muted: #171c33;
-    --border: #232a45;
-    --border-strong: #343c5e;
-    --text: #f2f4fb;
-    --text-muted: #a8b0cb;
-    --text-subtle: #7a84a3;
+    --bg: #0c1020;
+    --bg-subtle: #131829;
+    --bg-muted: #1b2135;
+    --border: #272e46;
+    --border-strong: #3a435f;
+    --text: #f1f3f8;
+    --text-muted: #a9b0c4;
+    --text-subtle: #7b8299;
   }
 }
 
@@ -84,6 +91,22 @@ body {
   font-weight: 700;
 }
 
+/* 첫 화면 제목 — Inter 28pt Black */
+@utility font-hero-display {
+  font-family: var(--font-hero-display);
+  font-weight: 900;
+}
+
+/* 첫 화면 작은 글씨 — Inter 18pt (굵기는 쓰는 쪽에서 정한다) */
+@utility font-hero {
+  font-family: var(--font-hero);
+}
+
+/* 디자인 파일의 파란 그라데이션. 큰 원과 반전 슬라이드가 함께 쓴다. */
+@utility bg-grad-brand {
+  background-image: var(--grad-brand);
+}
+
 /* 세로쓰기. 글자를 눕히지 않고 위에서 아래로 쌓는다 (모바일 히어로) */
 @utility vertical {
   writing-mode: vertical-rl;
@@ -104,8 +127,10 @@ body {
   color: var(--text-subtle);
 }
 
-/* 스크롤 시 섹션 제목이 상단 헤더에 가리지 않도록 */
-[id] {
+/* 앵커로 이동할 때 섹션 제목이 상단 고정 헤더에 가리지 않도록.
+   랜딩 슬라이드(data-nav)는 제외한다 — scroll-margin은 스냅 위치도 옮기기 때문에,
+   걸리면 id가 있는 슬라이드마다 스냅이 80px 모자란 곳에서 멈춘다. */
+[id]:not([data-nav]) {
   scroll-margin-top: 5rem;
 }
 

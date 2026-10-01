@@ -40,7 +40,7 @@ function LoginContent() {
       <Card className="p-8">
         <h1 className="text-xl font-bold">로그인</h1>
         <p className="mt-2 text-sm leading-relaxed text-muted">
-          한양대학교 Google 계정(@{ALLOWED_DOMAIN})으로 로그인합니다. 팀 등록, 산출물 제출,
+          한양대학교 Google 계정(@{ALLOWED_DOMAIN})으로 로그인합니다. 팀 등록, 결과물 제출,
           평가에 모두 같은 계정을 사용합니다.
         </p>
 

@@ -5,3 +5,6 @@ out/
 !gradle/wrapper/gradle-wrapper.jar
 application-prod.yml
 application-local.yml
+
+# H2 파일 DB. 참가자 개인정보가 들어 있으므로 저장소에 올리지 않는다.
+data/

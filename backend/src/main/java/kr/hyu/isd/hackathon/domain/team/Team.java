@@ -79,15 +79,16 @@ public class Team extends BaseTimeEntity {
      *
      * @param appliedTrack 팀이 등록 폼에서 선택한 트랙 (SPARK 또는 SPRINT/SUMMIT 계열)
      */
+    /**
+     * 트랙은 참가자가 등록 폼에서 직접 고른다.
+     * 자가진단은 어느 트랙이 맞는지 권해 주는 안내일 뿐이라, 고른 값을 그대로 쓴다.
+     * 운영진이 보기에 필요한 자가진단 기록은 넘어온 값이 있으면 함께 저장한다.
+     */
     public static Team create(HackathonEvent event, String name, String topic, String description,
                               User leader, Track appliedTrack, SelfCheck selfCheck) {
-        if (appliedTrack == Track.SPARK) {
-            return new Team(event, name, topic, description, leader,
-                    Track.SPARK, SelfCheck.empty(), "Spark 트랙 직접 선택");
-        }
+        Track track = appliedTrack != null ? appliedTrack : Track.SPARK;
         SelfCheck check = selfCheck != null ? selfCheck : SelfCheck.empty();
-        return new Team(event, name, topic, description, leader,
-                check.resolveTrack(), check, check.describeReason());
+        return new Team(event, name, topic, description, leader, track, check, "참가자 직접 선택");
     }
 
     public void updateInfo(String name, String topic, String description) {

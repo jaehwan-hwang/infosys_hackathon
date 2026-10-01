@@ -7,14 +7,39 @@ import { SiteFooter } from "@/components/site-footer";
 import "./globals.css";
 
 /**
- * 로컬 웹폰트. 원본 TTF/OTF는 한 벌에 2.6MB라 한글 음절 범위로 서브셋한 woff2를 쓴다.
- * 서브셋 생성은 저장소 루트의 RiaSans/ · Freesentation/ 원본에서 뽑았다.
+ * 로컬 웹폰트.
+ *
+ * Inter는 첫 화면(히어로)에서만 쓴다. web design.svg의 조판을 그대로 옮기려고
+ * static/의 Google Fonts 배포본을 라틴 범위로 서브셋해 woff2로 바꾼 것이다(한 벌 19KB).
+ * Three Tracks 슬라이드부터 아래 페이지 전부는 원래대로 RiaSans Bold(큰 제목)와
+ * Freesentation(본문)을 쓴다.
+ *
+ * 한글 글리프가 없는 Inter를 폰트 스택 앞에 두면 한글은 자동으로 Freesentation이 받는다.
  */
 const riaSans = localFont({
   src: "./fonts/RiaSans-Bold.woff2",
   weight: "700",
   style: "normal",
   variable: "--font-riasans",
+  display: "swap",
+});
+
+const interDisplay = localFont({
+  src: "./fonts/Inter-Display-Black.woff2",
+  weight: "900",
+  style: "normal",
+  variable: "--font-inter-display",
+  display: "swap",
+});
+
+const inter = localFont({
+  src: [
+    { path: "./fonts/Inter-Regular.woff2", weight: "400", style: "normal" },
+    { path: "./fonts/Inter-Medium.woff2", weight: "500", style: "normal" },
+    { path: "./fonts/Inter-SemiBold.woff2", weight: "600", style: "normal" },
+    { path: "./fonts/Inter-Bold.woff2", weight: "700", style: "normal" },
+  ],
+  variable: "--font-inter",
   display: "swap",
 });
 
@@ -44,7 +69,7 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   themeColor: [
     { media: "(prefers-color-scheme: light)", color: "#ffffff" },
-    { media: "(prefers-color-scheme: dark)", color: "#0a0a0b" },
+    { media: "(prefers-color-scheme: dark)", color: "#0a0d1c" },
   ],
 };
 
@@ -54,7 +79,10 @@ export default async function RootLayout({
   const session = await auth();
 
   return (
-    <html lang="ko" className={`${riaSans.variable} ${freesentation.variable}`}>
+    <html
+      lang="ko"
+      className={`${riaSans.variable} ${inter.variable} ${interDisplay.variable} ${freesentation.variable}`}
+    >
       <body className="flex min-h-screen flex-col">
         {/* 키보드 사용자가 내비게이션을 건너뛸 수 있게 한다 */}
         <a

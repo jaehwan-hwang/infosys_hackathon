@@ -1,17 +1,6 @@
-import type { Metadata } from "next";
-import { AuthGate } from "@/components/auth-gate";
-import { EvaluationBoard } from "@/components/evaluation-board";
+import { redirect } from "next/navigation";
 
-export const metadata: Metadata = { title: "교수 평가" };
-
-/**
- * Summit 트랙 교수 평가.
- * 화면 접근은 AuthGate가, 실제 차단은 백엔드의 ROLE_PROFESSOR 검사가 담당한다.
- */
-export default function ProfessorEvaluatePage() {
-  return (
-    <AuthGate requireRole={["PROFESSOR", "ADMIN"]}>
-      <EvaluationBoard evaluatorType="PROFESSOR" />
-    </AuthGate>
-  );
+/** 교수 평가는 /evaluate 안으로 합쳤다. 예전 주소로 들어오면 그쪽으로 보낸다. */
+export default function ProfessorEvaluateRedirect() {
+  redirect("/evaluate");
 }

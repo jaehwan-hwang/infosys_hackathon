@@ -4,6 +4,7 @@ import { signIn } from "next-auth/react";
 import { usePathname } from "next/navigation";
 import { useState, type ReactNode } from "react";
 import { api } from "@/lib/api";
+import { cleanPersonName } from "@/lib/format";
 import { useApiMutation, useAuth } from "@/lib/use-auth";
 import type { Role } from "@/lib/types";
 import { Button, Field, TextInput } from "./form";
@@ -71,7 +72,7 @@ export function AuthGate({
           title="접근 권한이 없습니다"
           description={
             requireRole.includes("ADMIN")
-              ? "학생회 운영진만 볼 수 있는 페이지입니다."
+              ? "운영진만 접근 가능한 권한입니다."
               : "교수 심사위원만 볼 수 있는 페이지입니다. 접근이 필요하면 운영진에게 문의해 주세요."
           }
         />
@@ -88,7 +89,7 @@ export function AuthGate({
  */
 function ProfileForm() {
   const { token, user, refresh } = useAuth();
-  const [name, setName] = useState(user?.name ?? "");
+  const [name, setName] = useState(() => cleanPersonName(user?.name));
   const [studentId, setStudentId] = useState("");
   const [department, setDepartment] = useState("정보시스템학과");
   const [done, setDone] = useState(false);

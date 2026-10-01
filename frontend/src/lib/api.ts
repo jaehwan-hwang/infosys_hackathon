@@ -174,6 +174,10 @@ export const api = {
   getTeamsByTrack: (token: string, track: Track) =>
     request<Team[]>(`/api/v1/teams?track=${track}`, { token }),
 
+  /** 전체 팀 목록(공개용). Spark → Sprint → Summit 순으로 내려온다. */
+  getTeams: (token: string, signal?: AbortSignal) =>
+    request<Team[]>("/api/v1/teams", { token, signal }),
+
   // ---- 제출 ----
 
   /** 내 팀 제출물. 아직 제출 전이면 null이 온다. */
@@ -259,6 +263,10 @@ export const api = {
         method: "POST",
         token,
       }),
+
+    /** 팀 삭제. 제출물·받은 평가·수상도 함께 지워진다. */
+    deleteTeam: (token: string, teamId: number) =>
+      request<void>(`/api/v1/admin/teams/${teamId}`, { method: "DELETE", token }),
 
     overrideTrack: (token: string, teamId: number, track: Track, reason?: string) => {
       const query = new URLSearchParams({ track });

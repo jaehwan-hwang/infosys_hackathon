@@ -179,8 +179,8 @@ public class ResultService {
 
     private String formulaOf(Track track) {
         return track == Track.SUMMIT
-                ? "교수 평가 평균 × 0.7 + 학생 투표 평균 × 0.3"
-                : "학생 투표 평균 × 1.0";
+                ? "교수 평가 평균 × 0.7 + 참가자 투표 평균 × 0.3"
+                : "참가자 투표 평균 × 1.0";
     }
 
     /** 팀별 학생/교수 평균과 평가자 수를 한 번에 읽어 온다. */

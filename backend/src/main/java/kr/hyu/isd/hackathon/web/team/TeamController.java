@@ -43,9 +43,11 @@ public class TeamController {
     }
 
     /** 트랙별 팀 목록 (개인정보 제외) */
+    /** 팀 목록. track을 주지 않으면 전체를 Spark → Sprint → Summit 순으로 준다. */
     @GetMapping
-    public ApiResponse<List<TeamResponse>> getTeams(@RequestParam Track track) {
-        return ApiResponse.success(teamService.getTeamsByTrack(track));
+    public ApiResponse<List<TeamResponse>> getTeams(
+            @RequestParam(required = false) Track track) {
+        return ApiResponse.success(teamService.getTeams(track));
     }
 
     @GetMapping("/{teamId}")

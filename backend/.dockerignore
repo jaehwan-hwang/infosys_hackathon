@@ -1,0 +1,9 @@
+build/
+.gradle/
+bin/
+out/
+data/
+src/test/
+*.md
+application-prod.yml
+application-local.yml

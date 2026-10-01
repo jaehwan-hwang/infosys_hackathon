@@ -3,14 +3,17 @@ spring:
     name: isd-hackathon-backend
 
   datasource:
-    url: ${DB_URL:jdbc:h2:mem:hackathon;MODE=PostgreSQL;DB_CLOSE_DELAY=-1}
+    # 기본값을 파일 DB로 둔다. 인메모리가 기본이면 DB_URL을 깜빡 빠뜨렸을 때
+    # 재기동마다 가입·팀·제출이 조용히 사라진다.
+    url: ${DB_URL:jdbc:h2:file:./data/hackathon;MODE=PostgreSQL}
     username: ${DB_USERNAME:sa}
     password: ${DB_PASSWORD:}
 
   jpa:
     hibernate:
-      # 로컬/개발은 create-drop, 운영(Supabase)은 validate + 마이그레이션 SQL 사용
-      ddl-auto: ${JPA_DDL_AUTO:create-drop}
+      # 스키마만 맞추고 데이터는 건드리지 않는다. create-drop은 기동할 때마다
+      # 테이블을 지우므로 기본값으로 두지 않는다.
+      ddl-auto: ${JPA_DDL_AUTO:update}
     properties:
       hibernate:
         format_sql: true

@@ -127,22 +127,20 @@ public class Submission extends BaseTimeEntity {
         List<String> missing = new ArrayList<>();
         Track track = team.getTrack();
 
+        // 랜딩의 트랙 소개에 적힌 "필수 제출물"과 같은 목록이어야 한다.
+        // 나머지 항목은 내고 싶은 팀만 내는 선택 사항이다.
         switch (track) {
             case SPARK -> {
-                if (isBlank(planFileUrl)) missing.add("서비스 기획서");
-                if (isBlank(prototypeUrl)) missing.add("프로토타입");
+                if (isBlank(deckFileUrl)) missing.add("발표 자료");
             }
             case SPRINT -> {
-                if (isBlank(sourceCodeUrl)) missing.add("소스코드");
-                if (isBlank(deckFileUrl)) missing.add("발표자료");
-                if (isBlank(demoUrl)) missing.add("핵심 기능 시연");
+                if (isBlank(prototypeUrl)) missing.add("프로토타입");
+                if (isBlank(deckFileUrl)) missing.add("발표 자료");
             }
             case SUMMIT -> {
+                if (isBlank(deployUrl)) missing.add("프로덕트");
                 if (isBlank(sourceCodeUrl)) missing.add("소스코드");
-                if (isBlank(deckFileUrl)) missing.add("발표자료");
-                if (isBlank(deployUrl)) missing.add("배포 링크");
-                if (isBlank(architectureFileUrl)) missing.add("시스템 아키텍처 다이어그램");
-                if (isBlank(techSpecFileUrl)) missing.add("기술 명세서");
+                if (isBlank(deckFileUrl)) missing.add("발표 자료");
             }
         }
         return missing;

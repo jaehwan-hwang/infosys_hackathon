@@ -4,6 +4,7 @@ import kr.hyu.isd.hackathon.domain.submission.Submission;
 import kr.hyu.isd.hackathon.domain.team.Track;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 
 public record SubmissionResponse(
@@ -47,7 +48,9 @@ public record SubmissionResponse(
                 s.getDeployUrl(),
                 s.getArchitectureFileUrl(),
                 s.getTechSpecFileUrl(),
-                s.getTechStacks(),
+                // 지연 로딩 컬렉션을 그대로 넘기면 트랜잭션이 끝난 뒤 JSON으로 쓰는 순간
+                // 세션이 없어 터진다(open-in-view=false). 여기서 복사해 끊어낸다.
+                new ArrayList<>(s.getTechStacks()),
                 s.getSubmittedAt(),
                 missing.isEmpty(),
                 missing

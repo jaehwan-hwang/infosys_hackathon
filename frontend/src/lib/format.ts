@@ -58,3 +58,19 @@ export function rankLabel(rank: number): string {
   if (rank === 3) return "🥉";
   return `${rank}`;
 }
+
+/**
+ * 구글 계정 표시 이름에서 사람 이름만 남긴다.
+ *
+ * 한양대 계정은 "황재환 | 정보시스템학과 | 한양대(서울)"처럼 소속을 덧붙여 내려주고,
+ * 앞에 보이지 않는 제어 문자(소프트 하이픈 등)가 섞여 오기도 한다.
+ * 참가자 명단과 시상에 그대로 쓸 수 없으므로 첫 구분자 앞까지만 취한다.
+ */
+export function cleanPersonName(raw: string | null | undefined): string {
+  if (!raw) return "";
+  return raw
+    // 폭 없는 공백·소프트 하이픈처럼 눈에 안 보이는 문자를 먼저 걷어낸다
+    .replace(/[\u00ad\u200b-\u200f\ufeff]/g, "")
+    .split(/[|/·,(]/)[0]
+    .trim();
+}

@@ -59,6 +59,13 @@ public class AdminController {
 
     // ---- 행사 설정 ----
 
+    /** 팀 삭제. 제출물·받은 평가·수상까지 함께 지운다. */
+    @DeleteMapping("/teams/{teamId}")
+    public ApiResponse<Void> deleteTeam(@PathVariable Long teamId) {
+        adminService.deleteTeam(teamId);
+        return ApiResponse.success(null);
+    }
+
     @PutMapping("/event")
     public ApiResponse<EventResponse> updateEvent(@Valid @RequestBody EventUpdateRequest request) {
         return ApiResponse.success(adminService.updateEvent(request));

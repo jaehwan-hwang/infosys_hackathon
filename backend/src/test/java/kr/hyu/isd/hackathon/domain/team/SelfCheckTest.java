@@ -93,18 +93,27 @@ class SelfCheckTest {
         }
 
         @Test
-        @DisplayName("하나도 해당하지 않으면 Sprint다")
-        void noneIsSprint() {
+        @DisplayName("하나도 해당하지 않으면 Spark다 — 개발 경험이 없다고 본다")
+        void noneIsSpark() {
             SelfCheck check = checklist(false, false, false, false);
 
             assertThat(check.checkedCount()).isZero();
+            assertThat(check.resolveTrack()).isEqualTo(Track.SPARK);
+        }
+
+        @Test
+        @DisplayName("4개 중 1개면 Sprint다 — Spark 경계 바로 위")
+        void oneOfFourIsSprint() {
+            SelfCheck check = checklist(true, false, false, false);
+
+            assertThat(check.checkedCount()).isEqualTo(1);
             assertThat(check.resolveTrack()).isEqualTo(Track.SPRINT);
         }
 
         @Test
-        @DisplayName("빈 자가진단은 Sprint다")
-        void emptyIsSprint() {
-            assertThat(SelfCheck.empty().resolveTrack()).isEqualTo(Track.SPRINT);
+        @DisplayName("빈 자가진단은 Spark다")
+        void emptyIsSpark() {
+            assertThat(SelfCheck.empty().resolveTrack()).isEqualTo(Track.SPARK);
         }
     }
 

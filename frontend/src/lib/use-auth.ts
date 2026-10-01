@@ -10,6 +10,15 @@ import { ApiError } from "./api";
 export function useAuth() {
   const { data: session, status, update } = useSession();
 
+  /**
+   * 세션을 백엔드 최신 상태로 다시 읽어온다.
+   *
+   * update()를 인자 없이 부르면 세션을 GET으로 다시 받기만 할 뿐
+   * jwt 콜백이 trigger: "update"로 돌지 않아 값이 그대로다.
+   * 인자를 넘겨야 갱신 경로를 탄다.
+   */
+  const refresh = useCallback(() => update({}), [update]);
+
   return {
     session,
     token: session?.accessToken,
@@ -21,7 +30,7 @@ export function useAuth() {
     needsProfile: status === "authenticated" && session?.user?.profileCompleted === false,
     /** 토큰 교환 실패 사유 */
     authError: session?.authError,
-    refresh: update,
+    refresh,
   };
 }
 
