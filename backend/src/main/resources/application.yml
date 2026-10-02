@@ -23,8 +23,10 @@ spring:
 
   servlet:
     multipart:
-      max-file-size: 50MB
-      max-request-size: 60MB
+      # Cloud Run은 HTTP/1 요청을 32MiB에서 끊는다. 그 위로는 우리 서버에 닿지도
+      # 않고 영문 HTML 413이 돌아가므로, 한도를 그 아래에 두고 안내 문구를 우리가 낸다.
+      max-file-size: 25MB
+      max-request-size: 28MB
 
   jackson:
     default-property-inclusion: non_null
@@ -50,7 +52,7 @@ app:
     supabase-url: ${SUPABASE_URL:}
     supabase-service-key: ${SUPABASE_SERVICE_KEY:}
     bucket: ${SUPABASE_BUCKET:submissions}
-    max-upload-mb: ${MAX_UPLOAD_MB:50}
+    max-upload-mb: ${MAX_UPLOAD_MB:25}
 
 logging:
   level:

@@ -34,6 +34,15 @@ public record EventResponse(
 ) {
 
     public static EventResponse from(HackathonEvent event) {
+        return from(event, event.getMaxUploadMb());
+    }
+
+    /**
+     * @param effectiveMaxUploadMb 화면에 보여줄 업로드 한도.
+     *                             행사 설정과 서버가 실제로 받는 크기 중 작은 쪽이어야 한다.
+     *                             (둘이 어긋나면 "50MB까지"라고 안내해 놓고 25MB에서 막힌다)
+     */
+    public static EventResponse from(HackathonEvent event, int effectiveMaxUploadMb) {
         Instant now = Instant.now();
         return new EventResponse(
                 event.getId(),
@@ -60,7 +69,7 @@ public record EventResponse(
                 event.isResultsPublished(),
                 event.getMinTeamSize(),
                 event.getMaxTeamSize(),
-                event.getMaxUploadMb(),
+                effectiveMaxUploadMb,
                 now
         );
     }

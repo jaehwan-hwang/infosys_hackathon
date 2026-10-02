@@ -2,6 +2,7 @@ package kr.hyu.isd.hackathon.application.event;
 
 import kr.hyu.isd.hackathon.common.exception.ErrorCode;
 import kr.hyu.isd.hackathon.common.exception.HackathonException;
+import kr.hyu.isd.hackathon.application.storage.StorageService;
 import kr.hyu.isd.hackathon.domain.event.HackathonEvent;
 import kr.hyu.isd.hackathon.infrastructure.persistence.CriterionRepository;
 import kr.hyu.isd.hackathon.infrastructure.persistence.HackathonEventRepository;
@@ -22,6 +23,7 @@ public class EventService {
 
     private final HackathonEventRepository eventRepository;
     private final CriterionRepository criterionRepository;
+    private final StorageService storageService;
 
     /** 현재 활성 행사 엔티티. 없으면 예외 */
     @Transactional(readOnly = true)
@@ -32,7 +34,18 @@ public class EventService {
 
     @Transactional(readOnly = true)
     public EventResponse getActiveEventInfo() {
-        return EventResponse.from(getActiveEvent());
+        HackathonEvent event = getActiveEvent();
+        return EventResponse.from(event, effectiveMaxUploadMb(event));
+    }
+
+    /**
+     * 화면에 안내할 업로드 한도.
+     *
+     * 운영진이 행사 설정에서 정한 값과 서버가 실제로 받는 크기 중 작은 쪽이다.
+     * 뒤쪽은 배포 환경(Cloud Run은 32MiB)에 걸린 천장이라 운영진이 올릴 수 없다.
+     */
+    public int effectiveMaxUploadMb(HackathonEvent event) {
+        return Math.min(event.getMaxUploadMb(), storageService.getMaxUploadMb());
     }
 
     /** 평가 기준 전체 목록. 평가 화면과 랜딩의 심사 기준 안내가 함께 쓴다. */

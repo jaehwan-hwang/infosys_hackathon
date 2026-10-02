@@ -154,7 +154,7 @@ public class AdminService {
         event.updateRules(request.minTeamSize(), request.maxTeamSize(), request.maxUploadMb());
 
         log.info("행사 설정 변경: title={}", event.getTitle());
-        return EventResponse.from(event);
+        return EventResponse.from(event, eventService.effectiveMaxUploadMb(event));
     }
 
     /** 발표 종료 후 트랙별 평가를 연다/닫는다. */
@@ -163,7 +163,7 @@ public class AdminService {
         HackathonEvent event = eventService.getActiveEvent();
         event.setVotingOpen(request.track(), request.open());
         log.info("평가 토글: track={}, open={}", request.track(), request.open());
-        return EventResponse.from(event);
+        return EventResponse.from(event, eventService.effectiveMaxUploadMb(event));
     }
 
     /** 시상식에서 결과를 공개한다. */
@@ -172,7 +172,7 @@ public class AdminService {
         HackathonEvent event = eventService.getActiveEvent();
         event.setResultsPublished(published);
         log.info("결과 공개 상태 변경: {}", published);
-        return EventResponse.from(event);
+        return EventResponse.from(event, eventService.effectiveMaxUploadMb(event));
     }
 
     // ---- 평가 항목 ----

@@ -105,14 +105,24 @@ async function upload<T>(path: string, form: FormData, token: string): Promise<T
     body: form,
   });
 
-  const payload: ApiResponse<T> = await res.json();
-  if (!res.ok) {
-    throw new ApiError(
-      payload?.message ?? "업로드에 실패했습니다.",
-      res.status,
-      payload?.errorCode,
-    );
+  // 파일이 너무 크면 서버에 닿기도 전에 플랫폼(Cloud Run)이 HTML로 413을 돌려준다.
+  // 그대로 JSON으로 읽으면 터지므로, 본문을 먼저 안전하게 해석한다.
+  let payload: ApiResponse<T> | null = null;
+  try {
+    payload = (await res.json()) as ApiResponse<T>;
+  } catch {
+    payload = null;
   }
+
+  if (!res.ok) {
+    const fallback =
+      res.status === 413
+        ? "파일이 너무 큽니다. 더 작은 파일로 올리거나 링크로 제출해 주세요."
+        : "업로드에 실패했습니다.";
+    throw new ApiError(payload?.message ?? fallback, res.status, payload?.errorCode);
+  }
+
+  if (!payload) throw new ApiError("업로드 응답을 읽지 못했습니다.", res.status);
   return payload.data;
 }
 
