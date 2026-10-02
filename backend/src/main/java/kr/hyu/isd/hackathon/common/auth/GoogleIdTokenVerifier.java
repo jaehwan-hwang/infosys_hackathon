@@ -59,8 +59,23 @@ public class GoogleIdTokenVerifier {
             throw new HackathonException(ErrorCode.DOMAIN_NOT_ALLOWED);
         }
 
-        String name = jwt.getClaimAsString("name");
-        return new GoogleIdentity(email.toLowerCase(), name != null ? name : email);
+        return new GoogleIdentity(email.toLowerCase(), cleanName(jwt.getClaimAsString("name"), email));
+    }
+
+    /**
+     * 구글 표시 이름에서 사람 이름만 남긴다.
+     *
+     * 한양대 계정은 "황재환 | 정보시스템학과 | 한양대(서울)"처럼 소속을 붙여 보내고,
+     * 앞에 보이지 않는 제어 문자가 섞여 오기도 한다. 그대로 두면 참가자 명단과
+     * 화면 곳곳에 소속까지 따라붙으므로 첫 구분자 앞까지만 취한다.
+     * (프론트의 cleanPersonName과 같은 규칙이다)
+     */
+    private static String cleanName(String raw, String fallback) {
+        if (raw == null || raw.isBlank()) return fallback;
+        String cleaned = raw.replaceAll("[­​-‏﻿]", "")
+                .split("[|/·,(]", 2)[0]
+                .trim();
+        return cleaned.isEmpty() ? fallback : cleaned;
     }
 
     public record GoogleIdentity(String email, String name) {

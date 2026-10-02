@@ -79,7 +79,10 @@ public class StorageService {
 
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create(uploadUrl))
+                    // Supabase는 예전 service_role 키(JWT)는 Authorization으로, 새 secret 키
+                    // (sb_secret_…)는 apikey 헤더로 받는다. 둘 다 보내 어느 키를 넣든 통하게 한다.
                     .header("Authorization", "Bearer " + properties.supabaseServiceKey())
+                    .header("apikey", properties.supabaseServiceKey())
                     .header("Content-Type", resolveContentType(file))
                     // 같은 슬롯에 다시 올리면 덮어쓴다
                     .header("x-upsert", "true")

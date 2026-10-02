@@ -8,3 +8,6 @@ application-local.yml
 
 # H2 파일 DB. 참가자 개인정보가 들어 있으므로 저장소에 올리지 않는다.
 data/
+
+# Cloud Run 배포용 환경변수 (비밀번호·키가 들어간다)
+.env.deploy.yaml

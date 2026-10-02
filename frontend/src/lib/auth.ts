@@ -70,6 +70,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           // 백엔드 토큰 만료 시각을 함께 들고 있다가 세션에서 노출한다
           token.accessTokenExpiresAt = Date.now() + data.expiresIn * 1000;
           token.userId = data.user.userId;
+          if (data.user.name) token.name = data.user.name;
           token.role = data.user.role;
           token.studentId = data.user.studentId;
           token.profileCompleted = data.user.profileCompleted;
@@ -100,6 +101,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             token.role = user.role;
             token.studentId = user.studentId;
             token.profileCompleted = user.profileCompleted;
+            // 구글이 주는 표시 이름은 "황재환 | 정보시스템학과 | 한양대(서울)"처럼 길다.
+            // 참가자가 프로필에 적은 이름이 있으면 화면에는 그쪽을 쓴다.
+            if (user.name) token.name = user.name;
             token.syncedAt = Date.now();
             token.authError = undefined;
           } else if (res.status === 401) {
@@ -122,6 +126,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
       if (session.user) {
         session.user.id = String(token.userId ?? "");
+        if (token.name) session.user.name = token.name as string;
         session.user.role = token.role as Role;
         session.user.studentId = token.studentId as string | null;
         session.user.profileCompleted = Boolean(token.profileCompleted);
