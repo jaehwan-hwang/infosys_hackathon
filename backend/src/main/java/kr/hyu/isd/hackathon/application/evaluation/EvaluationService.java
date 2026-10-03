@@ -119,8 +119,9 @@ public class EvaluationService {
     /**
      * 이 평가자가 이 팀을 평가할 자격이 있는지 검사한다.
      *
-     * 학생: 참가자 본인이어야 하고, 자기 팀은 평가할 수 없으며, 같은 트랙만 평가한다.
-     * 교수: Summit 트랙만 평가한다.
+     * 참가자: 팀에 소속돼 있어야 하고, 자기 팀만 아니면 트랙과 무관하게 평가할 수 있다.
+     *         (발표를 본 사람이 투표한다는 것이 전제다)
+     * 교수:   Summit 트랙만 평가한다.
      */
     private void validateEvaluatorEligibility(User evaluator, Team targetTeam,
                                               EvaluatorType evaluatorType, HackathonEvent event) {
@@ -137,15 +138,10 @@ public class EvaluationService {
             throw new HackathonException(ErrorCode.SELF_VOTE_FORBIDDEN);
         }
 
-        // 학생 투표는 자기가 속한 트랙 안에서만 이뤄진다.
-        Team myTeam = teamRepository
-                .findByEventIdAndMemberUserId(event.getId(), evaluator.getId())
-                .orElseThrow(() -> new HackathonException(ErrorCode.TEAM_NOT_FOUND,
-                        "참가 팀에 소속된 학생만 투표할 수 있습니다."));
-
-        if (myTeam.getTrack() != targetTeam.getTrack()) {
-            throw new HackathonException(ErrorCode.TRACK_MISMATCH,
-                    "본인이 참가한 트랙의 팀만 평가할 수 있습니다.");
+        // 참가자여야 한다. 트랙은 가리지 않는다 — 다른 트랙 발표도 보고 투표할 수 있다.
+        if (teamRepository.findByEventIdAndMemberUserId(event.getId(), evaluator.getId()).isEmpty()) {
+            throw new HackathonException(ErrorCode.TEAM_NOT_FOUND,
+                    "참가 팀에 소속된 학생만 투표할 수 있습니다.");
         }
     }
 
@@ -189,25 +185,28 @@ public class EvaluationService {
 
     /**
      * 평가 화면에 뿌릴 대상 목록.
-     * 학생은 자기 트랙의 다른 팀들만, 교수는 Summit 전체를 받는다.
+     *
+     * 참가자는 평가가 열린 모든 트랙의 팀을 받는다(자기 팀 제외). 교수는 Summit만 받는다.
+     * 운영진이 트랙별로 평가를 여닫으므로, 아직 발표하지 않은 트랙은 저절로 빠진다.
      */
     @Transactional(readOnly = true)
     public List<EvaluationTargetResponse> getTargets(Long userId, EvaluatorType evaluatorType) {
         HackathonEvent event = eventService.getActiveEvent();
 
-        Track track;
+        List<Track> tracks;
         Long myTeamId = null;
         if (evaluatorType == EvaluatorType.PROFESSOR) {
-            track = Track.SUMMIT;
+            tracks = List.of(Track.SUMMIT);
         } else {
             Team myTeam = teamRepository.findByEventIdAndMemberUserId(event.getId(), userId)
                     .orElseThrow(() -> new HackathonException(ErrorCode.TEAM_NOT_FOUND,
                             "참가 팀에 소속된 학생만 투표할 수 있습니다."));
-            track = myTeam.getTrack();
             myTeamId = myTeam.getId();
+            tracks = List.of(Track.values());
         }
 
-        if (!event.isVotingOpen(track)) {
+        List<Track> openTracks = tracks.stream().filter(event::isVotingOpen).toList();
+        if (openTracks.isEmpty()) {
             throw new HackathonException(ErrorCode.VOTING_CLOSED);
         }
 
@@ -218,7 +217,8 @@ public class EvaluationService {
                 .collect(java.util.stream.Collectors.toSet());
 
         final Long excludeTeamId = myTeamId;
-        return teamRepository.findByEventIdAndTrackWithMembers(event.getId(), track).stream()
+        return openTracks.stream()
+                .flatMap(t -> teamRepository.findByEventIdAndTrackWithMembers(event.getId(), t).stream())
                 // 자기 팀은 애초에 목록에서 뺀다
                 .filter(t -> excludeTeamId == null || !t.getId().equals(excludeTeamId))
                 .map(t -> toTarget(t, evaluatedTeamIds.contains(t.getId())))

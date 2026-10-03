@@ -68,7 +68,7 @@ export function EvaluationBoard({ evaluatorType }: { evaluatorType: EvaluatorTyp
           description={
             isProfessor
               ? "아직 Summit 트랙에 등록된 팀이 없습니다."
-              : "같은 트랙에 평가할 다른 팀이 아직 없습니다. 자신이 속한 팀은 평가 대상에서 제외됩니다."
+              : "지금 평가가 열린 팀이 없습니다. 발표가 끝난 트랙부터 운영진이 순서대로 엽니다."
           }
         />
       </Section>
@@ -85,7 +85,7 @@ export function EvaluationBoard({ evaluatorType }: { evaluatorType: EvaluatorTyp
       description={
         isProfessor
           ? "Summit 트랙 팀을 항목별로 채점합니다. 교수 평가는 최종 점수의 70%를 차지합니다."
-          : "발표를 본 팀을 항목별로 채점해 주세요. 자신이 속한 팀은 목록에 표시되지 않습니다."
+          : "발표를 본 팀을 항목별로 채점해 주세요. 트랙에 관계없이 평가가 열린 팀은 모두 투표할 수 있고, 자신이 속한 팀만 목록에서 빠집니다."
       }
     >
       <div className="mb-6 flex flex-wrap items-center gap-3">
@@ -117,6 +117,10 @@ export function EvaluationBoard({ evaluatorType }: { evaluatorType: EvaluatorTyp
                   <div className="flex items-start justify-between gap-2">
                     <span className="text-sm font-semibold">{target.teamName}</span>
                     {target.evaluated && <Badge tone="success">완료</Badge>}
+                  </div>
+                  {/* 여러 트랙이 한 목록에 섞이므로 어느 트랙 팀인지 보여준다 */}
+                  <div className="mt-1.5">
+                    <TrackBadge track={target.track} />
                   </div>
                   {target.projectName && (
                     <p className="mt-1 text-xs text-muted">{target.projectName}</p>
