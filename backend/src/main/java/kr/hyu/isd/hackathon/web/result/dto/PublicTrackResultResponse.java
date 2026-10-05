@@ -11,15 +11,17 @@ import java.util.List;
  * 않아야, 주소를 직접 쳐 보거나 응답을 열어 봐도 결과가 새지 않는다.
  *
  * @param awardCount 이 트랙이 시상하는 등수 (Spark 1등까지, Sprint·Summit 3등까지)
+ * @param formula    이 트랙에 적용된 산식. 점수를 공개하므로 계산 근거도 함께 밝힌다.
  */
 public record PublicTrackResultResponse(
         Track track,
         boolean published,
         int awardCount,
+        String formula,
         List<PublicTeamResultResponse> winners
 ) {
 
     public static PublicTrackResultResponse hidden(Track track) {
-        return new PublicTrackResultResponse(track, false, track.getAwardCount(), List.of());
+        return new PublicTrackResultResponse(track, false, track.getAwardCount(), null, List.of());
     }
 }

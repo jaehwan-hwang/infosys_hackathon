@@ -38,7 +38,7 @@ import java.util.Map;
  * 여기서는 평가자별 평균을 내고 트랙 가중치만 적용하면 된다.
  *
  * 참가자가 보는 리더보드는 트랙마다 따로 열리고(Spark는 1일차, Sprint·Summit은 2일차),
- * 열린 트랙도 시상 등수까지만 점수 없이 내려간다. 운영진 조회는 언제든 가능하다.
+ * 열린 트랙도 시상 등수까지만 내려간다. 운영진 조회는 언제든 가능하다.
  */
 @Service
 @RequiredArgsConstructor
@@ -62,7 +62,7 @@ public class ResultService {
      * 참가자가 보는 리더보드.
      *
      * 트랙 세 칸을 항상 내려주되, 공개하지 않은 트랙은 빈 칸으로 보낸다. 공개한 트랙도
-     * 시상 등수까지만, 점수 없이 보낸다 — 4등 이하는 자기 순위조차 알 수 없다.
+     * 시상 등수까지만 보낸다 — 4등 이하는 자기 순위도 점수도 알 수 없다.
      */
     @Transactional(readOnly = true)
     public List<PublicTrackResultResponse> getPublishedResults() {
@@ -74,15 +74,23 @@ public class ResultService {
                 .toList();
     }
 
-    /** 집계 결과에서 시상 등수까지만 남기고 점수를 뗀다. */
+    /**
+     * 집계 결과에서 시상 등수까지만 남긴다.
+     *
+     * 남은 팀의 점수는 그대로 공개한다. 떨어진 팀은 목록에서 빠지므로 점수도 함께 사라진다.
+     */
     private PublicTrackResultResponse toPublic(Track track, TrackResultResponse full) {
         List<PublicTeamResultResponse> winners = full.results().stream()
                 // 동점으로 공동 수상이 나오면 그 등수까지는 모두 올린다
                 .filter(r -> r.rank() <= track.getAwardCount())
                 .map(r -> new PublicTeamResultResponse(
-                        r.rank(), r.teamId(), r.teamName(), r.projectName(), r.awardName()))
+                        r.rank(), r.teamId(), r.teamName(), r.projectName(), r.awardName(),
+                        r.finalScore(), r.studentAverage(),
+                        // 교수 평가가 없는 트랙에서 0.00을 보여주면 0점을 받은 것처럼 읽힌다
+                        track == Track.SUMMIT ? r.professorAverage() : null))
                 .toList();
-        return new PublicTrackResultResponse(track, true, track.getAwardCount(), winners);
+        return new PublicTrackResultResponse(
+                track, true, track.getAwardCount(), full.formula(), winners);
     }
 
     /**

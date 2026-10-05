@@ -223,13 +223,20 @@ export interface TrackResult {
   results: TeamResult[];
 }
 
-/** 리더보드에 올라가는 수상 팀. 점수는 내려오지 않는다. */
+/**
+ * 리더보드에 올라가는 수상 팀.
+ * 시상 등수 밖 팀은 애초에 목록에 없으므로, 떨어진 팀의 점수는 내려오지 않는다.
+ */
 export interface PublicTeamResult {
   rank: number;
   teamId: number;
   teamName: string;
   projectName: string | null;
   awardName: string | null;
+  finalScore: number;
+  studentAverage: number;
+  /** 교수 평가가 있는 Summit에서만 값이 온다 */
+  professorAverage: number | null;
 }
 
 /** 리더보드의 트랙 한 칸. 공개 전에는 published=false에 winners가 비어 있다. */
@@ -238,6 +245,8 @@ export interface PublicTrackResult {
   published: boolean;
   /** 이 트랙이 시상하는 등수 (Spark 1, Sprint·Summit 3) */
   awardCount: number;
+  /** 적용된 산식. 공개 전에는 null이다. */
+  formula: string | null;
   winners: PublicTeamResult[];
 }
 

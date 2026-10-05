@@ -512,9 +512,12 @@ function Professors() {
                 </div>
               </>
             ) : (
-              <p className="font-display text-[22px] tracking-tight opacity-35 sm:text-[26px] lg:text-[34px]">
-                섭외 중
-              </p>
+              // 비어 있는 칸은 가운데에 안내만 둔다. 이름이 들어간 칸과 달리 읽을 것이 한 줄뿐이다.
+              <div className="flex h-full items-center justify-center py-6 text-center">
+                <p className="text-[14px] leading-relaxed opacity-45 lg:text-[16px]">
+                  심사 교수님은 추후 변동되거나 추가될 수 있습니다.
+                </p>
+              </div>
             )}
           </div>
         ))}
