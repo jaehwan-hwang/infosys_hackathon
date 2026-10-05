@@ -75,22 +75,29 @@ public class ResultService {
     }
 
     /**
-     * 집계 결과에서 시상 등수까지만 남긴다.
+     * 집계 결과를 공개용으로 바꾼다.
      *
-     * 남은 팀의 점수는 그대로 공개한다. 떨어진 팀은 목록에서 빠지므로 점수도 함께 사라진다.
+     * 등수는 전부 보여주되 점수는 수상 팀 것만 넘긴다. 수상 밖 팀의 점수까지 내려보내면
+     * 화면에서 가려도 응답을 열어 보면 그만이다.
      */
     private PublicTrackResultResponse toPublic(Track track, TrackResultResponse full) {
-        List<PublicTeamResultResponse> winners = full.results().stream()
-                // 동점으로 공동 수상이 나오면 그 등수까지는 모두 올린다
-                .filter(r -> r.rank() <= track.getAwardCount())
-                .map(r -> new PublicTeamResultResponse(
-                        r.rank(), r.teamId(), r.teamName(), r.projectName(), r.awardName(),
-                        r.finalScore(), r.studentAverage(),
-                        // 교수 평가가 없는 트랙에서 0.00을 보여주면 0점을 받은 것처럼 읽힌다
-                        track == Track.SUMMIT ? r.professorAverage() : null))
+        List<PublicTeamResultResponse> teams = full.results().stream()
+                .map(r -> {
+                    // 동점으로 공동 수상이 나오면 그 등수까지는 모두 수상으로 본다
+                    boolean awarded = r.rank() <= track.getAwardCount();
+                    return new PublicTeamResultResponse(
+                            r.rank(), r.teamId(), r.teamName(),
+                            awarded ? r.projectName() : null,
+                            r.awardName(),
+                            awarded,
+                            awarded ? r.finalScore() : null,
+                            awarded ? r.studentAverage() : null,
+                            // 교수 평가가 없는 트랙에서 0.00을 보여주면 0점을 받은 것처럼 읽힌다
+                            awarded && track == Track.SUMMIT ? r.professorAverage() : null);
+                })
                 .toList();
         return new PublicTrackResultResponse(
-                track, true, track.getAwardCount(), full.formula(), winners);
+                track, true, track.getAwardCount(), full.formula(), teams);
     }
 
     /**

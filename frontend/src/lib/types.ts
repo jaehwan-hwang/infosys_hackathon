@@ -224,8 +224,8 @@ export interface TrackResult {
 }
 
 /**
- * 리더보드에 올라가는 수상 팀.
- * 시상 등수 밖 팀은 애초에 목록에 없으므로, 떨어진 팀의 점수는 내려오지 않는다.
+ * 리더보드에 올라가는 팀.
+ * 등수는 전부 내려오지만 점수는 수상 팀 것만 온다.
  */
 export interface PublicTeamResult {
   rank: number;
@@ -233,9 +233,12 @@ export interface PublicTeamResult {
   teamName: string;
   projectName: string | null;
   awardName: string | null;
-  finalScore: number;
-  studentAverage: number;
-  /** 교수 평가가 있는 Summit에서만 값이 온다 */
+  /** 시상 등수 안에 든 팀인가 */
+  awarded: boolean;
+  /** 수상 팀만 값이 온다 */
+  finalScore: number | null;
+  studentAverage: number | null;
+  /** 교수 평가가 있는 Summit의 수상 팀만 값이 온다 */
   professorAverage: number | null;
 }
 
@@ -247,7 +250,7 @@ export interface PublicTrackResult {
   awardCount: number;
   /** 적용된 산식. 공개 전에는 null이다. */
   formula: string | null;
-  winners: PublicTeamResult[];
+  teams: PublicTeamResult[];
 }
 
 export interface Dashboard {

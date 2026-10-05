@@ -80,16 +80,20 @@ function TrackPanel({
               <br />
               {TRACK_LABEL[track.track]} 트랙 시상이 끝나면 여기에 수상 팀이 올라옵니다.
             </p>
-          ) : track.winners.length === 0 ? (
+          ) : track.teams.length === 0 ? (
             <p className="rounded-2xl border-2 border-current/15 px-6 py-7 text-center text-sm text-muted">
               이 트랙에는 집계된 팀이 없습니다.
             </p>
           ) : (
             <>
               <ul className="space-y-2.5">
-                {track.winners.map((winner) => (
-                  <li key={winner.teamId}>
-                    <WinnerRow winner={winner} track={track.track} />
+                {track.teams.map((team) => (
+                  <li key={team.teamId}>
+                    {team.awarded ? (
+                      <WinnerRow team={team} track={track.track} />
+                    ) : (
+                      <PlainRow team={team} />
+                    )}
                   </li>
                 ))}
               </ul>
@@ -126,7 +130,7 @@ function Chevron({ open }: { open: boolean }) {
   );
 }
 
-function WinnerRow({ winner, track }: { winner: PublicTeamResult; track: Track }) {
+function WinnerRow({ team: winner, track }: { team: PublicTeamResult; track: Track }) {
   const first = winner.rank === 1;
   // Summit만 교수 평가가 섞이므로, 최종 점수가 어떻게 나왔는지 내역을 함께 보여준다.
   // 교수 평가가 없는 트랙에서는 서버가 이 칸을 아예 빼고 내려보내므로 undefined도 걸러낸다.
@@ -175,6 +179,23 @@ function WinnerRow({ winner, track }: { winner: PublicTeamResult; track: Track }
           </p>
         )}
       </div>
+    </div>
+  );
+}
+
+/**
+ * 수상 밖 팀. 등수와 팀 이름만 적는다.
+ *
+ * 점수는 서버가 내려주지 않는다 — 몇 점 차로 못 받았는지까지 드러낼 이유가 없다.
+ * 수상 줄보다 눈에 덜 띄게 두어 시상 결과와 섞이지 않게 한다.
+ */
+function PlainRow({ team }: { team: PublicTeamResult }) {
+  return (
+    <div className="flex items-center gap-4 rounded-2xl border-2 border-current/10 px-5 py-3">
+      <span className="w-12 shrink-0 text-sm font-bold tabular-nums text-subtle">
+        {team.rank}등
+      </span>
+      <span className="min-w-0 font-bold">{team.teamName}</span>
     </div>
   );
 }
