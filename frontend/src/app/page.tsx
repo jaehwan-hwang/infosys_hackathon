@@ -50,7 +50,7 @@ const TRACKS = [
     metas: [
       { label: "필수 제출물", values: ["발표 자료"] },
       { label: "평가", values: ["해커톤 참가자 투표 100%"] },
-      { label: "제출 마감", values: ["11월 7일 1일차 19:00", "마감 후 자동 잠금"] },
+      { label: "제출 마감", values: ["11월 7일 1일차 18:00", "마감 후 자동 잠금"] },
     ],
     tags: ["아이디어톤", "개발 결과물 제출 금지"],
   },
@@ -97,7 +97,7 @@ const DAYS = [
   {
     title: "DAY 1",
     kicker: "SPARK 트랙",
-    lede: "Spark 트랙은 1일차에만 진행되는 별도 트랙입니다. 1일차 결과물은 Spark 트랙이 제출합니다.",
+    lede: "Spark 트랙은 1일차에만 진행되는 별도 트랙입니다. 1일차 결과물은 Spark 트랙만 제출합니다.",
     rows: dayRows("SPARK"),
   },
   {
@@ -108,12 +108,35 @@ const DAYS = [
   },
 ] as const;
 
-/** 실제 교수님 정보는 학생회에서 확정해야 하므로 대괄호 자리표시자로 둔다. */
+/**
+ * 심사위원. 세 번째 자리는 아직 섭외 중이라 비워 둔다.
+ * 전공 분야는 트랙 슬라이드의 태그와 같은 모양으로 늘어놓는다.
+ */
 const PROFESSORS = [
-  { name: "[교수님 성함]", field: "[전공 분야]", email: "[이메일]" },
-  { name: "[교수님 성함]", field: "[전공 분야]", email: "[이메일]" },
-  { name: "[교수님 성함]", field: "[전공 분야]", email: "[이메일]" },
-];
+  {
+    name: "이욱",
+    email: "ooklee@hanyang.ac.kr",
+    fields: [
+      "정보시스템관리",
+      "정보시스템과 정보기술분석",
+      "정치정보시스템",
+      "전자민주주의",
+      "해방이론과 정보기술",
+    ],
+  },
+  {
+    name: "김은찬",
+    email: "eckim@hanyang.ac.kr",
+    fields: [
+      "인공지능",
+      "데이터 인텔리전스",
+      "비즈니스 인텔리전스",
+      "지능형 시스템",
+      "다학제적 융합 연구",
+    ],
+  },
+  { name: null, email: null, fields: [] },
+] as const;
 
 const JOIN = {
   title: "어느 트랙에 참가해야 할까요",
@@ -464,31 +487,35 @@ function Professors() {
 
       <hr className="mt-[min(48px,4.5dvh)] h-0.5 border-0 bg-current opacity-20" />
 
-      {/* 네모 칸 세 개를 같은 간격·같은 높이로. 모바일은 캔버스처럼 사진 옆에 글을 둔 가로 카드. */}
-      <div className="mt-[min(44px,4dvh)] grid gap-3 sm:grid-cols-3 sm:gap-6 lg:gap-14">
+      {/* 네모 칸 세 개를 같은 간격·같은 높이로. 성함 → 이메일 → 전공 분야 태그 순. */}
+      <div className="mt-[min(44px,4dvh)] grid gap-3 sm:grid-cols-3 sm:gap-6 lg:gap-10">
         {PROFESSORS.map((p, i) => (
           <div
             key={i}
-            className="flex items-center gap-4 rounded-2xl border-2 border-current px-4 py-3.5 sm:flex-col sm:gap-0 sm:rounded-3xl sm:px-6 sm:py-[min(40px,4dvh)] sm:text-center lg:min-h-[min(360px,38dvh)] lg:justify-center"
+            className="rounded-2xl border-2 border-current px-5 py-4 sm:rounded-3xl sm:px-6 sm:py-[min(28px,3dvh)] lg:min-h-[min(360px,38dvh)]"
           >
-            <svg
-              viewBox="0 0 64 64"
-              role="img"
-              aria-label="사진 자리"
-              className="block size-14 shrink-0 rounded-full opacity-15 sm:size-[min(132px,13dvh)]"
-            >
-              <circle cx="32" cy="24" r="12" fill="currentColor" />
-              <path d="M8 62c0-13 11-22 24-22s24 9 24 22z" fill="currentColor" />
-            </svg>
-            <div>
-              <p className="font-display text-[20px] tracking-tight sm:mt-5 sm:text-[26px] lg:text-[34px]">
-                {p.name}
+            {p.name ? (
+              <>
+                <p className="font-display text-[22px] tracking-tight sm:text-[26px] lg:text-[34px]">
+                  {p.name}
+                </p>
+                <p className="mt-1 text-[13px] opacity-60 lg:text-[15px]">{p.email}</p>
+                <div className="mt-3 flex flex-wrap gap-1.5 sm:mt-5 sm:gap-2">
+                  {p.fields.map((field) => (
+                    <span
+                      key={field}
+                      className="rounded-full border-2 border-current/35 px-2.5 py-1 text-[11px] font-bold sm:px-3 sm:py-1.5 lg:text-[13px]"
+                    >
+                      {field}
+                    </span>
+                  ))}
+                </div>
+              </>
+            ) : (
+              <p className="font-display text-[22px] tracking-tight opacity-35 sm:text-[26px] lg:text-[34px]">
+                섭외 중
               </p>
-              <p className="mt-0.5 text-[13px] font-bold opacity-75 sm:mt-2.5 lg:text-base">
-                {p.field}
-              </p>
-              <p className="text-[13px] opacity-60 sm:mt-1 lg:text-base">{p.email}</p>
-            </div>
+            )}
           </div>
         ))}
       </div>
