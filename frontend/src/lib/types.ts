@@ -57,7 +57,7 @@ export interface HackathonEvent {
   registrationOpen: boolean;
   submissionOpen: Record<Track, boolean>;
   votingOpen: Record<Track, boolean>;
-  resultsPublished: boolean;
+  resultsPublished: Record<Track, boolean>;
   minTeamSize: number;
   maxTeamSize: number;
   maxUploadMb: number;
@@ -223,6 +223,24 @@ export interface TrackResult {
   results: TeamResult[];
 }
 
+/** 리더보드에 올라가는 수상 팀. 점수는 내려오지 않는다. */
+export interface PublicTeamResult {
+  rank: number;
+  teamId: number;
+  teamName: string;
+  projectName: string | null;
+  awardName: string | null;
+}
+
+/** 리더보드의 트랙 한 칸. 공개 전에는 published=false에 winners가 비어 있다. */
+export interface PublicTrackResult {
+  track: Track;
+  published: boolean;
+  /** 이 트랙이 시상하는 등수 (Spark 1, Sprint·Summit 3) */
+  awardCount: number;
+  winners: PublicTeamResult[];
+}
+
 export interface Dashboard {
   totalTeams: number;
   totalSubmissions: number;
@@ -231,7 +249,7 @@ export interface Dashboard {
   submissionsByTrack: Record<Track, number>;
   studentVotesByTrack: Record<Track, number>;
   professorVoteCount: number;
-  resultsPublished: boolean;
+  resultsPublished: Record<Track, boolean>;
   votingOpen: Record<Track, boolean>;
 }
 

@@ -70,7 +70,25 @@ public class HackathonEvent extends BaseTimeEntity {
     @Column(name = "summit_voting_open", nullable = false)
     private boolean summitVotingOpen;
 
-    /** 순위·점수 공개 여부. 시상식 전까지 false로 유지한다. */
+    /**
+     * 트랙별 리더보드 공개 여부. 시상식 전까지 false로 유지한다.
+     *
+     * Spark는 1일차에, Sprint와 Summit은 2일차에 시상하므로 한꺼번에 열 수 없다.
+     * 트랙마다 따로 연다.
+     */
+    @Column(name = "spark_results_published", nullable = false)
+    private boolean sparkResultsPublished;
+
+    @Column(name = "sprint_results_published", nullable = false)
+    private boolean sprintResultsPublished;
+
+    @Column(name = "summit_results_published", nullable = false)
+    private boolean summitResultsPublished;
+
+    /**
+     * 트랙별로 나누기 전에 쓰던 열. 지금은 아무것도 판단하지 않지만, 운영 DB에
+     * NOT NULL로 남아 있어 새 행사를 만들 때 값이 필요하다. 하나라도 공개되면 true로 둔다.
+     */
     @Column(name = "results_published", nullable = false)
     private boolean resultsPublished;
 
@@ -174,8 +192,22 @@ public class HackathonEvent extends BaseTimeEntity {
         this.summitVotingOpen = day == 2;
     }
 
-    public void setResultsPublished(boolean published) {
-        this.resultsPublished = published;
+    /** 지금 이 트랙의 리더보드가 공개됐는가 */
+    public boolean isResultsPublished(Track track) {
+        return switch (track) {
+            case SPARK -> sparkResultsPublished;
+            case SPRINT -> sprintResultsPublished;
+            case SUMMIT -> summitResultsPublished;
+        };
+    }
+
+    public void setResultsPublished(Track track, boolean published) {
+        switch (track) {
+            case SPARK -> this.sparkResultsPublished = published;
+            case SPRINT -> this.sprintResultsPublished = published;
+            case SUMMIT -> this.summitResultsPublished = published;
+        }
+        this.resultsPublished = sparkResultsPublished || sprintResultsPublished || summitResultsPublished;
     }
 
     public void deactivate() {

@@ -178,10 +178,10 @@ Cloud Run이라면 이미지를 올린 뒤 아래 환경변수를 넣습니다. 
 
 1. **행사 전** — 마감 시각·팀 인원 설정, 교수 계정에 `PROFESSOR` 권한 부여
 2. **제출 마감** — 별도 조작 불필요. 설정한 시각이 지나면 서버가 자동으로 잠급니다
-3. **발표 종료 직후** — 해당 트랙의 **평가 열기**
+3. **발표 종료 직후** — **1일차 / 2일차 평가 열기** (1일차는 Spark만, 2일차는 Sprint·Summit만 열리고 Spark는 닫힙니다). 트랙 하나만 따로 여닫으려면 트랙 카드의 **평가 열기**
 4. **평가 종료** — **평가 닫기**
 5. **집계 확인** — `집계` 탭에서 순위 확인 (참가자에게는 아직 비공개)
-6. **시상식** — **결과 공개하기**를 눌러 `/results`를 개방
+6. **시상식** — 시상하는 트랙의 **시상 공개**를 눌러 `/results` 리더보드에 올립니다. 트랙마다 따로 엽니다
 7. **행사 후** — `참가자 명단` / `제출 현황` / `최종 순위표` CSV 내보내기
 
 ---
@@ -235,6 +235,12 @@ Summit = 교수 평가 평균 × 0.4 + 학생 투표 평균 × 0.6
 
 동점 팀은 같은 순위를 받고 다음 순위를 건너뜁니다 (1, 2, 2, 4).
 
+### 리더보드
+
+참가자에게 보이는 `/results`에는 **시상 등수까지만, 점수 없이** 올라갑니다 — Spark는 1등, Sprint와 Summit은 3등까지입니다. 4등 이하는 응답 자체에 담기지 않으므로 자기 순위를 알 수 없습니다. 점수와 전체 순위는 운영진의 `집계` 탭에만 보입니다.
+
+공개는 트랙마다 따로 합니다. Spark는 1일차 시상 직후, Sprint와 Summit은 2일차에 엽니다. 열지 않은 트랙은 "시상 기간이 아닙니다"만 보입니다.
+
 ---
 
 ## 테스트
@@ -284,7 +290,7 @@ cd frontend && npm run type-check
 | `GET` | `/api/v1/event` | 공개 | 행사 정보·마감·개방 상태 |
 | `GET` | `/api/v1/event/criteria` | 공개 | 트랙별 평가 기준 |
 | `POST` | `/api/v1/teams/self-check` | 공개 | 자가진단 결과 |
-| `GET` | `/api/v1/results` | 공개 | 최종 순위 (공개 전 403) |
+| `GET` | `/api/v1/results` | 공개 | 리더보드. 공개한 트랙의 수상 등수까지만, 점수 없이 |
 | `POST` | `/api/v1/auth/google` | 공개 | Google ID 토큰 → 자체 토큰 |
 | `GET` | `/api/v1/auth/me` | 로그인 | 내 정보 |
 | `PUT` | `/api/v1/auth/me/profile` | 로그인 | 학번·성명 등록 |
@@ -298,5 +304,5 @@ cd frontend && npm run type-check
 | `POST` | `/api/v1/evaluations/professor` | 교수 | 교수 평가 |
 | `GET` | `/api/v1/admin/dashboard` | 운영진 | 현황 요약 |
 | `POST` | `/api/v1/admin/event/voting` | 운영진 | 평가 열기/닫기 |
-| `POST` | `/api/v1/admin/event/publish` | 운영진 | 결과 공개 |
+| `POST` | `/api/v1/admin/event/publish` | 운영진 | 트랙별 리더보드 공개 |
 | `GET` | `/api/v1/admin/export/{kind}` | 운영진 | CSV 내보내기 |

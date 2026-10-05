@@ -8,15 +8,17 @@ import { Button } from "./form";
 import { cx } from "./ui";
 
 /**
- * 상단 메뉴는 네 개로 끝낸다.
+ * 상단 메뉴.
  *
  * 트랙 자가진단은 랜딩 마지막 슬라이드에서만 들어가고, 거기서 팀 등록으로 이어진다.
  * 팀 등록·결과물 제출은 "팀" 한 곳에 모였고, 교수 평가는 "평가" 안에서 권한에 따라 갈린다.
+ * 리더보드는 평가 바로 옆에 둔다 — 투표하고 나서 결과를 찾는 흐름이 자연스럽다.
  */
 const NAV_ITEMS = [
   { href: "/", label: "홈" },
   { href: "/team", label: "팀" },
   { href: "/evaluate", label: "평가" },
+  { href: "/results", label: "리더보드" },
 ];
 
 export function SiteHeader() {

@@ -16,6 +16,7 @@ import type {
   TeamAdmin,
   TeamRegisterInput,
   Track,
+  PublicTrackResult,
   TrackResult,
   UploadResult,
   User,
@@ -142,9 +143,12 @@ export const publicApi = {
       body: payload,
     }),
 
-  /** 공개된 최종 결과. 시상식 전에는 403이 돌아온다. */
+  /**
+   * 리더보드. 로그인 없이 열리고, 공개하지 않은 트랙은 빈 칸으로 내려온다.
+   * 공개한 트랙도 시상 등수까지만, 점수 없이 온다.
+   */
   getResults: (signal?: AbortSignal) =>
-    request<TrackResult[]>("/api/v1/results", { signal }),
+    request<PublicTrackResult[]>("/api/v1/results", { signal }),
 };
 
 // ---- 인증 필요 API ----
@@ -271,11 +275,12 @@ export const api = {
         token,
       }),
 
-    publishResults: (token: string, published: boolean) =>
-      request<HackathonEvent>(`/api/v1/admin/event/publish?published=${published}`, {
-        method: "POST",
-        token,
-      }),
+    /** 트랙별 리더보드 공개. 시상 순서대로 하나씩 연다. */
+    publishResults: (token: string, track: Track, published: boolean) =>
+      request<HackathonEvent>(
+        `/api/v1/admin/event/publish?track=${track}&published=${published}`,
+        { method: "POST", token },
+      ),
 
     /** 팀 삭제. 제출물·받은 평가·수상도 함께 지워진다. */
     deleteTeam: (token: string, teamId: number) =>

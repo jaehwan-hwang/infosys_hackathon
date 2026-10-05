@@ -63,6 +63,7 @@ public class AdminService {
         Map<Track, Long> submissionsByTrack = new EnumMap<>(Track.class);
         Map<Track, Long> studentVotesByTrack = new EnumMap<>(Track.class);
         Map<Track, Boolean> votingOpen = new EnumMap<>(Track.class);
+        Map<Track, Boolean> resultsPublished = new EnumMap<>(Track.class);
 
         long totalParticipants = 0;
         for (Track track : Track.values()) {
@@ -78,6 +79,7 @@ public class AdminService {
             studentVotesByTrack.put(track, evaluationRepository
                     .countByEventIdAndTrackAndEvaluatorType(eventId, track, EvaluatorType.STUDENT));
             votingOpen.put(track, event.isVotingOpen(track));
+            resultsPublished.put(track, event.isResultsPublished(track));
         }
 
         long professorVotes = evaluationRepository.countByEventIdAndTrackAndEvaluatorType(
@@ -91,7 +93,7 @@ public class AdminService {
                 submissionsByTrack,
                 studentVotesByTrack,
                 professorVotes,
-                event.isResultsPublished(),
+                resultsPublished,
                 votingOpen
         );
     }
@@ -180,12 +182,12 @@ public class AdminService {
         return EventResponse.from(event, eventService.effectiveMaxUploadMb(event));
     }
 
-    /** 시상식에서 결과를 공개한다. */
+    /** 시상식에서 트랙 하나의 리더보드를 공개한다. */
     @Transactional
-    public EventResponse publishResults(boolean published) {
+    public EventResponse publishResults(Track track, boolean published) {
         HackathonEvent event = eventService.getActiveEvent();
-        event.setResultsPublished(published);
-        log.info("결과 공개 상태 변경: {}", published);
+        event.setResultsPublished(track, published);
+        log.info("리더보드 공개 상태 변경: track={}, published={}", track, published);
         return EventResponse.from(event, eventService.effectiveMaxUploadMb(event));
     }
 

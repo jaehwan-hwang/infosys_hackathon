@@ -86,9 +86,9 @@ function Overview({
     return api.admin.openVotingForDay(token, day);
   });
 
-  const publishMutation = useApiMutation(async (published: boolean) => {
+  const publishMutation = useApiMutation(async (track: Track, published: boolean) => {
     if (!token) throw new Error("no token");
-    return api.admin.publishResults(token, published);
+    return api.admin.publishResults(token, track, published);
   });
 
   if (dashboard.loading) return <Spinner />;
@@ -175,7 +175,7 @@ function Overview({
                 </div>
               </dl>
 
-              <div className="mt-4 border-t-2 border-current/10 pt-3">
+              <div className="mt-4 space-y-2 border-t-2 border-current/10 pt-3">
                 <div className="flex items-center justify-between gap-2">
                   <span className="text-sm text-muted">평가</span>
                   <Button
@@ -190,6 +190,21 @@ function Overview({
                     {data.votingOpen[track] ? "평가 닫기" : "평가 열기"}
                   </Button>
                 </div>
+
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-sm text-muted">리더보드</span>
+                  <Button
+                    size="sm"
+                    variant={data.resultsPublished[track] ? "danger" : "primary"}
+                    loading={publishMutation.pending}
+                    onClick={async () => {
+                      await publishMutation.run(track, !data.resultsPublished[track]);
+                      dashboard.reload();
+                    }}
+                  >
+                    {data.resultsPublished[track] ? "다시 비공개" : "시상 공개"}
+                  </Button>
+                </div>
               </div>
             </Card>
           ))}
@@ -197,30 +212,21 @@ function Overview({
       </div>
 
       <Card>
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <div>
-            <h2 className="text-base font-bold">결과 공개</h2>
-            <p className="mt-1 text-sm text-muted">
-              공개하면 참가자들이 <code>/results</code>에서 순위를 볼 수 있습니다. 시상식
-              발표 직전에 켜주세요.
-            </p>
+        <h2 className="text-base font-bold">리더보드 공개</h2>
+        <p className="mt-1 text-sm leading-relaxed text-muted">
+          트랙별 <strong>시상 공개</strong>를 누르면 그 트랙의 수상 팀이{" "}
+          <code>/results</code>에 올라갑니다. 시상 순서대로 하나씩 눌러 주세요 — Spark는
+          1일차, Sprint와 Summit은 2일차입니다. 참가자에게는 <strong>등수와 팀 이름만</strong>{" "}
+          보이고 점수는 공개되지 않습니다. 수상 등수는 Spark 1등, Sprint·Summit 3등까지입니다.
+        </p>
+        <p className="mt-2 text-sm text-muted">
+          팀에 &ldquo;대상&rdquo; 같은 수상명을 붙이려면 집계 탭에서 확인한 뒤 등록하세요.
+        </p>
+        {publishMutation.error && (
+          <div className="mt-3">
+            <Alert tone="error">{publishMutation.error.message}</Alert>
           </div>
-          <div className="flex items-center gap-3">
-            <Badge tone={data.resultsPublished ? "success" : "neutral"}>
-              {data.resultsPublished ? "공개됨" : "비공개"}
-            </Badge>
-            <Button
-              variant={data.resultsPublished ? "danger" : "primary"}
-              loading={publishMutation.pending}
-              onClick={async () => {
-                await publishMutation.run(!data.resultsPublished);
-                dashboard.reload();
-              }}
-            >
-              {data.resultsPublished ? "다시 비공개로" : "결과 공개하기"}
-            </Button>
-          </div>
-        </div>
+        )}
       </Card>
 
       <ExportPanel />

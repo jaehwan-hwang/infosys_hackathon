@@ -20,7 +20,7 @@ public record DashboardResponse(
         Map<Track, Long> submissionsByTrack,
         Map<Track, Long> studentVotesByTrack,
         long professorVoteCount,
-        boolean resultsPublished,
+        Map<Track, Boolean> resultsPublished,
         Map<Track, Boolean> votingOpen
 ) {
 }

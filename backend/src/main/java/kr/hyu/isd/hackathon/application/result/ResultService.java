@@ -1,8 +1,6 @@
 package kr.hyu.isd.hackathon.application.result;
 
 import kr.hyu.isd.hackathon.application.event.EventService;
-import kr.hyu.isd.hackathon.common.exception.ErrorCode;
-import kr.hyu.isd.hackathon.common.exception.HackathonException;
 import kr.hyu.isd.hackathon.domain.evaluation.Award;
 import kr.hyu.isd.hackathon.domain.evaluation.EvaluatorType;
 import kr.hyu.isd.hackathon.domain.event.HackathonEvent;
@@ -13,6 +11,8 @@ import kr.hyu.isd.hackathon.infrastructure.persistence.AwardRepository;
 import kr.hyu.isd.hackathon.infrastructure.persistence.EvaluationRepository;
 import kr.hyu.isd.hackathon.infrastructure.persistence.SubmissionRepository;
 import kr.hyu.isd.hackathon.infrastructure.persistence.TeamRepository;
+import kr.hyu.isd.hackathon.web.result.dto.PublicTeamResultResponse;
+import kr.hyu.isd.hackathon.web.result.dto.PublicTrackResultResponse;
 import kr.hyu.isd.hackathon.web.result.dto.TeamResultResponse;
 import kr.hyu.isd.hackathon.web.result.dto.TrackResultResponse;
 import lombok.RequiredArgsConstructor;
@@ -37,8 +37,8 @@ import java.util.Map;
  * 점수는 평가 제출 시점에 이미 100점 만점으로 가중 환산되어 저장되므로,
  * 여기서는 평가자별 평균을 내고 트랙 가중치만 적용하면 된다.
  *
- * 참가자에게 노출되는 경로는 event.resultsPublished가 true여야 열리고,
- * 운영진 조회는 언제든 가능하다(시상 전 내부 확인용).
+ * 참가자가 보는 리더보드는 트랙마다 따로 열리고(Spark는 1일차, Sprint·Summit은 2일차),
+ * 열린 트랙도 시상 등수까지만 점수 없이 내려간다. 운영진 조회는 언제든 가능하다.
  */
 @Service
 @RequiredArgsConstructor
@@ -59,15 +59,30 @@ public class ResultService {
     private static final int SCALE = 2;
 
     /**
-     * 참가자에게 공개하는 결과. 시상식 전에는 막혀 있다.
+     * 참가자가 보는 리더보드.
+     *
+     * 트랙 세 칸을 항상 내려주되, 공개하지 않은 트랙은 빈 칸으로 보낸다. 공개한 트랙도
+     * 시상 등수까지만, 점수 없이 보낸다 — 4등 이하는 자기 순위조차 알 수 없다.
      */
     @Transactional(readOnly = true)
-    public List<TrackResultResponse> getPublishedResults() {
+    public List<PublicTrackResultResponse> getPublishedResults() {
         HackathonEvent event = eventService.getActiveEvent();
-        if (!event.isResultsPublished()) {
-            throw new HackathonException(ErrorCode.RESULTS_NOT_PUBLISHED);
-        }
-        return aggregateAll(event);
+        return List.of(Track.values()).stream()
+                .map(track -> event.isResultsPublished(track)
+                        ? toPublic(track, aggregate(event, track))
+                        : PublicTrackResultResponse.hidden(track))
+                .toList();
+    }
+
+    /** 집계 결과에서 시상 등수까지만 남기고 점수를 뗀다. */
+    private PublicTrackResultResponse toPublic(Track track, TrackResultResponse full) {
+        List<PublicTeamResultResponse> winners = full.results().stream()
+                // 동점으로 공동 수상이 나오면 그 등수까지는 모두 올린다
+                .filter(r -> r.rank() <= track.getAwardCount())
+                .map(r -> new PublicTeamResultResponse(
+                        r.rank(), r.teamId(), r.teamName(), r.projectName(), r.awardName()))
+                .toList();
+        return new PublicTrackResultResponse(track, true, track.getAwardCount(), winners);
     }
 
     /**

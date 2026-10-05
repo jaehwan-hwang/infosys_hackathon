@@ -1,155 +1,149 @@
 import type { Metadata } from "next";
 import { ApiError, publicApi } from "@/lib/api";
-import { formatScore, rankLabel } from "@/lib/format";
-import { TRACK_LABEL } from "@/lib/track-rules";
-import type { TrackResult } from "@/lib/types";
-import {
-  Alert,
-  Card,
-  EmptyState,
-  Section,
-  TrackBadge,
-  cx,
-  trackStyle,
-} from "@/components/ui";
+import { TRACK_LABEL, TRACK_TAGLINE } from "@/lib/track-rules";
+import type { PublicTeamResult, PublicTrackResult, Track } from "@/lib/types";
+import { Alert, Card, Section, TrackBadge, cx, trackStyle } from "@/components/ui";
 
-export const metadata: Metadata = { title: "결과" };
+export const metadata: Metadata = { title: "리더보드" };
 
 // 공개 시점이 운영진 토글에 달려 있어 캐시하지 않는다.
 export const dynamic = "force-dynamic";
 
+/**
+ * 리더보드.
+ *
+ * 점수는 보여주지 않는다. 등수와 팀 이름만 올린다 — 점수를 공개하면 "몇 점 차로
+ * 졌다"가 드러나고, 시상 밖 팀의 순위까지 드러난다. 서버도 시상 등수까지만 내려준다.
+ *
+ * 트랙마다 따로 열린다. Spark는 1일차 시상 직후, Sprint와 Summit은 2일차에 열린다.
+ * 아직 열지 않은 트랙은 "시상 기간이 아닙니다"만 보인다.
+ */
 export default async function ResultsPage() {
-  let results: TrackResult[] | null = null;
-  let notPublished = false;
+  let tracks: PublicTrackResult[] = [];
   let error: string | null = null;
 
   try {
-    results = await publicApi.getResults();
+    tracks = await publicApi.getResults();
   } catch (e) {
-    if (e instanceof ApiError && e.status === 403) {
-      notPublished = true;
-    } else {
-      error = e instanceof ApiError ? e.message : "결과를 불러오지 못했습니다.";
-    }
-  }
-
-  if (notPublished) {
-    return (
-      <Section title="결과">
-        <EmptyState
-          title="아직 결과가 공개되지 않았습니다"
-          description="순위와 점수는 시상식 발표 시점에 공개됩니다. 그때 이 페이지에서 확인할 수 있습니다."
-        />
-      </Section>
-    );
+    error = e instanceof ApiError ? e.message : "리더보드를 불러오지 못했습니다.";
   }
 
   if (error) {
     return (
-      <Section title="결과">
+      <Section title="리더보드">
         <Alert tone="error">{error}</Alert>
       </Section>
     );
   }
 
+  const openCount = tracks.filter((t) => t.published).length;
+
   return (
     <Section
-      eyebrow="Results"
-      title="최종 결과"
-      description="트랙별 최종 순위입니다. 각 트랙에 적용된 산식을 함께 표기했습니다."
+      eyebrow="Leaderboard"
+      title="리더보드"
+      description={
+        openCount === 0
+          ? "시상이 끝난 트랙부터 순서대로 공개됩니다. Spark는 1일차, Sprint와 Summit은 2일차에 열립니다."
+          : "트랙별 수상 팀입니다. 점수는 공개하지 않습니다."
+      }
     >
-      <div className="space-y-12">
-        {(results ?? []).map((track) => (
-          <TrackResults key={track.track} track={track} />
+      <div className="space-y-10">
+        {tracks.map((track) => (
+          <TrackBoard key={track.track} track={track} />
         ))}
       </div>
     </Section>
   );
 }
 
-function TrackResults({ track }: { track: TrackResult }) {
-  const style = trackStyle(track.track);
-
-  if (track.results.length === 0) return null;
-
-  const [winner, ...rest] = track.results;
-
+function TrackBoard({ track }: { track: PublicTrackResult }) {
   return (
     <section>
       <div className="flex flex-wrap items-center gap-3">
         <TrackBadge track={track.track} />
-        <h2 className="text-xl font-bold">{TRACK_LABEL[track.track]}</h2>
-        <span className="text-xs text-subtle">{track.formula}</span>
+        <h2 className="font-display text-2xl tracking-tight">
+          {TRACK_LABEL[track.track]}
+        </h2>
+        <span className="text-xs text-subtle">
+          {TRACK_TAGLINE[track.track]} · {track.awardCount}등까지 시상
+        </span>
       </div>
 
-      {/* 1위는 크게 강조한다 */}
-      <Card className={cx("mt-4 ring-2", style.ring)}>
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div>
-            <p className="text-3xl">{rankLabel(winner.rank)}</p>
-            <h3 className="mt-2 text-2xl font-black">{winner.teamName}</h3>
-            {winner.projectName && (
-              <p className="mt-1 text-muted">{winner.projectName}</p>
-            )}
-            {winner.awardName && (
-              <p className={cx("mt-3 text-sm font-bold", style.accent)}>
-                {winner.awardName}
-              </p>
-            )}
-          </div>
-          <div className="text-right">
-            <p className="text-xs uppercase tracking-wider text-subtle">최종 점수</p>
-            <p className="text-3xl font-black tabular-nums">
-              {formatScore(winner.finalScore)}
-            </p>
-          </div>
-        </div>
-      </Card>
-
-      {rest.length > 0 && (
-        <div className="mt-4 overflow-x-auto">
-          <table className="w-full min-w-[520px] border-collapse text-sm">
-            <caption className="sr-only">
-              {TRACK_LABEL[track.track]} 트랙 전체 순위
-            </caption>
-            <thead>
-              <tr className="border-b-2 border-current/25 text-left">
-                <th scope="col" className="py-2.5 pr-3 font-semibold">
-                  순위
-                </th>
-                <th scope="col" className="py-2.5 pr-3 font-semibold">
-                  팀
-                </th>
-                <th scope="col" className="py-2.5 pr-3 font-semibold">
-                  수상
-                </th>
-                <th scope="col" className="py-2.5 text-right font-semibold">
-                  최종 점수
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {rest.map((r) => (
-                <tr key={r.teamId} className="border-b border-current/10">
-                  <td className="py-3 pr-3 font-bold tabular-nums">
-                    {rankLabel(r.rank)}
-                  </td>
-                  <td className="py-3 pr-3">
-                    <span className="font-medium">{r.teamName}</span>
-                    {r.projectName && (
-                      <span className="ml-2 text-xs text-muted">{r.projectName}</span>
-                    )}
-                  </td>
-                  <td className="py-3 pr-3 text-sm text-muted">{r.awardName ?? "–"}</td>
-                  <td className="py-3 text-right font-semibold tabular-nums">
-                    {formatScore(r.finalScore)}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+      {!track.published ? (
+        <Card className="mt-4">
+          <p className="font-bold">시상 기간이 아닙니다</p>
+          <p className="mt-1.5 text-sm leading-relaxed text-muted">
+            {TRACK_LABEL[track.track]} 트랙 시상이 끝나면 이 자리에 수상 팀이 올라옵니다.
+          </p>
+        </Card>
+      ) : track.winners.length === 0 ? (
+        <Card className="mt-4">
+          <p className="font-bold">수상 팀이 없습니다</p>
+          <p className="mt-1.5 text-sm text-muted">
+            이 트랙에는 집계된 팀이 없습니다.
+          </p>
+        </Card>
+      ) : (
+        <ul className="mt-4 space-y-3">
+          {track.winners.map((winner) => (
+            <li key={winner.teamId}>
+              <WinnerCard winner={winner} track={track.track} />
+            </li>
+          ))}
+        </ul>
       )}
     </section>
+  );
+}
+
+function WinnerCard({ winner, track }: { winner: PublicTeamResult; track: Track }) {
+  const first = winner.rank === 1;
+
+  return (
+    <Card className={cx(first && trackStyle(track).ring)}>
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+        <MedalTag rank={winner.rank} />
+        <div className="min-w-0">
+          <p
+            className={cx(
+              "font-display tracking-tight",
+              first ? "text-2xl sm:text-3xl" : "text-xl",
+            )}
+          >
+            {winner.teamName}
+          </p>
+          {winner.projectName && (
+            <p className="mt-0.5 text-sm text-muted">{winner.projectName}</p>
+          )}
+        </div>
+        {winner.awardName && (
+          <span className="ml-auto rounded-full border-2 border-current/20 px-3 py-1 text-xs font-bold">
+            {winner.awardName}
+          </span>
+        )}
+      </div>
+    </Card>
+  );
+}
+
+/** 등수 메달. 1등만 파란 그라데이션으로 채우고 나머지는 선만 둔다. */
+const MEDALS: Record<number, string> = { 1: "🥇", 2: "🥈", 3: "🥉" };
+
+function MedalTag({ rank }: { rank: number }) {
+  const medal = MEDALS[rank] ?? "🏅";
+
+  return (
+    <span
+      className={cx(
+        "inline-flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-bold",
+        rank === 1 ? "bg-grad-brand text-white" : "border-2 border-current/20",
+      )}
+    >
+      <span aria-hidden="true" className="text-base leading-none">
+        {medal}
+      </span>
+      {rank}등
+    </span>
   );
 }

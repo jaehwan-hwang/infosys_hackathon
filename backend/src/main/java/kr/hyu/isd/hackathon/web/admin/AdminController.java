@@ -86,10 +86,11 @@ public class AdminController {
         return ApiResponse.success(adminService.openVotingForDay(day));
     }
 
-    /** 시상식에서 결과 공개 */
+    /** 시상식에서 트랙별 리더보드 공개 */
     @PostMapping("/event/publish")
-    public ApiResponse<EventResponse> publishResults(@RequestParam boolean published) {
-        return ApiResponse.success(adminService.publishResults(published));
+    public ApiResponse<EventResponse> publishResults(@RequestParam Track track,
+                                                     @RequestParam boolean published) {
+        return ApiResponse.success(adminService.publishResults(track, published));
     }
 
     // ---- 평가 항목 ----

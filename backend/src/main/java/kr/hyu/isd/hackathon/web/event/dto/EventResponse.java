@@ -26,7 +26,7 @@ public record EventResponse(
         boolean registrationOpen,
         Map<Track, Boolean> submissionOpen,
         Map<Track, Boolean> votingOpen,
-        boolean resultsPublished,
+        Map<Track, Boolean> resultsPublished,
         int minTeamSize,
         int maxTeamSize,
         int maxUploadMb,
@@ -66,7 +66,11 @@ public record EventResponse(
                         Track.SPRINT, event.isVotingOpen(Track.SPRINT),
                         Track.SUMMIT, event.isVotingOpen(Track.SUMMIT)
                 ),
-                event.isResultsPublished(),
+                Map.of(
+                        Track.SPARK, event.isResultsPublished(Track.SPARK),
+                        Track.SPRINT, event.isResultsPublished(Track.SPRINT),
+                        Track.SUMMIT, event.isResultsPublished(Track.SUMMIT)
+                ),
                 event.getMinTeamSize(),
                 event.getMaxTeamSize(),
                 effectiveMaxUploadMb,

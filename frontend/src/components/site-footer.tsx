@@ -28,7 +28,7 @@ export function SiteFooter() {
               평가
             </Link>
             <Link href="/results" className="text-muted hover:underline">
-              결과
+              리더보드
             </Link>
             <Link href="/privacy" className="text-muted hover:underline">
               개인정보 처리방침
