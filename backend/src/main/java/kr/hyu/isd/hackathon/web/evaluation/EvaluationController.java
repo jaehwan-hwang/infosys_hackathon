@@ -32,7 +32,7 @@ public class EvaluationController {
 
     // ---- 학생 투표 ----
 
-    /** 내가 평가할 팀 목록 (내 트랙, 자기 팀 제외) */
+    /** 내가 평가할 팀 목록 (평가가 열린 트랙 전부, 자기 팀 제외) */
     @GetMapping("/targets")
     public ApiResponse<List<EvaluationTargetResponse>> getStudentTargets(
             @CurrentUser AuthPrincipal principal) {
@@ -40,7 +40,7 @@ public class EvaluationController {
                 evaluationService.getTargets(principal.userId(), EvaluatorType.STUDENT));
     }
 
-    /** 학생 투표 제출. 같은 팀을 다시 내면 덮어쓴다. */
+    /** 학생 투표 제출. 한 팀당 한 번만 낼 수 있다. */
     @PostMapping
     public ApiResponse<EvaluationResponse> evaluateAsStudent(
             @CurrentUser AuthPrincipal principal,
