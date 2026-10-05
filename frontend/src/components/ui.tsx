@@ -7,6 +7,24 @@ export function cx(...parts: (string | false | null | undefined)[]): string {
   return parts.filter(Boolean).join(" ");
 }
 
+/**
+ * 하위 페이지의 생김새는 홈과 같은 규칙을 따른다.
+ *
+ *   - 바탕은 흰색, 글씨는 검정. 회색 면으로 영역을 나누지 않는다.
+ *   - 영역은 2px 선과 큰 모서리로 구분한다 (홈 교수 카드·태그와 같은 방식)
+ *   - 제목은 RiaSans Bold(font-display), 위에 자간 넓은 작은 영문 머리말
+ *   - 누르는 것은 전부 알약 모양. 강조는 홈의 파란 그라데이션 한 가지뿐이다.
+ *
+ * 흔한 카드 UI를 쓰면 다른 학과 행사 사이트와 구분이 되지 않는다는 지적이 있어,
+ * 색과 모양을 홈 디자인 쪽으로 모두 끌어왔다.
+ */
+
+/** 2px 선으로 둘러싼 면. 카드·입력·알약이 모두 같은 선 색을 쓴다. */
+export const HAIRLINE = "border-2 border-current/15";
+
+/** 강조 면 — 홈의 파란 그라데이션 */
+export const FILLED = "bg-grad-brand text-white";
+
 // ---- 레이아웃 ----
 
 export function Section({
@@ -16,6 +34,7 @@ export function Section({
   description,
   children,
   className,
+  nested = false,
 }: {
   id?: string;
   eyebrow?: string;
@@ -23,24 +42,45 @@ export function Section({
   description?: string;
   children: ReactNode;
   className?: string;
+  /** 다른 Section 안에 들어가는 묶음. 제목을 한 단 낮추고 바깥 여백을 뺀다. */
+  nested?: boolean;
 }) {
   return (
-    <section id={id} className={cx("mx-auto w-full max-w-5xl px-5 py-16 sm:py-20", className)}>
+    <section
+      id={id}
+      className={cx(
+        nested ? "w-full" : "mx-auto w-full max-w-5xl px-5 py-14 sm:py-20",
+        className,
+      )}
+    >
       {(eyebrow || title || description) && (
-        <header className="mb-10">
+        <header className={nested ? "mb-6" : "mb-10"}>
           {eyebrow && (
-            <p className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-brand-600">
+            <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-brand-600">
               {eyebrow}
             </p>
           )}
-          {title && (
-            <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">{title}</h2>
-          )}
+          {title &&
+            (nested ? (
+              <h3 className="font-display mt-2 text-[26px] leading-tight tracking-[-0.02em] sm:text-[32px]">
+                {title}
+              </h3>
+            ) : (
+              <h1 className="font-display mt-3 text-[clamp(2.1rem,8vw,3.5rem)] leading-[0.95] tracking-[-0.03em]">
+                {title}
+              </h1>
+            ))}
           {description && (
-            <p className="mt-3 max-w-2xl text-[15px] leading-relaxed text-muted">
+            <p
+              className={cx(
+                "max-w-2xl leading-relaxed text-muted",
+                nested ? "mt-2.5 text-sm" : "mt-4 text-[15px] sm:text-[17px]",
+              )}
+            >
               {description}
             </p>
           )}
+          {!nested && <hr className="mt-8 h-0.5 border-0 bg-current opacity-15" />}
         </header>
       )}
       {children}
@@ -58,7 +98,83 @@ export function Card({
   as?: "div" | "li" | "article";
 }) {
   return (
-    <Tag className={cx("surface rounded-xl p-5", className)}>{children}</Tag>
+    <Tag className={cx("rounded-2xl bg-[var(--bg)] p-5 sm:p-6", HAIRLINE, className)}>
+      {children}
+    </Tag>
+  );
+}
+
+// ---- 탭·필터 ----
+
+/**
+ * 알약 묶음. 탭과 필터가 같은 모양을 쓴다.
+ * 고른 칸만 파란 그라데이션으로 채우고, 나머지는 선만 둔다.
+ */
+export function PillTabs<T extends string>({
+  label,
+  items,
+  value,
+  onChange,
+  size = "md",
+}: {
+  label: string;
+  items: readonly { value: T; label: string }[];
+  value: T;
+  onChange: (value: T) => void;
+  size?: "sm" | "md";
+}) {
+  return (
+    <div role="tablist" aria-label={label} className="flex flex-wrap gap-2">
+      {items.map((item) => {
+        const active = item.value === value;
+        return (
+          <button
+            key={item.value}
+            role="tab"
+            type="button"
+            aria-selected={active}
+            onClick={() => onChange(item.value)}
+            className={cx(
+              "rounded-full font-bold transition-colors",
+              size === "sm" ? "h-9 px-4 text-[13px]" : "h-11 px-6 text-sm",
+              active ? FILLED : cx(HAIRLINE, "text-muted hover:text-[var(--text)]"),
+            )}
+          >
+            {item.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+/** 트랙 필터. "전체"를 포함한 네 칸으로, 팀 목록과 운영진 화면이 함께 쓴다. */
+export const TRACK_FILTER_ITEMS = [
+  { value: "ALL", label: "전체" },
+  { value: "SPARK", label: TRACK_LABEL.SPARK },
+  { value: "SPRINT", label: TRACK_LABEL.SPRINT },
+  { value: "SUMMIT", label: TRACK_LABEL.SUMMIT },
+] as const;
+
+export type TrackFilterValue = Track | "ALL";
+
+export function TrackFilter({
+  value,
+  onChange,
+  label = "트랙으로 걸러보기",
+}: {
+  value: TrackFilterValue;
+  onChange: (value: TrackFilterValue) => void;
+  label?: string;
+}) {
+  return (
+    <PillTabs<TrackFilterValue>
+      label={label}
+      items={TRACK_FILTER_ITEMS}
+      value={value}
+      onChange={onChange}
+      size="sm"
+    />
   );
 }
 
@@ -66,23 +182,23 @@ export function Card({
 
 /**
  * 트랙 표시는 파랑 한 계열 안에서 농도로만 구분한다.
- * 랜딩이 흰색·파란색 반전 단색 체계라, 트랙마다 다른 색을 쓰면 규칙이 무너진다.
+ * 홈이 흰색·파란색 반전 단색 체계라, 트랙마다 다른 색을 쓰면 규칙이 무너진다.
  */
 const TRACK_STYLES: Record<Track, { badge: string; accent: string; ring: string }> = {
   SPARK: {
-    badge: "bg-brand-50 text-brand-700 dark:bg-brand-950 dark:text-brand-200",
+    badge: "border-2 border-brand-500/40 text-brand-600 dark:text-brand-300",
     accent: "text-brand-500 dark:text-brand-300",
-    ring: "ring-brand-400/30",
+    ring: "ring-2 ring-brand-400/40",
   },
   SPRINT: {
-    badge: "bg-brand-100 text-brand-800 dark:bg-brand-900 dark:text-brand-100",
+    badge: "border-2 border-brand-600/50 text-brand-700 dark:text-brand-200",
     accent: "text-brand-600 dark:text-brand-300",
-    ring: "ring-brand-500/30",
+    ring: "ring-2 ring-brand-500/50",
   },
   SUMMIT: {
-    badge: "bg-brand-600 text-white dark:bg-brand-500 dark:text-white",
+    badge: "bg-grad-brand text-white",
     accent: "text-brand-700 dark:text-brand-200",
-    ring: "ring-brand-600/40",
+    ring: "ring-2 ring-brand-600/60",
   },
 };
 
@@ -102,14 +218,14 @@ export function TrackBadge({
   return (
     <span
       className={cx(
-        "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold",
+        "inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold",
         TRACK_STYLES[track].badge,
         className,
       )}
     >
       {TRACK_LABEL[track]}
       {showTagline && (
-        <span className="font-normal opacity-70">{TRACK_TAGLINE[track]}</span>
+        <span className="font-medium opacity-70">{TRACK_TAGLINE[track]}</span>
       )}
     </span>
   );
@@ -125,16 +241,16 @@ export function Badge({
   tone?: "neutral" | "success" | "warning" | "danger" | "info";
 }) {
   const tones = {
-    neutral: "bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300",
-    success: "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300",
-    warning: "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300",
-    danger: "bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300",
-    info: "bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300",
+    neutral: "border-2 border-current/20 text-muted",
+    success: "border-2 border-emerald-500/50 text-emerald-700 dark:text-emerald-300",
+    warning: "border-2 border-amber-500/50 text-amber-700 dark:text-amber-300",
+    danger: "border-2 border-red-500/50 text-red-700 dark:text-red-300",
+    info: "border-2 border-brand-500/40 text-brand-600 dark:text-brand-300",
   };
   return (
     <span
       className={cx(
-        "inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium",
+        "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold",
         tones[tone],
       )}
     >
@@ -154,21 +270,18 @@ export function Alert({
   children?: ReactNode;
 }) {
   const tones = {
-    error:
-      "border-red-200 bg-red-50 text-red-900 dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-200",
-    warning:
-      "border-amber-200 bg-amber-50 text-amber-900 dark:border-amber-900/50 dark:bg-amber-950/40 dark:text-amber-200",
-    info: "border-blue-200 bg-blue-50 text-blue-900 dark:border-blue-900/50 dark:bg-blue-950/40 dark:text-blue-200",
-    success:
-      "border-emerald-200 bg-emerald-50 text-emerald-900 dark:border-emerald-900/50 dark:bg-emerald-950/40 dark:text-emerald-200",
+    error: "border-red-500/40 text-red-800 dark:text-red-200",
+    warning: "border-amber-500/50 text-amber-800 dark:text-amber-200",
+    info: "border-brand-500/40 text-brand-700 dark:text-brand-200",
+    success: "border-emerald-500/50 text-emerald-800 dark:text-emerald-200",
   };
   return (
     <div
       role={tone === "error" ? "alert" : "status"}
-      className={cx("rounded-lg border px-4 py-3 text-sm", tones[tone])}
+      className={cx("rounded-2xl border-2 px-5 py-4 text-sm leading-relaxed", tones[tone])}
     >
-      {title && <p className="font-semibold">{title}</p>}
-      {children && <div className={title ? "mt-1" : undefined}>{children}</div>}
+      {title && <p className="font-bold">{title}</p>}
+      {children && <div className={title ? "mt-1.5" : undefined}>{children}</div>}
     </div>
   );
 }
@@ -183,12 +296,14 @@ export function EmptyState({
   action?: ReactNode;
 }) {
   return (
-    <div className="surface rounded-xl px-6 py-14 text-center">
-      <p className="font-semibold">{title}</p>
+    <div className={cx("rounded-2xl px-6 py-14 text-center", HAIRLINE)}>
+      <p className="font-display text-xl tracking-tight">{title}</p>
       {description && (
-        <p className="mx-auto mt-2 max-w-md text-sm text-muted">{description}</p>
+        <p className="mx-auto mt-2.5 max-w-md text-sm leading-relaxed text-muted">
+          {description}
+        </p>
       )}
-      {action && <div className="mt-5">{action}</div>}
+      {action && <div className="mt-6">{action}</div>}
     </div>
   );
 }
@@ -196,7 +311,7 @@ export function EmptyState({
 export function Spinner({ label = "불러오는 중" }: { label?: string }) {
   return (
     <div role="status" className="flex items-center justify-center gap-3 py-14">
-      <span className="size-4 animate-spin rounded-full border-2 border-brand-500 border-t-transparent" />
+      <span className="size-4 animate-spin rounded-full border-2 border-brand-600 border-t-transparent" />
       <span className="text-sm text-muted">{label}</span>
     </div>
   );

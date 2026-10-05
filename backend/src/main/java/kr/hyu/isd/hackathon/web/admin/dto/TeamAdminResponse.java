@@ -12,7 +12,6 @@ import java.util.List;
 public record TeamAdminResponse(
         Long teamId,
         String teamName,
-        String topic,
         Track track,
         String trackReason,
         String leaderName,

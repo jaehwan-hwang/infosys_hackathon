@@ -140,7 +140,7 @@ export const TRACK_GOAL: Record<Track, string> = {
 export const TRACK_EVALUATION: Record<Track, string> = {
   SPARK: "해커톤 참가자 투표 100%",
   SPRINT: "해커톤 참가자 투표 100%",
-  SUMMIT: "교수 평가 70% + 참가자 투표 30%",
+  SUMMIT: "교수 평가 40% + 참가자 투표 60%",
 };
 
 /**

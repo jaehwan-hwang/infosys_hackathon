@@ -2,7 +2,7 @@
 
 import type { InputHTMLAttributes, ReactNode, TextareaHTMLAttributes } from "react";
 import { useId } from "react";
-import { cx } from "./ui";
+import { FILLED, HAIRLINE, cx } from "./ui";
 
 // ---- 버튼 ----
 
@@ -13,19 +13,21 @@ type ButtonProps = {
   children: ReactNode;
 } & React.ButtonHTMLAttributes<HTMLButtonElement>;
 
+/**
+ * 버튼 모양은 홈과 같다 — 알약, 강조는 파란 그라데이션 한 가지뿐.
+ * 홈의 "자가진단 시작하기"(채운 알약)와 "팀 등록하기"(선만 있는 알약)가 그대로 1차·2차다.
+ */
 const BUTTON_VARIANTS = {
-  primary:
-    "bg-brand-600 text-white hover:bg-brand-700 disabled:bg-brand-300 dark:disabled:bg-brand-900",
-  secondary:
-    "border border-[var(--border-strong)] bg-[var(--bg)] hover:bg-[var(--bg-muted)]",
-  ghost: "hover:bg-[var(--bg-muted)]",
+  primary: `${FILLED} hover:opacity-90`,
+  secondary: `${HAIRLINE} bg-transparent hover:bg-current/5`,
+  ghost: "hover:bg-current/5",
   danger: "bg-red-600 text-white hover:bg-red-700",
 };
 
 const BUTTON_SIZES = {
-  sm: "h-8 px-3 text-xs",
-  md: "h-10 px-4 text-sm",
-  lg: "h-12 px-6 text-[15px]",
+  sm: "h-9 px-4 text-xs",
+  md: "h-11 px-6 text-sm",
+  lg: "h-13 px-8 text-[15px]",
 };
 
 export function Button({
@@ -43,8 +45,8 @@ export function Button({
       disabled={disabled || loading}
       aria-busy={loading || undefined}
       className={cx(
-        "inline-flex items-center justify-center gap-2 rounded-lg font-semibold transition-colors",
-        "disabled:cursor-not-allowed disabled:opacity-60",
+        "inline-flex items-center justify-center gap-2 rounded-full font-bold transition-opacity",
+        "disabled:cursor-not-allowed disabled:opacity-40",
         BUTTON_VARIANTS[variant],
         BUTTON_SIZES[size],
         className,
@@ -80,7 +82,7 @@ export function Field({ label, hint, error, required, children }: FieldProps) {
 
   return (
     <div>
-      <label htmlFor={id} className="block text-sm font-medium">
+      <label htmlFor={id} className="block text-sm font-bold">
         {label}
         {required && <span className="ml-1 text-brand-600">*</span>}
       </label>
@@ -100,9 +102,9 @@ export function Field({ label, hint, error, required, children }: FieldProps) {
 }
 
 const CONTROL_CLASS =
-  "w-full rounded-lg border border-[var(--border-strong)] bg-[var(--bg)] px-3 py-2 text-sm " +
-  "placeholder:text-[var(--text-subtle)] focus:border-brand-500 focus:outline-none " +
-  "focus:ring-2 focus:ring-brand-500/20 disabled:opacity-60";
+  `w-full rounded-xl ${HAIRLINE} bg-[var(--bg)] px-4 py-2.5 text-sm ` +
+  "placeholder:text-[var(--text-subtle)] focus:border-brand-600 focus:outline-none " +
+  "disabled:opacity-50";
 
 export function TextInput({
   invalid,
@@ -150,10 +152,10 @@ export function CheckCard({
   return (
     <label
       className={cx(
-        "flex cursor-pointer gap-3 rounded-xl border p-4 transition-colors",
+        "flex cursor-pointer gap-3 rounded-2xl border-2 p-4 transition-colors",
         checked
-          ? "border-brand-400 bg-brand-50 dark:bg-brand-950/30"
-          : "border-[var(--border)] hover:bg-[var(--bg-muted)]",
+          ? "border-brand-600 bg-brand-600/5"
+          : "border-current/15 hover:bg-current/5",
       )}
     >
       <input
@@ -163,7 +165,7 @@ export function CheckCard({
         className="mt-0.5 size-4 shrink-0 accent-brand-600"
       />
       <span>
-        <span className="block text-sm font-medium">{label}</span>
+        <span className="block text-sm font-bold">{label}</span>
         {description && (
           <span className="mt-0.5 block text-xs leading-relaxed text-muted">
             {description}
@@ -209,13 +211,13 @@ export function ScoreSelector({
             disabled={readOnly}
             onClick={() => onChange(score)}
             className={cx(
-              "h-10 min-w-10 rounded-lg border text-sm font-semibold transition-colors",
+              "h-11 min-w-11 rounded-full border-2 text-sm font-bold transition-colors",
               selected
-                ? "border-brand-600 bg-brand-600 text-white"
-                : "border-[var(--border-strong)]",
+                ? "border-transparent bg-grad-brand text-white"
+                : "border-current/15",
               readOnly
-                ? "cursor-default disabled:opacity-60"
-                : !selected && "hover:bg-[var(--bg-muted)]",
+                ? "cursor-default disabled:opacity-50"
+                : !selected && "hover:bg-current/5",
             )}
           >
             {score}

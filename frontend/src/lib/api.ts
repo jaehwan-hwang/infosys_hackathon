@@ -170,11 +170,7 @@ export const api = {
   registerTeam: (token: string, input: TeamRegisterInput) =>
     request<Team>("/api/v1/teams", { method: "POST", body: input, token }),
 
-  updateTeam: (
-    token: string,
-    teamId: number,
-    input: { name: string; topic?: string; description?: string },
-  ) =>
+  updateTeam: (token: string, teamId: number, input: { name: string }) =>
     request<Team>(`/api/v1/teams/${teamId}`, {
       method: "PUT",
       body: input,
@@ -265,6 +261,13 @@ export const api = {
       request<HackathonEvent>("/api/v1/admin/event/voting", {
         method: "POST",
         body: { track, open },
+        token,
+      }),
+
+    /** 일차별 평가 전환. 1일차는 Spark만, 2일차는 Sprint·Summit만 열린다. */
+    openVotingForDay: (token: string, day: 1 | 2) =>
+      request<HackathonEvent>(`/api/v1/admin/event/voting/day/${day}`, {
+        method: "POST",
         token,
       }),
 

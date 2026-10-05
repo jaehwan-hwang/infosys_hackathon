@@ -38,7 +38,7 @@ function LoginContent() {
   return (
     <div className="mx-auto flex w-full max-w-md flex-col justify-center px-5 py-20">
       <Card className="p-8">
-        <h1 className="text-xl font-bold">로그인</h1>
+        <h1 className="font-display text-2xl tracking-tight">로그인</h1>
         <p className="mt-2 text-sm leading-relaxed text-muted">
           한양대학교 Google 계정(@{ALLOWED_DOMAIN})으로 로그인합니다. 팀 등록, 결과물 제출,
           평가에 모두 같은 계정을 사용합니다.

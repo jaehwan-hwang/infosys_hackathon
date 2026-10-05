@@ -8,7 +8,7 @@ import java.math.BigDecimal;
  * 팀 하나의 집계 결과.
  *
  * Spark/Sprint는 학생 투표 평균이 그대로 최종 점수이고,
- * Summit은 교수 평균 70% + 학생 평균 30%로 합산한다.
+ * Summit은 교수 평균 40% + 학생 평균 60%로 합산한다.
  */
 public record TeamResultResponse(
         int rank,

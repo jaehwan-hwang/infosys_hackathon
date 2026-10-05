@@ -151,12 +151,13 @@ export function SubmissionPanel({
 
   return (
     <Section
+      nested
       eyebrow="Submission"
       title="결과물 제출"
       description="마감 전까지 몇 번이든 저장할 수 있습니다. 마지막으로 저장된 내용이 심사 대상이 됩니다."
     >
       {/* 상단 상태 바 */}
-      <Card className={cx("ring-1", style.ring)}>
+      <Card className={style.ring}>
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <div className="flex items-center gap-2">
@@ -330,7 +331,7 @@ export function SubmissionPanel({
               </p>
             )}
 
-            <ul className="mt-5 space-y-2 border-t border-[var(--border)] pt-4">
+            <ul className="mt-5 space-y-2 border-t-2 border-current/10 pt-4">
               {fields
                 .filter((f) => f.required)
                 .map((field) => {

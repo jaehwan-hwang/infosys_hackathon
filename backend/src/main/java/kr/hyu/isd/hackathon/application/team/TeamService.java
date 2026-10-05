@@ -89,8 +89,7 @@ public class TeamService {
         validateTeamSize(event, memberRequests.size() + 1);
         validateNoDuplicates(leader, memberRequests);
 
-        Team team = Team.create(event, request.name(), request.topic(), request.description(),
-                leader, request.appliedTrack(),
+        Team team = Team.create(event, request.name(), leader, request.appliedTrack(),
                 request.selfCheck() != null ? request.selfCheck().toDomain() : SelfCheck.empty());
 
         team.addMember(TeamMember.createLeader(team, leader,
@@ -163,7 +162,7 @@ public class TeamService {
             throw new HackathonException(ErrorCode.DUPLICATE_TEAM_NAME);
         }
 
-        team.updateInfo(request.name(), request.topic(), request.description());
+        team.rename(request.name());
         return TeamResponse.from(team);
     }
 

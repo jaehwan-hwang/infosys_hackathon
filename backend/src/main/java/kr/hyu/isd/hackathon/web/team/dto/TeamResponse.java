@@ -10,8 +10,6 @@ import java.util.List;
 public record TeamResponse(
         Long teamId,
         String name,
-        String topic,
-        String description,
         Track track,
         String trackReason,
         Long leaderId,
@@ -31,8 +29,6 @@ public record TeamResponse(
         return new TeamResponse(
                 team.getId(),
                 team.getName(),
-                team.getTopic(),
-                team.getDescription(),
                 team.getTrack(),
                 team.getTrackReason(),
                 team.getLeader().getId(),
@@ -56,8 +52,6 @@ public record TeamResponse(
         return new TeamResponse(
                 team.getId(),
                 team.getName(),
-                team.getTopic(),
-                team.getDescription(),
                 team.getTrack(),
                 null,
                 team.getLeader().getId(),

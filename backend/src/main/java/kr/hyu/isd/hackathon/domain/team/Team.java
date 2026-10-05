@@ -12,8 +12,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * 참가 팀. 등록 시 트랙 선택(Spark 또는 Sprint/Summit)과 자가진단을 함께 받고,
- * Sprint/Summit을 고른 팀의 최종 트랙은 SelfCheck가 서버에서 다시 계산한다.
+ * 참가 팀.
+ *
+ * 등록 때 받는 것은 팀명·트랙·팀원뿐이다. 주제와 소개는 받지 않는다 —
+ * 신청 단계에서 아직 정해지지 않은 내용을 적게 하면 신청이 무거워지고,
+ * 어차피 결과물 제출 단계에서 프로젝트명과 요약으로 다시 받기 때문이다.
  */
 @Entity
 @Getter
@@ -35,13 +38,6 @@ public class Team extends BaseTimeEntity {
     @Column(length = 60, nullable = false)
     private String name;
 
-    /** 팀이 다루는 주제 한 줄 소개 */
-    @Column(length = 200)
-    private String topic;
-
-    @Column(length = 1000)
-    private String description;
-
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "leader_id", nullable = false)
     private User leader;
@@ -61,12 +57,10 @@ public class Team extends BaseTimeEntity {
     @OneToMany(mappedBy = "team", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<TeamMember> members = new ArrayList<>();
 
-    private Team(HackathonEvent event, String name, String topic, String description,
+    private Team(HackathonEvent event, String name,
                  User leader, Track track, SelfCheck selfCheck, String trackReason) {
         this.event = event;
         this.name = name;
-        this.topic = topic;
-        this.description = description;
         this.leader = leader;
         this.track = track;
         this.selfCheck = selfCheck;
@@ -74,27 +68,21 @@ public class Team extends BaseTimeEntity {
     }
 
     /**
-     * 팀을 생성한다. Spark를 선택하면 자가진단과 무관하게 Spark로 확정되고,
-     * Sprint/Summit을 선택하면 자가진단 결과가 최종 트랙을 결정한다.
-     *
-     * @param appliedTrack 팀이 등록 폼에서 선택한 트랙 (SPARK 또는 SPRINT/SUMMIT 계열)
-     */
-    /**
      * 트랙은 참가자가 등록 폼에서 직접 고른다.
      * 자가진단은 어느 트랙이 맞는지 권해 주는 안내일 뿐이라, 고른 값을 그대로 쓴다.
      * 운영진이 보기에 필요한 자가진단 기록은 넘어온 값이 있으면 함께 저장한다.
+     *
+     * @param appliedTrack 팀이 등록 폼에서 고른 트랙. 비어 있으면 Spark로 둔다.
      */
-    public static Team create(HackathonEvent event, String name, String topic, String description,
+    public static Team create(HackathonEvent event, String name,
                               User leader, Track appliedTrack, SelfCheck selfCheck) {
         Track track = appliedTrack != null ? appliedTrack : Track.SPARK;
         SelfCheck check = selfCheck != null ? selfCheck : SelfCheck.empty();
-        return new Team(event, name, topic, description, leader, track, check, "참가자 직접 선택");
+        return new Team(event, name, leader, track, check, "참가자 직접 선택");
     }
 
-    public void updateInfo(String name, String topic, String description) {
+    public void rename(String name) {
         this.name = name;
-        this.topic = topic;
-        this.description = description;
     }
 
     /** 운영진이 배정 결과를 수동으로 정정할 때만 사용한다. */

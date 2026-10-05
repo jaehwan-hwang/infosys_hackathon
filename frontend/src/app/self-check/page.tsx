@@ -41,7 +41,7 @@ export default function SelfCheckPage() {
       title="트랙 자가진단"
       description="설문을 통해 Spark, Sprint, Summit 중 어느 트랙에 적합한지 알 수 있습니다."
     >
-      <div className="mx-auto max-w-2xl">
+      <div className="max-w-2xl">
         <fieldset>
           <legend className="text-base font-bold">1. 개발 경험</legend>
           <p className="mt-1.5 text-sm text-muted">
@@ -101,7 +101,7 @@ function ResultCard({ result }: { result: ReturnType<typeof evaluateSelfCheck> }
 
   return (
     <div className="mt-9">
-      <Card className={cx("ring-1", style.ring)}>
+      <Card className={style.ring}>
         <p className="text-xs font-semibold uppercase tracking-wider text-subtle">추천 트랙</p>
 
         <div className="mt-3 flex flex-wrap items-baseline gap-3">
@@ -113,7 +113,7 @@ function ResultCard({ result }: { result: ReturnType<typeof evaluateSelfCheck> }
 
         <p className="mt-3 text-sm leading-relaxed text-muted">{TRACK_GOAL[track]}</p>
 
-        <dl className="mt-5 space-y-3 border-t border-[var(--border)] pt-4 text-sm">
+        <dl className="mt-5 space-y-3 border-t-2 border-current/10 pt-4 text-sm">
           <div className="flex justify-between gap-3">
             <dt className="text-muted">판단 근거</dt>
             <dd className="text-right font-medium">
@@ -128,7 +128,7 @@ function ResultCard({ result }: { result: ReturnType<typeof evaluateSelfCheck> }
 
         <Link
           href={`/team?track=${track}`}
-          className="mt-6 inline-flex h-12 w-full items-center justify-center rounded-lg bg-brand-600 px-5 text-sm font-semibold text-white transition-colors hover:bg-brand-700"
+          className="bg-grad-brand mt-6 inline-flex h-13 w-full items-center justify-center rounded-full px-5 text-sm font-bold text-white transition-opacity hover:opacity-90"
         >
           이 트랙으로 팀 등록하기
         </Link>

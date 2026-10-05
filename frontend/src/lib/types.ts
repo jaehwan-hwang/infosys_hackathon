@@ -106,8 +106,6 @@ export interface TeamMember {
 export interface Team {
   teamId: number;
   name: string;
-  topic: string | null;
-  description: string | null;
   track: Track;
   trackReason: string | null;
   leaderId: number;
@@ -125,8 +123,6 @@ export interface TeamMemberInput {
 
 export interface TeamRegisterInput {
   name: string;
-  topic?: string;
-  description?: string;
   appliedTrack: Track;
   selfCheck: SelfCheckPayload;
   members: TeamMemberInput[];
@@ -180,7 +176,6 @@ export interface UploadResult {
 export interface EvaluationTarget {
   teamId: number;
   teamName: string;
-  topic: string | null;
   track: Track;
   projectName: string | null;
   summary: string | null;
@@ -243,7 +238,6 @@ export interface Dashboard {
 export interface TeamAdmin {
   teamId: number;
   teamName: string;
-  topic: string | null;
   track: Track;
   trackReason: string | null;
   leaderName: string;

@@ -32,7 +32,7 @@ import java.util.Map;
  * 기획서 6장의 산식을 그대로 구현한다.
  *   Spark  : 학생 투표 100%
  *   Sprint : 학생 투표 100%
- *   Summit : 교수 평가 70% + 학생 투표 30%
+ *   Summit : 교수 평가 40% + 학생 투표 60%
  *
  * 점수는 평가 제출 시점에 이미 100점 만점으로 가중 환산되어 저장되므로,
  * 여기서는 평가자별 평균을 내고 트랙 가중치만 적용하면 된다.
@@ -51,10 +51,10 @@ public class ResultService {
     private final EventService eventService;
 
     /** Summit 트랙의 교수 평가 가중치 */
-    private static final BigDecimal PROFESSOR_WEIGHT = new BigDecimal("0.7");
+    private static final BigDecimal PROFESSOR_WEIGHT = new BigDecimal("0.4");
 
     /** Summit 트랙의 학생 투표 가중치 */
-    private static final BigDecimal STUDENT_WEIGHT = new BigDecimal("0.3");
+    private static final BigDecimal STUDENT_WEIGHT = new BigDecimal("0.6");
 
     private static final int SCALE = 2;
 
@@ -155,8 +155,8 @@ public class ResultService {
     /**
      * 트랙별 최종 점수.
      *
-     * Summit에서 교수 평가가 아직 하나도 없으면 학생 투표만으로 70:30을 적용할 수 없다.
-     * 이 경우 학생 평균을 그대로 쓰는 대신 교수 몫을 0으로 두면 점수가 30%로 눌려
+     * Summit에서 교수 평가가 아직 하나도 없으면 학생 투표만으로 40:60을 적용할 수 없다.
+     * 이 경우 학생 평균을 그대로 쓰는 대신 교수 몫을 0으로 두면 점수가 60%로 눌려
      * 순위가 뒤집히므로, 존재하는 평가만으로 가중치를 재정규화한다.
      */
     private BigDecimal computeFinalScore(Track track, Aggregate agg) {
@@ -179,7 +179,7 @@ public class ResultService {
 
     private String formulaOf(Track track) {
         return track == Track.SUMMIT
-                ? "교수 평가 평균 × 0.7 + 참가자 투표 평균 × 0.3"
+                ? "교수 평가 평균 × 0.4 + 참가자 투표 평균 × 0.6"
                 : "참가자 투표 평균 × 1.0";
     }
 

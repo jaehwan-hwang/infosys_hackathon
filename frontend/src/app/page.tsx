@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { LandingNav } from "@/components/landing-nav";
 import { SlideFit } from "@/components/slide-fit";
+import { TrackJumpList } from "@/components/track-jump";
 import { cx } from "@/components/ui";
 
 /**
@@ -72,35 +73,38 @@ const TRACKS = [
     lede: "실제로 배포되어 접속 가능한 서비스를 만듭니다. 기술적 완성도와 아키텍처, 상용화 가능성까지 교수 심사위원이 함께 평가합니다.",
     metas: [
       { label: "필수 제출물", values: ["프로덕트", "소스코드", "발표 자료"] },
-      { label: "평가", values: ["교수 평가 70%", "참가자 투표 30%"] },
+      { label: "평가", values: ["교수 평가 40%", "참가자 투표 60%"] },
       { label: "제출 마감", values: ["11월 8일 2일차 18:00", "마감 직후 심사 시작"] },
     ],
     tags: ["해커톤", "교수 평가", "개발 완성도"],
   },
 ] as const;
 
-/** DAY 1·2 진행 순서는 같다. 트랙만 다르다. */
-const DAY_ROWS = [
+/**
+ * DAY 1·2 진행 순서는 같다. 그날 결과물을 내는 트랙만 다르므로,
+ * 제출 마감 줄에는 어느 트랙이 내는 마감인지 트랙 이름을 함께 적는다.
+ */
+const dayRows = (tracks: string) => [
   { time: "10:00", label: "시작", hi: false },
   { time: "13:00", label: "점심 식사", hi: false },
-  { time: "18:00", label: "결과물 제출 마감 및 저녁 식사", hi: true },
+  { time: "18:00", label: `${tracks} 결과물 제출 마감 및 저녁 식사`, hi: true },
   { time: "19:00", label: "발표 및 투표", hi: false },
   { time: "21:00", label: "시상", hi: true },
-  { time: "22:00", label: "해산", hi: false },
-] as const;
+  { time: "22:00", label: "마무리", hi: false },
+];
 
 const DAYS = [
   {
     title: "DAY 1",
     kicker: "SPARK 트랙",
-    lede: "Spark 트랙은 1일차에만 진행되는 별도 트랙입니다.",
-    rows: DAY_ROWS,
+    lede: "Spark 트랙은 1일차에만 진행되는 별도 트랙입니다. 1일차 결과물은 Spark 트랙이 제출합니다.",
+    rows: dayRows("SPARK"),
   },
   {
     title: "DAY 2",
     kicker: "SPRINT · SUMMIT 트랙",
-    lede: "Sprint와 Summit 트랙은 2일차 일정으로 진행됩니다.",
-    rows: DAY_ROWS,
+    lede: "Sprint와 Summit 트랙은 2일차 일정으로 진행됩니다. 2일차 결과물은 두 트랙이 함께 제출합니다.",
+    rows: dayRows("SPRINT · SUMMIT"),
   },
 ] as const;
 
@@ -169,11 +173,14 @@ const HERO_PAD_TOP = "pt-[max(16.56vw,13.57dvh)]";
 function Slide({
   id,
   nav,
+  slide,
   inverted,
   children,
 }: {
   id?: string;
   nav: string;
+  /** Three Tracks 목록에서 눌러 넘어올 수 있게 붙이는 표식 */
+  slide?: string;
   inverted: boolean;
   children: React.ReactNode;
 }) {
@@ -181,6 +188,7 @@ function Slide({
     <section
       id={id}
       data-nav={nav}
+      data-slide={slide}
       className={cx(
         SLIDE_FRAME,
         // 디자인 파일의 두 색: 흰 바탕 + 검정 글씨 ↔ 파란 그라데이션 + 흰 글씨
@@ -319,20 +327,7 @@ function ThreeTracks() {
 
       <hr className="mt-[min(70px,6dvh)] h-0.5 border-0 bg-current opacity-20" />
 
-      <div className="mt-[min(36px,4dvh)] grid gap-5 sm:grid-cols-3 sm:gap-8 lg:gap-14">
-        {TRACKS_INTRO.items.map((t) => (
-          <div key={t.name}>
-            <p className="text-[12px] font-bold tracking-[0.2em] opacity-45 lg:text-[15px]">
-              {t.num}
-            </p>
-            {/* sm 3단 칸 폭에서 6글자(SPRINT)가 넘치지 않는 크기. RiaSans 6글자 폭 = 5.747 × 글자크기 */}
-            <p className="font-display mt-1 text-[34px] tracking-tight sm:mt-2 sm:text-[clamp(1.5rem,min(3.4vw,6dvh),2.875rem)]">
-              {t.name}
-            </p>
-            <p className="mt-0.5 text-[15px] opacity-65 sm:mt-1 lg:text-[17px]">{t.sub}</p>
-          </div>
-        ))}
-      </div>
+      <TrackJumpList items={TRACKS_INTRO.items} />
     </Slide>
   );
 }
@@ -345,7 +340,7 @@ function TrackSlide({
   inverted: boolean;
 }) {
   return (
-    <Slide nav="tracks" inverted={inverted}>
+    <Slide nav="tracks" slide={track.name} inverted={inverted}>
       <div className="flex items-center gap-6">
         <p className="text-[13px] font-bold tracking-[0.2em] opacity-55 lg:text-[15px]">
           {track.num}
@@ -522,6 +517,11 @@ function Join() {
         </h2>
         <p className="mt-[min(28px,3dvh)] max-w-[660px] text-[15px] leading-[1.6] opacity-80 sm:text-[21px] sm:leading-[1.65]">
           {JOIN.lede}
+        </p>
+
+        <p className="mt-[min(18px,2dvh)] max-w-[660px] text-[13px] leading-[1.6] opacity-70 sm:text-[16px]">
+          신청은 조장 한 명만 하면 됩니다. 팀원은 따로 신청하지 않고, 조장이 적어 넣은 한양대학교
+          이메일로 로그인만 하면 자동으로 팀에 연결됩니다.
         </p>
 
         <div className="mt-[min(36px,3.5dvh)] flex flex-col gap-2.5 sm:flex-row sm:gap-3.5">

@@ -121,7 +121,7 @@ function ProfileForm() {
   return (
     <div className="mx-auto max-w-md px-5 py-16">
       <Card className="p-7">
-        <h1 className="text-lg font-bold">프로필 등록</h1>
+        <h1 className="font-display text-2xl tracking-tight">프로필 등록</h1>
         <p className="mt-2 text-sm leading-relaxed text-muted">
           처음 로그인하셨네요. 참가자 명단 작성을 위해 성명과 학번을 한 번만 입력해 주세요.
         </p>

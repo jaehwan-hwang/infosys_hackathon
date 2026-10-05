@@ -10,11 +10,11 @@ export function SiteFooter() {
   if (pathname === "/") return null;
 
   return (
-    <footer className="border-t border-[var(--border)] bg-[var(--bg-subtle)]">
+    <footer className="border-t-2 border-current/15">
       <div className="mx-auto w-full max-w-6xl px-5 py-10">
         <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <p className="font-semibold">정보시스템학과 해커톤</p>
+            <p className="font-display text-xl tracking-tight">정보시스템학과 해커톤</p>
             <p className="mt-1 text-sm text-muted">
               한양대학교 정보시스템학과 학생회 주최
             </p>

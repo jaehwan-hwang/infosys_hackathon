@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Button, CheckCard, Field, TextArea, TextInput } from "@/components/form";
+import { Button, CheckCard, Field, TextInput } from "@/components/form";
 import { Alert, Card, Section, TrackBadge, cx, trackStyle } from "@/components/ui";
 import { api } from "@/lib/api";
 import { EMPTY_SELF_CHECK, TRACK_GOAL, TRACK_LABEL, TRACK_TAGLINE } from "@/lib/track-rules";
@@ -10,6 +10,9 @@ import type { TeamMemberInput, Track } from "@/lib/types";
 
 /**
  * 팀 등록 폼.
+ *
+ * 받는 것은 팀명·트랙·팀원뿐이다. 주제나 소개는 받지 않는다 — 신청 시점에는
+ * 아직 정해지지 않은 경우가 많고, 결과물 제출 단계에서 프로젝트명과 요약으로 다시 받는다.
  *
  * 트랙은 참가자가 세 개 중에서 직접 고른다. 자가진단을 거쳐 왔으면 추천 트랙이
  * 미리 골라져 있고, 그대로 두든 바꾸든 자유다. 자가진단 문항을 여기서 또 받지는 않는다.
@@ -45,8 +48,6 @@ export function TeamRegisterForm({
   const { token, user } = useAuth();
 
   const [name, setName] = useState("");
-  const [topic, setTopic] = useState("");
-  const [description, setDescription] = useState("");
   const [track, setTrack] = useState<Track>(initialTrack);
   const [members, setMembers] = useState<TeamMemberInput[]>([]);
   const [consent, setConsent] = useState(false);
@@ -55,8 +56,6 @@ export function TeamRegisterForm({
     if (!token) throw new Error("no token");
     return api.registerTeam(token, {
       name: name.trim(),
-      topic: topic.trim() || undefined,
-      description: description.trim() || undefined,
       appliedTrack: track,
       selfCheck: EMPTY_SELF_CHECK,
       members: members.map((m) => ({
@@ -95,11 +94,19 @@ export function TeamRegisterForm({
       title="팀 등록"
       description="로그인한 계정이 팀의 조장이 됩니다. 팀원 정보는 조장이 대신 입력합니다."
     >
+      <div className="mb-8">
+        <Alert tone="info" title="팀에 한 번만 등록하면 됩니다">
+          팀원은 따로 신청하지 않습니다. 조장이 아래에서 팀원 정보를 입력해 등록하면, 팀원은
+          적어 넣은 한양대학교 이메일로 <strong>로그인만</strong> 하면 자동으로 팀에 연결됩니다.
+          조장이 이미 등록했다면 이 화면에서 또 등록하지 마세요.
+        </Alert>
+      </div>
+
       <form onSubmit={handleSubmit} className="grid gap-8 lg:grid-cols-[1fr_300px]">
         <div className="space-y-10">
           <fieldset className="space-y-5">
-            <legend className="text-base font-bold">1. 팀 정보</legend>
-            <p className="text-sm text-muted">세 항목 모두 등록 후에 수정할 수 있습니다.</p>
+            <legend className="text-base font-bold">1. 팀명</legend>
+            <p className="text-sm text-muted">등록 후에도 신청 기간 동안 고칠 수 있습니다.</p>
 
             <Field label="팀명" required error={fieldError("name")}>
               {(id, describedBy) => (
@@ -112,32 +119,6 @@ export function TeamRegisterForm({
                   required
                   placeholder="예: 정보의 파수꾼"
                   invalid={Boolean(fieldError("name"))}
-                />
-              )}
-            </Field>
-
-            <Field label="한 줄 주제">
-              {(id, describedBy) => (
-                <TextInput
-                  id={id}
-                  aria-describedby={describedBy}
-                  value={topic}
-                  onChange={(e) => setTopic(e.target.value)}
-                  maxLength={200}
-                  placeholder="예: 학식 대기열을 줄이는 예약 서비스"
-                />
-              )}
-            </Field>
-
-            <Field label="팀 소개">
-              {(id, describedBy) => (
-                <TextArea
-                  id={id}
-                  aria-describedby={describedBy}
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  maxLength={1000}
-                  placeholder="팀이 풀고 싶은 문제나 관심사를 자유롭게 적어주세요."
                 />
               )}
             </Field>
@@ -159,10 +140,10 @@ export function TeamRegisterForm({
                   onClick={() => setTrack(item.track)}
                   aria-pressed={track === item.track}
                   className={cx(
-                    "rounded-xl border p-4 text-left transition-colors",
+                    "rounded-2xl border-2 p-4 text-left transition-colors",
                     track === item.track
-                      ? "border-brand-500 bg-brand-50 dark:bg-brand-950/30"
-                      : "border-[var(--border)] hover:bg-[var(--bg-muted)]",
+                      ? "border-brand-600 bg-brand-600/5"
+                      : "border-current/15 hover:bg-current/5",
                   )}
                 >
                   <p className="font-bold">{TRACK_LABEL[item.track]}</p>
@@ -321,7 +302,7 @@ export function TeamRegisterForm({
         </div>
 
         <div className="lg:sticky lg:top-24 lg:self-start">
-          <Card className={cx("ring-1", style.ring)}>
+          <Card className={style.ring}>
             <p className="text-xs font-semibold uppercase tracking-wider text-subtle">
               선택한 트랙
             </p>
@@ -333,7 +314,7 @@ export function TeamRegisterForm({
             </div>
             <p className="mt-3 text-sm leading-relaxed text-muted">{TRACK_GOAL[track]}</p>
 
-            <dl className="mt-4 space-y-2 border-t border-[var(--border)] pt-4 text-sm">
+            <dl className="mt-4 space-y-2 border-t-2 border-current/10 pt-4 text-sm">
               <div className="flex justify-between gap-2">
                 <dt className="text-muted">팀 인원</dt>
                 <dd className={cx("font-medium", !sizeValid && "text-red-600")}>
@@ -343,8 +324,8 @@ export function TeamRegisterForm({
             </dl>
 
             <p className="mt-4 text-xs leading-relaxed text-subtle">
-              등록 후 트랙을 바꾸려면 운영진에게 문의해야 합니다. 팀명·주제·소개는 신청 기간
-              동안 직접 수정할 수 있습니다.
+              등록 후 트랙을 바꾸려면 운영진에게 문의해야 합니다. 팀명은 신청 기간 동안 직접
+              수정할 수 있습니다.
             </p>
           </Card>
         </div>

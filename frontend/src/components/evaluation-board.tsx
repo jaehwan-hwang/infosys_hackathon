@@ -84,7 +84,7 @@ export function EvaluationBoard({ evaluatorType }: { evaluatorType: EvaluatorTyp
       title={isProfessor ? "교수 평가" : "팀 평가"}
       description={
         isProfessor
-          ? "Summit 트랙 팀을 항목별로 채점합니다. 교수 평가는 최종 점수의 70%를 차지합니다."
+          ? "Summit 트랙 팀을 항목별로 채점합니다. 교수 평가는 최종 점수의 40%를 차지합니다."
           : "발표를 본 팀을 항목별로 채점해 주세요. 트랙에 관계없이 평가가 열린 팀은 모두 투표할 수 있고, 자신이 속한 팀만 목록에서 빠집니다."
       }
     >
@@ -108,10 +108,10 @@ export function EvaluationBoard({ evaluatorType }: { evaluatorType: EvaluatorTyp
                   onClick={() => setSelectedTeamId(target.teamId)}
                   aria-current={target.teamId === selectedTeamId ? "true" : undefined}
                   className={cx(
-                    "w-full rounded-xl border p-3.5 text-left transition-colors",
+                    "w-full rounded-2xl border-2 p-3.5 text-left transition-colors",
                     target.teamId === selectedTeamId
-                      ? "border-brand-500 bg-brand-50 dark:bg-brand-950/30"
-                      : "border-[var(--border)] hover:bg-[var(--bg-muted)]",
+                      ? "border-brand-600 bg-brand-600/5"
+                      : "border-current/15 hover:bg-current/5",
                   )}
                 >
                   <div className="flex items-start justify-between gap-2">
@@ -264,7 +264,7 @@ function ScoreForm({
         </div>
 
         {(target.deployUrl || target.demoUrl) && (
-          <div className="mt-4 flex flex-wrap gap-2 border-t border-[var(--border)] pt-4">
+          <div className="mt-4 flex flex-wrap gap-2 border-t-2 border-current/10 pt-4">
             {target.deployUrl && (
               <ExternalLink href={target.deployUrl} label="배포 서비스 보기" />
             )}
@@ -391,7 +391,7 @@ function ExternalLink({ href, label }: { href: string; label: string }) {
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-[var(--border-strong)] px-3 text-xs font-semibold hover:bg-[var(--bg-muted)]"
+      className="inline-flex h-9 items-center gap-1.5 rounded-full border-2 border-current/15 px-4 text-xs font-bold hover:bg-current/5"
     >
       {label}
       <span aria-hidden="true">↗</span>

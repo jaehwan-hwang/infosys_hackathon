@@ -37,9 +37,15 @@ export function SiteHeader() {
   ];
 
   return (
-    <header className="sticky top-0 z-40 border-b border-[var(--border)] bg-[var(--bg)]/85 backdrop-blur">
+    <header className="sticky top-0 z-40 border-b-2 border-current/10 bg-[var(--bg)]/85 backdrop-blur">
       <div className="mx-auto flex h-16 w-full max-w-6xl items-center gap-4 px-5">
-        <Link href="/" className="font-display text-base tracking-tight text-brand-600">
+        {/* 홈으로 돌아가는 입구. 눌렀을 때 화면이 갑자기 바뀌지 않도록
+            app/template.tsx가 새 화면을 부드럽게 띄운다. */}
+        <Link
+          href="/"
+          aria-label="홈으로"
+          className="font-display text-lg tracking-[-0.02em] transition-opacity hover:opacity-60"
+        >
           IS HACKATHON
         </Link>
 
@@ -53,10 +59,10 @@ export function SiteHeader() {
                 href={item.href}
                 aria-current={active ? "page" : undefined}
                 className={cx(
-                  "rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                  "rounded-full px-4 py-2 text-sm font-bold transition-colors",
                   active
-                    ? "bg-brand-50 text-brand-700 dark:bg-brand-950/50 dark:text-brand-300"
-                    : "text-muted hover:bg-[var(--bg-muted)]",
+                    ? "bg-grad-brand text-white"
+                    : "text-muted hover:text-[var(--text)]",
                 )}
               >
                 {item.label}
@@ -73,7 +79,7 @@ export function SiteHeader() {
               <span className="hidden text-sm text-muted sm:inline">
                 {session.user.name}
                 {isStaff && (
-                  <span className="ml-1.5 rounded bg-brand-100 px-1.5 py-0.5 text-[10px] font-bold text-brand-700 dark:bg-brand-950 dark:text-brand-300">
+                  <span className="ml-1.5 rounded-full border-2 border-brand-500/40 px-2 py-0.5 text-[10px] font-bold text-brand-600 dark:text-brand-300">
                     {role === "ADMIN" ? "운영진" : "교수"}
                   </span>
                 )}
@@ -93,7 +99,7 @@ export function SiteHeader() {
             aria-label="메뉴 열기"
             aria-expanded={menuOpen}
             onClick={() => setMenuOpen((v) => !v)}
-            className="grid size-9 place-items-center rounded-lg hover:bg-[var(--bg-muted)] lg:hidden"
+            className="grid size-10 place-items-center rounded-full border-2 border-current/15 lg:hidden"
           >
             <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true">
               <path
@@ -110,7 +116,7 @@ export function SiteHeader() {
       {menuOpen && (
         <nav
           aria-label="모바일 메뉴"
-          className="border-t border-[var(--border)] bg-[var(--bg)] px-5 py-3 lg:hidden"
+          className="border-t-2 border-current/10 bg-[var(--bg)] px-5 py-3 lg:hidden"
         >
           <ul className="space-y-1">
             {navItems.map((item) => (
@@ -118,7 +124,7 @@ export function SiteHeader() {
                 <Link
                   href={item.href}
                   onClick={() => setMenuOpen(false)}
-                  className="block rounded-lg px-3 py-2.5 text-sm font-medium hover:bg-[var(--bg-muted)]"
+                  className="block rounded-full px-4 py-2.5 text-sm font-bold hover:bg-current/5"
                 >
                   {item.label}
                 </Link>

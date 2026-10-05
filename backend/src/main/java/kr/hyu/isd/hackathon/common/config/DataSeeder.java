@@ -73,7 +73,7 @@ public class DataSeeder {
                 "발표 및 코드 이해도", "팀이 자신의 결과물을 정확히 설명하는가", "0.30");
     }
 
-    /** Summit — 학생 투표 30% 몫에 쓰이는 항목 */
+    /** Summit — 학생 투표 60% 몫에 쓰이는 항목 */
     private void seedSummitStudentCriteria(HackathonEvent event) {
         save(event, Track.SUMMIT, EvaluatorType.STUDENT, 1,
                 "서비스 완성도", "사용자 입장에서 완결된 서비스로 느껴지는가", "0.50");
@@ -81,7 +81,7 @@ public class DataSeeder {
                 "발표", "결과물과 기술 선택을 설득력 있게 전달했는가", "0.50");
     }
 
-    /** Summit — 교수 평가 70% 몫에 쓰이는 항목 */
+    /** Summit — 교수 평가 40% 몫에 쓰이는 항목 */
     private void seedSummitProfessorCriteria(HackathonEvent event) {
         save(event, Track.SUMMIT, EvaluatorType.PROFESSOR, 1,
                 "기술적 난이도 및 완성도", "구현 난이도와 마감 수준", "0.30");

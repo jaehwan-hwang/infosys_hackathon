@@ -113,7 +113,7 @@ function TrackResults({ track }: { track: TrackResult }) {
               {TRACK_LABEL[track.track]} 트랙 전체 순위
             </caption>
             <thead>
-              <tr className="border-b border-[var(--border-strong)] text-left">
+              <tr className="border-b-2 border-current/25 text-left">
                 <th scope="col" className="py-2.5 pr-3 font-semibold">
                   순위
                 </th>
@@ -130,7 +130,7 @@ function TrackResults({ track }: { track: TrackResult }) {
             </thead>
             <tbody>
               {rest.map((r) => (
-                <tr key={r.teamId} className="border-b border-[var(--border)]">
+                <tr key={r.teamId} className="border-b border-current/10">
                   <td className="py-3 pr-3 font-bold tabular-nums">
                     {rankLabel(r.rank)}
                   </td>

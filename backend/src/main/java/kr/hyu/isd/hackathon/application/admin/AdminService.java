@@ -121,7 +121,6 @@ public class AdminService {
         return new TeamAdminResponse(
                 team.getId(),
                 team.getName(),
-                team.getTopic(),
                 team.getTrack(),
                 team.getTrackReason(),
                 team.getLeader().getName(),
@@ -163,6 +162,21 @@ public class AdminService {
         HackathonEvent event = eventService.getActiveEvent();
         event.setVotingOpen(request.track(), request.open());
         log.info("평가 토글: track={}, open={}", request.track(), request.open());
+        return EventResponse.from(event, eventService.effectiveMaxUploadMb(event));
+    }
+
+    /**
+     * 일차별 투표 전환. 1일차는 Spark만, 2일차는 Sprint·Summit만 열린다.
+     */
+    @Transactional
+    public EventResponse openVotingForDay(int day) {
+        if (day != 1 && day != 2) {
+            throw new HackathonException(ErrorCode.INVALID_INPUT, "일차는 1 또는 2만 가능합니다.");
+        }
+        HackathonEvent event = eventService.getActiveEvent();
+        event.openVotingForDay(day);
+        log.info("{}일차 평가 전환: spark={}, sprint={}, summit={}", day,
+                event.isSparkVotingOpen(), event.isSprintVotingOpen(), event.isSummitVotingOpen());
         return EventResponse.from(event, eventService.effectiveMaxUploadMb(event));
     }
 

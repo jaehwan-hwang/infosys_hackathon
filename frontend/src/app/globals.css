@@ -134,6 +134,30 @@ body {
   scroll-margin-top: 5rem;
 }
 
+/**
+ * 페이지 전환. app/template.tsx가 이동할 때마다 이 클래스를 다시 붙인다.
+ *
+ * 들어오는 화면을 부드럽게 올리며 띄운다. 로고를 눌러 홈으로 갈 때처럼 생김새가 크게
+ * 달라지는 이동이 "뚝" 끊겨 보이던 것을 없애기 위한 것이다.
+ *
+ * @keyframes 대신 @starting-style + transition을 쓴다. 애니메이션으로 만들면 첫
+ * 키프레임이 투명이라, 배경 탭처럼 프레임이 돌지 않는 상황에서 화면이 비어 보일 수 있다.
+ * transition은 평소 상태가 "다 보이는" 쪽이라 효과가 돌지 않아도 멀쩡히 보인다.
+ * @starting-style을 모르는 구형 브라우저에서도 마찬가지로 그냥 바로 나타난다.
+ */
+.page-enter {
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity 260ms cubic-bezier(0.22, 0.61, 0.36, 1),
+    transform 260ms cubic-bezier(0.22, 0.61, 0.36, 1);
+
+  @starting-style {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

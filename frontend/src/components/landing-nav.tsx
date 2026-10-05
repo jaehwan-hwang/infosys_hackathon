@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { scrollRoot, scrollToSlide } from "@/lib/landing-scroll";
 import { cx } from "./ui";
 
 /**
@@ -33,10 +34,6 @@ const BAR_BG = "linear-gradient(180deg, rgba(17,122,175,0.55) 0%, rgba(43,53,186
  */
 const LABEL_GLOW = "0 0 9px rgba(16,19,64,0.55)";
 
-function scrollRoot() {
-  return document.querySelector<HTMLElement>("[data-snap-root]");
-}
-
 export function LandingNav() {
   const [active, setActive] = useState<string>("about");
 
@@ -67,12 +64,7 @@ export function LandingNav() {
     };
   }, []);
 
-  const go = (key: string) => {
-    const root = scrollRoot();
-    const target = root?.querySelector<HTMLElement>(`[data-nav="${key}"]`);
-    if (!root || !target) return;
-    root.scrollTo({ top: target.offsetTop, behavior: "smooth" });
-  };
+  const go = (key: string) => scrollToSlide(`[data-nav="${key}"]`);
 
   return (
     <nav

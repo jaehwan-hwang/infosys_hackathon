@@ -7,11 +7,13 @@ import {
   Alert,
   Badge,
   Card,
+  PillTabs,
   Section,
   Spinner,
   TrackBadge,
-  cx,
+  TrackFilter,
 } from "@/components/ui";
+import type { TrackFilterValue } from "@/components/ui";
 import { api, downloadCsv } from "@/lib/api";
 import { formatDateTime, formatScore, rankLabel } from "@/lib/format";
 import { TRACK_LABEL } from "@/lib/track-rules";
@@ -48,27 +50,13 @@ function AdminDashboard() {
 
   return (
     <Section eyebrow="Admin" title="운영진 대시보드">
-      <div
-        role="tablist"
-        aria-label="관리 메뉴"
-        className="mb-8 flex gap-1 border-b border-[var(--border)]"
-      >
-        {tabs.map((t) => (
-          <button
-            key={t.id}
-            role="tab"
-            aria-selected={tab === t.id}
-            onClick={() => setTab(t.id)}
-            className={cx(
-              "-mb-px border-b-2 px-4 py-2.5 text-sm font-semibold transition-colors",
-              tab === t.id
-                ? "border-brand-600 text-brand-700 dark:text-brand-400"
-                : "border-transparent text-muted hover:text-[var(--text)]",
-            )}
-          >
-            {t.label}
-          </button>
-        ))}
+      <div className="mb-8">
+        <PillTabs<Tab>
+          label="관리 메뉴"
+          value={tab}
+          onChange={setTab}
+          items={tabs.map((t) => ({ value: t.id, label: t.label }))}
+        />
       </div>
 
       {tab === "overview" && (
@@ -91,6 +79,11 @@ function Overview({
   const votingMutation = useApiMutation(async (track: Track, open: boolean) => {
     if (!token) throw new Error("no token");
     return api.admin.toggleVoting(token, track, open);
+  });
+
+  const dayMutation = useApiMutation(async (day: 1 | 2) => {
+    if (!token) throw new Error("no token");
+    return api.admin.openVotingForDay(token, day);
   });
 
   const publishMutation = useApiMutation(async (published: boolean) => {
@@ -123,8 +116,40 @@ function Overview({
         ))}
       </dl>
 
+      <Card>
+        <h2 className="text-base font-bold">일차별 평가 전환</h2>
+        <p className="mt-1 text-sm text-muted">
+          1일차에는 Spark만, 2일차에는 Sprint와 Summit만 열립니다. 2일차를 누르면 Spark
+          평가는 자동으로 닫힙니다 — 1일차 발표를 보지 않은 사람이 Spark에 투표하는 일을
+          막기 위한 것입니다. 발표가 끝난 뒤 눌러주세요.
+        </p>
+        <div className="mt-4 flex flex-wrap gap-2">
+          {([1, 2] as const).map((day) => (
+            <Button
+              key={day}
+              variant="secondary"
+              loading={dayMutation.pending}
+              onClick={async () => {
+                await dayMutation.run(day);
+                dashboard.reload();
+              }}
+            >
+              {day}일차 평가 열기
+            </Button>
+          ))}
+        </div>
+        {dayMutation.error && (
+          <div className="mt-3">
+            <Alert tone="error">{dayMutation.error.message}</Alert>
+          </div>
+        )}
+      </Card>
+
       <div>
         <h2 className="text-base font-bold">트랙별 현황</h2>
+        <p className="mt-1 text-sm text-muted">
+          트랙 하나만 따로 열고 닫아야 할 때 씁니다.
+        </p>
         <div className="mt-4 grid gap-3 sm:grid-cols-3">
           {TRACKS.map((track) => (
             <Card key={track}>
@@ -150,7 +175,7 @@ function Overview({
                 </div>
               </dl>
 
-              <div className="mt-4 border-t border-[var(--border)] pt-3">
+              <div className="mt-4 border-t-2 border-current/10 pt-3">
                 <div className="flex items-center justify-between gap-2">
                   <span className="text-sm text-muted">평가</span>
                   <Button
@@ -261,7 +286,7 @@ function ExportPanel() {
 function TeamsPanel() {
   const { token } = useAuth();
   const teamsQuery = useApiQuery(token ? () => api.admin.getTeams(token) : null, [token]);
-  const [filter, setFilter] = useState<Track | "ALL">("ALL");
+  const [filter, setFilter] = useState<TrackFilterValue>("ALL");
 
   const trackMutation = useApiMutation(async (teamId: number, track: Track) => {
     if (!token) throw new Error("no token");
@@ -284,21 +309,8 @@ function TeamsPanel() {
 
   return (
     <div>
-      <div className="mb-4 flex flex-wrap gap-2">
-        {(["ALL", ...TRACKS] as const).map((t) => (
-          <button
-            key={t}
-            onClick={() => setFilter(t)}
-            className={cx(
-              "rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors",
-              filter === t
-                ? "border-brand-500 bg-brand-50 text-brand-700 dark:bg-brand-950/40 dark:text-brand-300"
-                : "border-[var(--border)] hover:bg-[var(--bg-muted)]",
-            )}
-          >
-            {t === "ALL" ? "전체" : TRACK_LABEL[t]}
-          </button>
-        ))}
+      <div className="mb-5">
+        <TrackFilter value={filter} onChange={setFilter} />
       </div>
 
       <div className="space-y-3">
@@ -350,7 +362,7 @@ function TeamsPanel() {
                     await trackMutation.run(team.teamId, e.target.value as Track);
                     teamsQuery.reload();
                   }}
-                  className="h-9 rounded-lg border border-[var(--border-strong)] bg-[var(--bg)] px-2 text-sm"
+                  className="h-9 rounded-full border-2 border-current/15 bg-[var(--bg)] px-3 text-sm font-bold"
                 >
                   {TRACKS.map((t) => (
                     <option key={t} value={t}>
@@ -444,8 +456,8 @@ function ResultsPanel() {
             <div className="mt-3 overflow-x-auto">
               <table className="w-full min-w-[640px] border-collapse text-sm">
                 <thead>
-                  <tr className="border-b border-[var(--border-strong)] text-left">
-                    <th scope="col" className="py-2.5 pr-3 font-semibold">순위</th>
+                  <tr className="border-b-2 border-current/25 text-left">
+                    <th scope="col" className="py-2.5 pr-3 font-bold">순위</th>
                     <th scope="col" className="py-2.5 pr-3 font-semibold">팀</th>
                     <th scope="col" className="py-2.5 pr-3 text-right font-semibold">학생 평균</th>
                     <th scope="col" className="py-2.5 pr-3 text-right font-semibold">교수 평균</th>
@@ -454,7 +466,7 @@ function ResultsPanel() {
                 </thead>
                 <tbody>
                   {track.results.map((r) => (
-                    <tr key={r.teamId} className="border-b border-[var(--border)]">
+                    <tr key={r.teamId} className="border-b border-current/10">
                       <td className="py-2.5 pr-3 font-bold tabular-nums">
                         {rankLabel(r.rank)}
                       </td>
@@ -547,7 +559,7 @@ function StaffPanel() {
               id="role-select"
               value={role}
               onChange={(e) => setRole(e.target.value as "PROFESSOR" | "ADMIN")}
-              className="mt-1.5 h-10 rounded-lg border border-[var(--border-strong)] bg-[var(--bg)] px-3 text-sm"
+              className="mt-1.5 h-11 rounded-xl border-2 border-current/15 bg-[var(--bg)] px-3 text-sm"
             >
               <option value="PROFESSOR">교수 (심사위원)</option>
               <option value="ADMIN">운영진</option>

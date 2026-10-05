@@ -159,6 +159,21 @@ public class HackathonEvent extends BaseTimeEntity {
         }
     }
 
+    /**
+     * 일차별로 투표를 한 번에 전환한다.
+     *
+     * 1일차에는 Spark만 발표하므로 Spark만 열고, 2일차에는 Spark 발표가 이미 끝났으니
+     * Spark를 닫고 Sprint·Summit을 연다. 토글 세 개를 손으로 맞추다 1일차 Spark를
+     * 닫는 것을 잊으면, 2일차 참가자가 보지도 않은 발표에 투표하게 된다.
+     *
+     * @param day 1 또는 2
+     */
+    public void openVotingForDay(int day) {
+        this.sparkVotingOpen = day == 1;
+        this.sprintVotingOpen = day == 2;
+        this.summitVotingOpen = day == 2;
+    }
+
     public void setResultsPublished(boolean published) {
         this.resultsPublished = published;
     }

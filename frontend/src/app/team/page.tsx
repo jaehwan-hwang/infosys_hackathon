@@ -11,15 +11,17 @@ import {
   Badge,
   Card,
   EmptyState,
+  PillTabs,
   Section,
   Spinner,
   TrackBadge,
-  cx,
+  TrackFilter,
   trackStyle,
 } from "@/components/ui";
+import type { TrackFilterValue } from "@/components/ui";
 import { TextInput } from "@/components/form";
 import { api, publicApi } from "@/lib/api";
-import { TRACK_TAGLINE } from "@/lib/track-rules";
+import { TRACK_LABEL, TRACK_TAGLINE } from "@/lib/track-rules";
 import { useApiQuery, useAuth } from "@/lib/use-auth";
 import type { Team, Track } from "@/lib/types";
 
@@ -104,32 +106,16 @@ function RegisteredView({
 
   return (
     <Section eyebrow="Team" title="팀">
-      <div
-        role="tablist"
-        aria-label="팀 보기"
-        className="mb-7 inline-flex rounded-xl border border-[var(--border)] p-1"
-      >
-        {(
-          [
-            ["mine", "우리 팀"],
-            ["others", "다른 팀"],
-          ] as const
-        ).map(([key, label]) => (
-          <button
-            key={key}
-            role="tab"
-            aria-selected={tab === key}
-            onClick={() => setTab(key)}
-            className={cx(
-              "rounded-lg px-5 py-2 text-sm font-semibold transition-colors",
-              tab === key
-                ? "bg-brand-600 text-white"
-                : "text-muted hover:bg-[var(--bg-muted)]",
-            )}
-          >
-            {label}
-          </button>
-        ))}
+      <div className="mb-8">
+        <PillTabs<Tab>
+          label="팀 보기"
+          value={tab}
+          onChange={setTab}
+          items={[
+            { value: "mine", label: "우리 팀" },
+            { value: "others", label: "다른 팀" },
+          ]}
+        />
       </div>
 
       {tab === "mine" ? (
@@ -167,25 +153,18 @@ function MyTeamTab({
 
   return (
     <div className="space-y-8">
-      <Card className={cx("ring-1", style.ring)}>
+      <Card className={style.ring}>
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <div className="flex items-center gap-2">
               <TrackBadge track={team.track} />
-              <h2 className="text-xl font-bold">{team.name}</h2>
+              <h2 className="font-display text-2xl tracking-tight">{team.name}</h2>
             </div>
-            {team.topic && <p className="mt-2 text-sm text-muted">{team.topic}</p>}
           </div>
           <span className="text-sm text-muted">{team.memberCount}명</span>
         </div>
 
-        {team.description && (
-          <p className="mt-4 whitespace-pre-line text-sm leading-relaxed text-muted">
-            {team.description}
-          </p>
-        )}
-
-        <div className="mt-6 border-t border-[var(--border)] pt-5">
+        <div className="mt-6 border-t-2 border-current/10 pt-5">
           <h3 className="text-sm font-semibold">팀원</h3>
           <ul className="mt-3 space-y-2">
             {team.members.map((member) => (
@@ -237,51 +216,65 @@ function MyTeamTab({
   );
 }
 
-/** 다른 팀 목록. 개인정보는 서버가 빼고 내려주므로 이름만 보인다. */
+/**
+ * 다른 팀 목록.
+ *
+ * 개인정보는 서버가 빼고 내려주므로 이름만 보인다. 팀이 많아지면 이름으로만 찾기가
+ * 번거로우므로 트랙으로 먼저 좁힐 수 있게 했다 — 트랙을 고르고 검색하면 그 트랙 안에서만 찾는다.
+ */
 function OtherTeamsTab({ myTeamId }: { myTeamId: number }) {
   const { token } = useAuth();
   const teamsQuery = useApiQuery(
     token ? (signal) => api.getTeams(token, signal) : null,
     [token],
   );
+  const [track, setTrack] = useState<TrackFilterValue>("ALL");
   const [query, setQuery] = useState("");
 
   const teams = useMemo(() => {
-    const all = (teamsQuery.data ?? []).filter((t) => t.teamId !== myTeamId);
     const q = query.trim().toLowerCase();
-    if (!q) return all;
-    // 팀 이름·한 줄 주제·팀 소개를 한꺼번에 훑는다
-    return all.filter((t) =>
-      [t.name, t.topic, t.description].some((v) => v?.toLowerCase().includes(q)),
-    );
-  }, [teamsQuery.data, myTeamId, query]);
+    return (teamsQuery.data ?? [])
+      .filter((t) => t.teamId !== myTeamId)
+      .filter((t) => track === "ALL" || t.track === track)
+      .filter((t) => !q || t.name.toLowerCase().includes(q));
+  }, [teamsQuery.data, myTeamId, track, query]);
 
   if (teamsQuery.loading) return <Spinner label="팀 목록 불러오는 중" />;
   if (teamsQuery.error) return <Alert tone="error">{teamsQuery.error}</Alert>;
 
+  const filtered = track !== "ALL" || query.trim().length > 0;
+
   return (
     <div>
-      <label htmlFor="team-search" className="sr-only">
-        팀 검색
-      </label>
-      <TextInput
-        id="team-search"
-        type="search"
-        value={query}
-        onChange={(e) => setQuery(e.target.value)}
-        placeholder="팀 이름, 주제, 소개로 검색"
-      />
+      <TrackFilter value={track} onChange={setTrack} />
+
+      <div className="mt-3">
+        <label htmlFor="team-search" className="sr-only">
+          팀 검색
+        </label>
+        <TextInput
+          id="team-search"
+          type="search"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="팀 이름으로 검색"
+          className="rounded-full"
+        />
+      </div>
 
       <p className="mt-3 text-sm text-muted">
-        {query.trim() ? `${teams.length}개 팀` : `전체 ${teams.length}개 팀`}
+        {filtered ? `${teams.length}개 팀` : `전체 ${teams.length}개 팀`}
+        {track !== "ALL" && ` · ${TRACK_LABEL[track]} 트랙`}
       </p>
 
       {teams.length === 0 ? (
         <div className="mt-6">
           <EmptyState
-            title={query.trim() ? "검색 결과가 없습니다" : "아직 등록된 다른 팀이 없습니다"}
+            title={filtered ? "해당하는 팀이 없습니다" : "아직 등록된 다른 팀이 없습니다"}
             description={
-              query.trim() ? "다른 말로 검색해 보세요." : "첫 번째 팀이 등록되면 여기에 보입니다."
+              filtered
+                ? "트랙을 전체로 바꾸거나 다른 말로 검색해 보세요."
+                : "첫 번째 팀이 등록되면 여기에 보입니다."
             }
           />
         </div>
@@ -305,20 +298,14 @@ function TeamCard({ team }: { team: Team }) {
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
             <TrackBadge track={team.track} />
-            <span className="font-bold">{team.name}</span>
+            <span className="font-display text-lg tracking-tight">{team.name}</span>
             <span className="text-xs text-subtle">{TRACK_TAGLINE[team.track]}</span>
           </div>
-          {team.topic && <p className="mt-2 text-sm text-muted">{team.topic}</p>}
-          {team.description && (
-            <p className="mt-1.5 line-clamp-2 text-sm leading-relaxed text-subtle">
-              {team.description}
-            </p>
-          )}
         </div>
         <Badge tone="neutral">{team.memberCount}명</Badge>
       </div>
 
-      <p className="mt-4 border-t border-[var(--border)] pt-3 text-sm">
+      <p className="mt-4 border-t-2 border-current/10 pt-3 text-sm">
         <span className="text-muted">팀원 </span>
         {team.members.map((m) => m.name).join(", ")}
       </p>

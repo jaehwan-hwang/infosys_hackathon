@@ -230,7 +230,6 @@ public class EvaluationService {
         return new EvaluationTargetResponse(
                 team.getId(),
                 team.getName(),
-                team.getTopic(),
                 team.getTrack(),
                 submission.map(Submission::getProjectName).orElse(null),
                 submission.map(Submission::getSummary).orElse(null),

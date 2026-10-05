@@ -77,6 +77,15 @@ public class AdminController {
         return ApiResponse.success(adminService.toggleVoting(request));
     }
 
+    /**
+     * 일차별 평가 전환. 1일차는 Spark만, 2일차는 Sprint·Summit만 열린다.
+     * 토글 세 개를 손으로 맞추는 실수를 막기 위한 단축 동작이다.
+     */
+    @PostMapping("/event/voting/day/{day}")
+    public ApiResponse<EventResponse> openVotingForDay(@PathVariable int day) {
+        return ApiResponse.success(adminService.openVotingForDay(day));
+    }
+
     /** 시상식에서 결과 공개 */
     @PostMapping("/event/publish")
     public ApiResponse<EventResponse> publishResults(@RequestParam boolean published) {

@@ -9,7 +9,6 @@ import kr.hyu.isd.hackathon.domain.team.Track;
 public record EvaluationTargetResponse(
         Long teamId,
         String teamName,
-        String topic,
         Track track,
         String projectName,
         String summary,
