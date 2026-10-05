@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { AdminEventForm } from "@/components/admin-event-form";
+import { AdminMergePanel } from "@/components/admin-merge-panel";
 import { AuthGate } from "@/components/auth-gate";
 import { Button, Field, TextInput } from "@/components/form";
 import {
@@ -22,7 +24,7 @@ import type { Track } from "@/lib/types";
 
 const TRACKS: Track[] = ["SPARK", "SPRINT", "SUMMIT"];
 
-type Tab = "overview" | "teams" | "results" | "staff";
+type Tab = "overview" | "teams" | "merge" | "results" | "settings" | "staff";
 
 export default function AdminPage() {
   return (
@@ -44,7 +46,9 @@ function AdminDashboard() {
   const tabs: { id: Tab; label: string }[] = [
     { id: "overview", label: "현황" },
     { id: "teams", label: "팀 관리" },
+    { id: "merge", label: "팀 합치기" },
     { id: "results", label: "집계" },
+    { id: "settings", label: "행사 설정" },
     { id: "staff", label: "권한" },
   ];
 
@@ -63,7 +67,9 @@ function AdminDashboard() {
         <Overview dashboard={dashboardQuery} />
       )}
       {tab === "teams" && <TeamsPanel />}
+      {tab === "merge" && <AdminMergePanel />}
       {tab === "results" && <ResultsPanel />}
+      {tab === "settings" && <AdminEventForm />}
       {tab === "staff" && <StaffPanel />}
     </Section>
   );

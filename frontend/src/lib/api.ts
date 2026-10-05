@@ -17,6 +17,9 @@ import type {
   TeamRegisterInput,
   Track,
   PublicTrackResult,
+  EventUpdateInput,
+  JoinRequest,
+  RecruitStatus,
   TrackResult,
   UploadResult,
   User,
@@ -181,6 +184,43 @@ export const api = {
       token,
     }),
 
+  /**
+   * 모집 중인 팀. want를 비우면 우리 팀이 찾는 것과 반대쪽이 온다.
+   * (팀원을 찾는 팀에게는 팀장을 찾는 팀이 보인다)
+   */
+  getRecruitingTeams: (token: string, want?: RecruitStatus, signal?: AbortSignal) =>
+    request<Team[]>(
+      want ? `/api/v1/teams/recruiting?want=${want}` : "/api/v1/teams/recruiting",
+      { token, signal },
+    ),
+
+  updateRecruiting: (
+    token: string,
+    teamId: number,
+    input: { recruiting: RecruitStatus; recruitNote?: string },
+  ) =>
+    request<Team>(`/api/v1/teams/${teamId}/recruiting`, {
+      method: "PUT",
+      body: input,
+      token,
+    }),
+
+  // ---- 팀 합치기 ----
+
+  /** 합치기 신청. toTeamId를 비우면 "어느 팀이든 좋다"는 신청이 된다. */
+  requestJoin: (token: string, input: { toTeamId?: number; message?: string }) =>
+    request<JoinRequest>("/api/v1/join-requests", {
+      method: "POST",
+      body: input,
+      token,
+    }),
+
+  getMyJoinRequests: (token: string, signal?: AbortSignal) =>
+    request<JoinRequest[]>("/api/v1/join-requests/me", { token, signal }),
+
+  cancelJoinRequest: (token: string, requestId: number) =>
+    request<void>(`/api/v1/join-requests/${requestId}`, { method: "DELETE", token }),
+
   getTeamsByTrack: (token: string, track: Track) =>
     request<Team[]>(`/api/v1/teams?track=${track}`, { token }),
 
@@ -279,6 +319,36 @@ export const api = {
     publishResults: (token: string, track: Track, published: boolean) =>
       request<HackathonEvent>(
         `/api/v1/admin/event/publish?track=${track}&published=${published}`,
+        { method: "POST", token },
+      ),
+
+    /** 행사 일정·규정 수정. 시각은 UTC ISO로 보낸다. */
+    updateEvent: (token: string, input: EventUpdateInput) =>
+      request<HackathonEvent>("/api/v1/admin/event", {
+        method: "PUT",
+        body: input,
+        token,
+      }),
+
+    getJoinRequests: (token: string) =>
+      request<JoinRequest[]>("/api/v1/admin/join-requests", { token }),
+
+    /** 두 팀을 합친다. fromTeam의 팀원이 toTeam으로 옮겨 가고 fromTeam은 사라진다. */
+    mergeTeams: (token: string, fromTeamId: number, toTeamId: number, note?: string) => {
+      const query = new URLSearchParams({
+        fromTeamId: String(fromTeamId),
+        toTeamId: String(toTeamId),
+      });
+      if (note) query.set("note", note);
+      return request<TeamAdmin>(`/api/v1/admin/teams/merge?${query}`, {
+        method: "POST",
+        token,
+      });
+    },
+
+    rejectJoinRequest: (token: string, requestId: number, note?: string) =>
+      request<void>(
+        `/api/v1/admin/join-requests/${requestId}/reject${note ? `?note=${encodeURIComponent(note)}` : ""}`,
         { method: "POST", token },
       ),
 

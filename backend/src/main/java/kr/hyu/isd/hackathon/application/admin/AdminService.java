@@ -7,6 +7,7 @@ import kr.hyu.isd.hackathon.domain.evaluation.Award;
 import kr.hyu.isd.hackathon.domain.evaluation.Criterion;
 import kr.hyu.isd.hackathon.domain.evaluation.Evaluation;
 import kr.hyu.isd.hackathon.domain.evaluation.EvaluatorType;
+import kr.hyu.isd.hackathon.domain.match.JoinRequest;
 import kr.hyu.isd.hackathon.domain.event.HackathonEvent;
 import kr.hyu.isd.hackathon.domain.submission.Submission;
 import kr.hyu.isd.hackathon.domain.team.Team;
@@ -16,6 +17,7 @@ import kr.hyu.isd.hackathon.domain.user.User;
 import kr.hyu.isd.hackathon.infrastructure.persistence.*;
 import kr.hyu.isd.hackathon.web.admin.dto.*;
 import kr.hyu.isd.hackathon.web.auth.dto.UserResponse;
+import kr.hyu.isd.hackathon.web.match.dto.JoinRequestResponse;
 import kr.hyu.isd.hackathon.web.event.dto.CriterionResponse;
 import kr.hyu.isd.hackathon.web.event.dto.EventResponse;
 import kr.hyu.isd.hackathon.web.team.dto.TeamMemberResponse;
@@ -50,6 +52,8 @@ public class AdminService {
     private final EvaluationRepository evaluationRepository;
     private final AwardRepository awardRepository;
     private final UserRepository userRepository;
+    private final JoinRequestRepository joinRequestRepository;
+    private final TeamMemberRepository teamMemberRepository;
     private final EventService eventService;
 
     // ---- 대시보드 ----
@@ -124,6 +128,7 @@ public class AdminService {
                 team.getId(),
                 team.getName(),
                 team.getTrack(),
+                team.getRecruiting(),
                 team.getTrackReason(),
                 team.getLeader().getName(),
                 team.getLeader().getEmail(),
@@ -151,6 +156,7 @@ public class AdminService {
         event.updateBasics(request.title(), request.theme(), request.description(),
                 request.location(), request.contactUrl());
         event.updateSchedule(request.registerStartsAt(), request.registerEndsAt(),
+                request.submitOpensAt(),
                 request.sparkSubmitDeadline(), request.devSubmitDeadline());
         event.updateRules(request.minTeamSize(), request.maxTeamSize(), request.maxUploadMb());
 
@@ -281,9 +287,94 @@ public class AdminService {
         evaluationRepository.deleteAll(received);
         submissionRepository.findByTeamId(teamId).ifPresent(submissionRepository::delete);
         awardRepository.deleteByTeamId(teamId);
+        // 이 팀이 걸린 합치기 신청도 같이 치운다. 남겨 두면 없는 팀을 가리킨다.
+        joinRequestRepository.deleteAll(joinRequestRepository.findAllTouchingTeam(teamId));
         teamRepository.delete(team);
 
         log.warn("팀 삭제: id={}, name={}, 함께 지운 평가 {}건", teamId, team.getName(), received.size());
+    }
+
+    // ---- 팀 합치기 ----
+
+    /** 들어온 합치기 신청 전부. 대기 중인 것이 위로 온다. */
+    @Transactional(readOnly = true)
+    public List<JoinRequestResponse> getJoinRequests() {
+        HackathonEvent event = eventService.getActiveEvent();
+        return joinRequestRepository.findAllByEventId(event.getId()).stream()
+                .map(JoinRequestResponse::from)
+                .toList();
+    }
+
+    /**
+     * 두 팀을 합친다.
+     *
+     * fromTeam의 팀원을 전부 toTeam으로 옮기고 fromTeam을 지운다. 옮겨 온 사람은 팀원이
+     * 되고, 받는 팀의 팀장은 그대로다 — 합쳐진 팀에 팀장이 둘이 되면 결과물을 낼 사람이
+     * 모호해진다. 신청 단계에서 정원을 확인하지만, 그 사이 양쪽 인원이 바뀔 수 있어 한 번 더 본다.
+     */
+    @Transactional
+    public TeamAdminResponse mergeTeams(Long fromTeamId, Long toTeamId, String note) {
+        if (fromTeamId.equals(toTeamId)) {
+            throw new HackathonException(ErrorCode.INVALID_INPUT, "같은 팀끼리는 합칠 수 없습니다.");
+        }
+        HackathonEvent event = eventService.getActiveEvent();
+        Team from = teamRepository.findByIdWithMembers(fromTeamId)
+                .orElseThrow(() -> new HackathonException(ErrorCode.TEAM_NOT_FOUND));
+        Team to = teamRepository.findByIdWithMembers(toTeamId)
+                .orElseThrow(() -> new HackathonException(ErrorCode.TEAM_NOT_FOUND));
+
+        int merged = from.memberCount() + to.memberCount();
+        if (merged > event.getMaxTeamSize()) {
+            throw new HackathonException(ErrorCode.INVALID_TEAM_SIZE,
+                    "합치면 %d명이 되어 최대 인원 %d명을 넘습니다."
+                            .formatted(merged, event.getMaxTeamSize()));
+        }
+
+        String fromName = from.getName();
+        String memo = note != null && !note.isBlank() ? note : "%s 팀과 합침".formatted(fromName);
+
+        // 넘어온 팀이 내놓았던 제출물·평가·수상은 팀과 함께 사라진다
+        // (신청 기간에 합치는 것이라 보통은 아무것도 없다)
+        submissionRepository.findByTeamId(fromTeamId).ifPresent(submissionRepository::delete);
+        evaluationRepository.deleteAll(evaluationRepository.findAllByTargetTeamId(fromTeamId));
+        awardRepository.deleteByTeamId(fromTeamId);
+
+        // 소속을 쿼리로 바꾼다. 컬렉션에서 빼면 orphanRemoval이 팀원을 지워 버린다.
+        teamMemberRepository.moveAllToTeam(fromTeamId, toTeamId);
+
+        // 위 쿼리가 영속성 컨텍스트를 비우므로 다시 읽어서 처리한다.
+        // 사라질 팀을 가리키는 신청은 연결을 떼어 낸다 — 외래 키가 걸려 삭제가 막힌다.
+        for (JoinRequest r : joinRequestRepository.findAllTouchingTeam(fromTeamId)) {
+            if (r.isPending()) {
+                boolean aimedHere = r.getToTeam() != null
+                        && r.getToTeam().getId().equals(fromTeamId);
+                if (aimedHere) {
+                    r.reject("%s 팀이 사라져 반려".formatted(fromName));
+                } else {
+                    r.markMerged(memo);
+                }
+            }
+            r.detachTeam(fromTeamId);
+        }
+        joinRequestRepository.flush();
+
+        teamRepository.deleteById(fromTeamId);
+        log.info("팀 합치기: {} -> {} ({}명)", fromName, to.getName(), merged);
+
+        Team result = teamRepository.findByIdWithMembers(toTeamId)
+                .orElseThrow(() -> new HackathonException(ErrorCode.TEAM_NOT_FOUND));
+        return toAdminResponse(result, submissionRepository.findByTeamId(toTeamId).orElse(null));
+    }
+
+    /** 신청을 반려한다. 합치지 않고 목록에서만 내린다. */
+    @Transactional
+    public void rejectJoinRequest(Long requestId, String note) {
+        JoinRequest request = joinRequestRepository.findById(requestId)
+                .orElseThrow(() -> new HackathonException(ErrorCode.TEAM_NOT_FOUND, "신청을 찾을 수 없습니다."));
+        if (!request.isPending()) {
+            throw new HackathonException(ErrorCode.INVALID_INPUT, "이미 처리된 신청입니다.");
+        }
+        request.reject(note);
     }
 
     // ---- 수상 ----

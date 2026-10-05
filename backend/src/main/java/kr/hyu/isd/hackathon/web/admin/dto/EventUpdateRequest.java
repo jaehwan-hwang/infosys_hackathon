@@ -27,6 +27,9 @@ public record EventUpdateRequest(
 
         Instant registerStartsAt,
         Instant registerEndsAt,
+        /** 결과물 제출이 열리는 시각. 비우면 마감 전까지 늘 열린다. */
+        Instant submitOpensAt,
+
         Instant sparkSubmitDeadline,
         Instant devSubmitDeadline,
 

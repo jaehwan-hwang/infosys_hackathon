@@ -4,6 +4,9 @@
  */
 
 export type Track = "SPARK" | "SPRINT" | "SUMMIT";
+/** 팀이 무엇을 찾고 있는지. 서로 반대인 팀끼리 이어 준다. */
+export type RecruitStatus = "NONE" | "MEMBERS" | "LEADER";
+export type JoinRequestStatus = "PENDING" | "MERGED" | "REJECTED" | "CANCELED";
 export type Role = "STUDENT" | "PROFESSOR" | "ADMIN";
 export type EvaluatorType = "STUDENT" | "PROFESSOR";
 export type TeamMemberRole = "LEADER" | "MEMBER";
@@ -52,9 +55,13 @@ export interface HackathonEvent {
   contactUrl: string | null;
   registerStartsAt: string | null;
   registerEndsAt: string | null;
+  /** 결과물 제출이 열리는 시각 */
+  submitOpensAt: string | null;
   sparkSubmitDeadline: string | null;
   devSubmitDeadline: string | null;
   registrationOpen: boolean;
+  /** 아직 제출 시작 전인가 */
+  beforeSubmissionOpen: boolean;
   submissionOpen: Record<Track, boolean>;
   votingOpen: Record<Track, boolean>;
   resultsPublished: Record<Track, boolean>;
@@ -63,6 +70,23 @@ export interface HackathonEvent {
   maxUploadMb: number;
   /** 서버 시각. 카운트다운을 이 값에 맞춰 보정한다. */
   serverTime: string;
+}
+
+/** 운영진이 고치는 행사 설정. 시각은 UTC ISO 문자열. */
+export interface EventUpdateInput {
+  title: string;
+  theme?: string;
+  description?: string;
+  location?: string;
+  contactUrl?: string;
+  registerStartsAt: string | null;
+  registerEndsAt: string | null;
+  submitOpensAt: string | null;
+  sparkSubmitDeadline: string | null;
+  devSubmitDeadline: string | null;
+  minTeamSize: number;
+  maxTeamSize: number;
+  maxUploadMb: number;
 }
 
 export interface Criterion {
@@ -101,6 +125,8 @@ export interface TeamMember {
   email: string | null;
   role: TeamMemberRole;
   linked: boolean;
+  /** 학생회비 납부 여부. 우리 팀과 운영진에게만 내려온다. */
+  duesPaid: boolean | null;
 }
 
 export interface Team {
@@ -112,6 +138,8 @@ export interface Team {
   leaderName: string;
   memberCount: number;
   members: TeamMember[];
+  recruiting: RecruitStatus;
+  recruitNote: string | null;
   createdAt: string;
 }
 
@@ -119,6 +147,26 @@ export interface TeamMemberInput {
   name: string;
   studentId: string;
   email: string;
+  /** 학생회비를 납부한 재학생인지. false면 참가비 1만원 대상 */
+  duesPaid: boolean;
+}
+
+export interface JoinRequest {
+  joinRequestId: number;
+  /** 합쳐져 사라진 팀이면 null */
+  fromTeamId: number | null;
+  fromTeamName: string;
+  fromTeamMemberCount: number;
+  fromTeamTrack: Track | null;
+  toTeamId: number | null;
+  toTeamName: string | null;
+  message: string | null;
+  status: JoinRequestStatus;
+  statusLabel: string;
+  handledNote: string | null;
+  /** 우리 팀이 보낸 신청인가. 받은 신청과 섞여 내려온다. */
+  outgoing: boolean | null;
+  createdAt: string;
 }
 
 export interface TeamRegisterInput {
@@ -126,6 +174,12 @@ export interface TeamRegisterInput {
   appliedTrack: Track;
   selfCheck: SelfCheckPayload;
   members: TeamMemberInput[];
+  /** 팀장으로 지정할 사람의 이메일. 비우면 등록한 본인 */
+  leaderEmail?: string;
+  recruiting: RecruitStatus;
+  recruitNote?: string;
+  /** 등록하는 본인의 학생회비 납부 여부 */
+  duesPaid: boolean;
   privacyConsent: boolean;
 }
 
@@ -269,6 +323,7 @@ export interface TeamAdmin {
   teamId: number;
   teamName: string;
   track: Track;
+  recruiting: RecruitStatus;
   trackReason: string | null;
   leaderName: string;
   leaderEmail: string;

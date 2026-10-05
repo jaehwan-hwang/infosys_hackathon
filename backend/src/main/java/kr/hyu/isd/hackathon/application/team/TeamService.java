@@ -5,13 +5,16 @@ import kr.hyu.isd.hackathon.common.dto.response.ApiErrorData;
 import kr.hyu.isd.hackathon.common.exception.ErrorCode;
 import kr.hyu.isd.hackathon.common.exception.HackathonException;
 import kr.hyu.isd.hackathon.domain.event.HackathonEvent;
+import kr.hyu.isd.hackathon.domain.team.RecruitStatus;
 import kr.hyu.isd.hackathon.domain.team.SelfCheck;
 import kr.hyu.isd.hackathon.domain.team.Team;
 import kr.hyu.isd.hackathon.domain.team.TeamMember;
+import kr.hyu.isd.hackathon.domain.team.TeamMemberRole;
 import kr.hyu.isd.hackathon.domain.team.Track;
 import kr.hyu.isd.hackathon.domain.user.User;
 import kr.hyu.isd.hackathon.infrastructure.persistence.TeamRepository;
 import kr.hyu.isd.hackathon.infrastructure.persistence.UserRepository;
+import kr.hyu.isd.hackathon.web.team.dto.RecruitUpdateRequest;
 import kr.hyu.isd.hackathon.web.team.dto.SelfCheckRequest;
 import kr.hyu.isd.hackathon.web.team.dto.SelfCheckResultResponse;
 import kr.hyu.isd.hackathon.web.team.dto.TeamMemberRequest;
@@ -90,16 +93,22 @@ public class TeamService {
         validateNoDuplicates(leader, memberRequests);
 
         Team team = Team.create(event, request.name(), leader, request.appliedTrack(),
-                request.selfCheck() != null ? request.selfCheck().toDomain() : SelfCheck.empty());
+                request.selfCheck() != null ? request.selfCheck().toDomain() : SelfCheck.empty(),
+                request.recruiting(), trimToNull(request.recruitNote()));
 
-        team.addMember(TeamMember.createLeader(team, leader,
-                leader.getName(), leader.getStudentId(), leader.getEmail()));
+        // 팀장은 등록 폼에서 고른다. 비워 두면 등록한 본인이 팀장이 된다.
+        String leaderEmail = resolveLeaderEmail(request, leader, memberRequests);
+
+        team.addMember(TeamMember.create(team, leader,
+                leader.getName(), leader.getStudentId(), leader.getEmail(),
+                roleOf(leader.getEmail(), leaderEmail), request.duesPaid()));
 
         for (TeamMemberRequest m : memberRequests) {
             // 이미 가입한 팀원이면 계정을 바로 연결하고, 아니면 로그인 시점에 연결한다.
             String email = m.email().toLowerCase();
             User linked = userRepository.findByEmail(email).orElse(null);
-            team.addMember(TeamMember.createMember(team, linked, m.name(), m.studentId(), email));
+            team.addMember(TeamMember.create(team, linked, m.name(), m.studentId(), email,
+                    roleOf(email, leaderEmail), m.duesPaid()));
         }
 
         Team saved = teamRepository.save(team);
@@ -166,6 +175,72 @@ public class TeamService {
         return TeamResponse.from(team);
     }
 
+    /**
+     * 팀장으로 지정된 사람의 이메일을 정한다.
+     *
+     * 폼에서 고른 값이 우리 팀 사람이 아니면 등록한 본인으로 되돌린다 — 팀장이 없는 팀이
+     * 생기면 결과물을 낼 사람이 사라진다.
+     */
+    private String resolveLeaderEmail(TeamRegisterRequest request, User registrant,
+                                      List<TeamMemberRequest> members) {
+        String picked = trimToNull(request.leaderEmail());
+        if (picked == null) return registrant.getEmail().toLowerCase();
+
+        String lowered = picked.toLowerCase();
+        if (lowered.equalsIgnoreCase(registrant.getEmail())) return lowered;
+        boolean amongMembers = members.stream()
+                .anyMatch(m -> m.email() != null && m.email().equalsIgnoreCase(lowered));
+        if (amongMembers) return lowered;
+
+        throw new HackathonException(ErrorCode.INVALID_INPUT,
+                "팀장은 팀원 중에서 골라야 합니다.");
+    }
+
+    private TeamMemberRole roleOf(String email, String leaderEmail) {
+        return email.equalsIgnoreCase(leaderEmail) ? TeamMemberRole.LEADER : TeamMemberRole.MEMBER;
+    }
+
+    private static String trimToNull(String value) {
+        if (value == null) return null;
+        String trimmed = value.trim();
+        return trimmed.isEmpty() ? null : trimmed;
+    }
+
+    /** 모집 상태 변경. 팀장 또는 등록한 사람만 할 수 있다. */
+    @Transactional
+    public TeamResponse updateRecruiting(Long userId, Long teamId, RecruitUpdateRequest request) {
+        Team team = findTeamWithMembers(teamId);
+        requireLeader(team, userId);
+        team.updateRecruiting(request.recruiting(), trimToNull(request.recruitNote()));
+        return TeamResponse.from(team);
+    }
+
+    /**
+     * 모집 중인 팀 목록.
+     *
+     * 내 팀이 팀원을 찾고 있으면 팀장을 찾는 팀이, 팀장을 찾고 있으면 팀원을 찾는 팀이 보인다.
+     * 서로 필요한 것이 반대인 쪽만 추려 주는 편이 전체 목록을 훑는 것보다 빠르다.
+     */
+    @Transactional(readOnly = true)
+    public List<TeamResponse> getRecruitingTeams(Long userId, RecruitStatus want) {
+        HackathonEvent event = eventService.getActiveEvent();
+        Team myTeam = teamRepository.findByEventIdAndMemberUserId(event.getId(), userId).orElse(null);
+
+        RecruitStatus target = want != null ? want
+                : (myTeam != null ? myTeam.getRecruiting().counterpart() : RecruitStatus.NONE);
+
+        List<Team> teams = target == RecruitStatus.NONE
+                ? teamRepository.findAllByEventIdWithMembers(event.getId()).stream()
+                        .filter(t -> t.getRecruiting() != RecruitStatus.NONE).toList()
+                : teamRepository.findByEventIdAndRecruitingWithMembers(event.getId(), target);
+
+        return teams.stream()
+                .filter(t -> myTeam == null || !t.getId().equals(myTeam.getId()))
+                .sorted(Comparator.comparing(Team::getTrack).thenComparing(Team::getId))
+                .map(TeamResponse::publicView)
+                .toList();
+    }
+
     private void validateTeamSize(HackathonEvent event, int size) {
         if (size < event.getMinTeamSize() || size > event.getMaxTeamSize()) {
             throw new HackathonException(ErrorCode.INVALID_TEAM_SIZE,
@@ -207,8 +282,14 @@ public class TeamService {
                 .orElseThrow(() -> new HackathonException(ErrorCode.TEAM_NOT_FOUND));
     }
 
+    /**
+     * 팀을 건드릴 수 있는 사람인지 확인한다.
+     *
+     * 등록한 사람과, 폼에서 팀장으로 지정된 사람 둘 다 통과시킨다.
+     * 등록은 대개 한 명이 대표로 하지만 팀장은 따로 지정할 수 있어 둘이 다를 수 있다.
+     */
     private void requireLeader(Team team, Long userId) {
-        if (!team.isLedBy(userId)) {
+        if (!team.canManage(userId)) {
             throw new HackathonException(ErrorCode.NOT_TEAM_LEADER);
         }
     }

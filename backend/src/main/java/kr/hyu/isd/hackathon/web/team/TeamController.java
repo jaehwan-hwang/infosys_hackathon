@@ -5,6 +5,7 @@ import kr.hyu.isd.hackathon.application.team.TeamService;
 import kr.hyu.isd.hackathon.common.auth.AuthPrincipal;
 import kr.hyu.isd.hackathon.common.auth.CurrentUser;
 import kr.hyu.isd.hackathon.common.dto.response.ApiResponse;
+import kr.hyu.isd.hackathon.domain.team.RecruitStatus;
 import kr.hyu.isd.hackathon.domain.team.Track;
 import kr.hyu.isd.hackathon.web.team.dto.*;
 import lombok.RequiredArgsConstructor;
@@ -48,6 +49,27 @@ public class TeamController {
     public ApiResponse<List<TeamResponse>> getTeams(
             @RequestParam(required = false) Track track) {
         return ApiResponse.success(teamService.getTeams(track));
+    }
+
+    /**
+     * 모집 중인 팀 목록.
+     *
+     * want를 비우면 우리 팀이 찾는 것과 반대인 쪽을 준다 — 팀원을 찾는 팀에게는
+     * 팀장을 찾는 팀이, 팀장을 찾는 팀에게는 팀원을 찾는 팀이 보인다.
+     */
+    @GetMapping("/recruiting")
+    public ApiResponse<List<TeamResponse>> getRecruitingTeams(
+            @CurrentUser AuthPrincipal principal,
+            @RequestParam(required = false) RecruitStatus want) {
+        return ApiResponse.success(teamService.getRecruitingTeams(principal.userId(), want));
+    }
+
+    /** 모집 상태 변경 */
+    @PutMapping("/{teamId}/recruiting")
+    public ApiResponse<TeamResponse> updateRecruiting(@CurrentUser AuthPrincipal principal,
+                                                      @PathVariable Long teamId,
+                                                      @Valid @RequestBody RecruitUpdateRequest request) {
+        return ApiResponse.success(teamService.updateRecruiting(principal.userId(), teamId, request));
     }
 
     @GetMapping("/{teamId}")

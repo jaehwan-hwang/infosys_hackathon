@@ -40,7 +40,7 @@ public enum ErrorCode {
 
     // ---- 403 Forbidden ----
     INSUFFICIENT_PERMISSION(HttpStatus.FORBIDDEN, "ISD024-403", "권한이 없습니다."),
-    NOT_TEAM_LEADER(HttpStatus.FORBIDDEN, "ISD025-403", "팀 조장만 수행할 수 있습니다."),
+    NOT_TEAM_LEADER(HttpStatus.FORBIDDEN, "ISD025-403", "팀장 또는 팀을 등록한 사람만 할 수 있습니다."),
     DOMAIN_NOT_ALLOWED(HttpStatus.FORBIDDEN, "ISD026-403", "한양대학교 이메일(@hanyang.ac.kr)로만 이용할 수 있습니다."),
 
     // ---- 404 Not Found ----

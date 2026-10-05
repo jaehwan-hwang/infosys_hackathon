@@ -149,8 +149,11 @@ public class SubmissionService {
         HackathonEvent event = team.getEvent();
         Instant now = Instant.now();
         if (!event.isSubmissionOpen(team.getTrack(), now)) {
+            // 아직 열리지 않은 것과 이미 닫힌 것은 참가자에게 전혀 다른 상황이다
             throw new HackathonException(ErrorCode.SUBMISSION_CLOSED,
-                    "%s 트랙 제출은 마감되었습니다.".formatted(team.getTrack().name()));
+                    event.isBeforeSubmissionOpen(now)
+                            ? "결과물 제출은 행사 당일에 열립니다."
+                            : "%s 트랙 제출은 마감되었습니다.".formatted(team.getTrack().getLabel()));
         }
     }
 
@@ -162,7 +165,7 @@ public class SubmissionService {
     }
 
     private void requireLeader(Team team, Long userId) {
-        if (!team.isLedBy(userId)) {
+        if (!team.canManage(userId)) {
             throw new HackathonException(ErrorCode.NOT_TEAM_LEADER,
                     "결과물 제출은 조장만 할 수 있습니다.");
         }

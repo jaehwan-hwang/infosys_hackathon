@@ -26,6 +26,11 @@ public record ApiResponse<T>(
         return new ApiResponse<>(System.currentTimeMillis(), null, null, message);
     }
 
+    /** 데이터와 함께 화면에 그대로 띄울 안내 문구를 내려준다. */
+    public static <T> ApiResponse<T> successWithMsg(T data, String message) {
+        return new ApiResponse<>(System.currentTimeMillis(), data, null, message);
+    }
+
     public static <T> ApiResponse<T> error(String errorCode, String message) {
         return new ApiResponse<>(System.currentTimeMillis(), null, errorCode, message);
     }

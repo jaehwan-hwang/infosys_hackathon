@@ -51,6 +51,15 @@ public class HackathonEvent extends BaseTimeEntity {
     @Column(name = "register_ends_at")
     private Instant registerEndsAt;
 
+    /**
+     * 결과물 제출이 열리는 시각.
+     *
+     * 신청은 행사 한 달 전부터 받지만 제출 폼은 행사 당일에만 열려야 한다.
+     * 미설정이면 마감 전까지 늘 열린 것으로 본다(개발 중 편의).
+     */
+    @Column(name = "submit_opens_at")
+    private Instant submitOpensAt;
+
     // ---- 트랙별 제출 마감 ----
     /** Spark 제출 마감 (1일차 19:00) */
     @Column(name = "spark_submit_deadline")
@@ -76,14 +85,14 @@ public class HackathonEvent extends BaseTimeEntity {
      * Spark는 1일차에, Sprint와 Summit은 2일차에 시상하므로 한꺼번에 열 수 없다.
      * 트랙마다 따로 연다.
      */
-    @Column(name = "spark_results_published", nullable = false)
-    private boolean sparkResultsPublished;
+    @Column(name = "spark_results_published")
+    private Boolean sparkResultsPublished;
 
-    @Column(name = "sprint_results_published", nullable = false)
-    private boolean sprintResultsPublished;
+    @Column(name = "sprint_results_published")
+    private Boolean sprintResultsPublished;
 
-    @Column(name = "summit_results_published", nullable = false)
-    private boolean summitResultsPublished;
+    @Column(name = "summit_results_published")
+    private Boolean summitResultsPublished;
 
     /**
      * 트랙별로 나누기 전에 쓰던 열. 지금은 아무것도 판단하지 않지만, 운영 DB에
@@ -124,8 +133,14 @@ public class HackathonEvent extends BaseTimeEntity {
 
     /** 지금 이 트랙의 제출 폼이 열려 있는가 */
     public boolean isSubmissionOpen(Track track, Instant now) {
+        if (submitOpensAt != null && now.isBefore(submitOpensAt)) return false;
         Instant deadline = submitDeadlineOf(track);
         return deadline == null || now.isBefore(deadline);
+    }
+
+    /** 아직 제출 시작 전인가. "곧 열립니다" 안내와 "마감됐습니다"를 가르는 데 쓴다. */
+    public boolean isBeforeSubmissionOpen(Instant now) {
+        return submitOpensAt != null && now.isBefore(submitOpensAt);
     }
 
     /** 지금 이 트랙의 평가가 열려 있는가 */
@@ -156,9 +171,11 @@ public class HackathonEvent extends BaseTimeEntity {
     }
 
     public void updateSchedule(Instant registerStartsAt, Instant registerEndsAt,
+                               Instant submitOpensAt,
                                Instant sparkSubmitDeadline, Instant devSubmitDeadline) {
         this.registerStartsAt = registerStartsAt;
         this.registerEndsAt = registerEndsAt;
+        this.submitOpensAt = submitOpensAt;
         this.sparkSubmitDeadline = sparkSubmitDeadline;
         this.devSubmitDeadline = devSubmitDeadline;
     }
@@ -192,13 +209,13 @@ public class HackathonEvent extends BaseTimeEntity {
         this.summitVotingOpen = day == 2;
     }
 
-    /** 지금 이 트랙의 리더보드가 공개됐는가 */
+    /** 지금 이 트랙의 리더보드가 공개됐는가. 값이 없으면 비공개다. */
     public boolean isResultsPublished(Track track) {
-        return switch (track) {
+        return Boolean.TRUE.equals(switch (track) {
             case SPARK -> sparkResultsPublished;
             case SPRINT -> sprintResultsPublished;
             case SUMMIT -> summitResultsPublished;
-        };
+        });
     }
 
     public void setResultsPublished(Track track, boolean published) {
@@ -207,7 +224,8 @@ public class HackathonEvent extends BaseTimeEntity {
             case SPRINT -> this.sprintResultsPublished = published;
             case SUMMIT -> this.summitResultsPublished = published;
         }
-        this.resultsPublished = sparkResultsPublished || sprintResultsPublished || summitResultsPublished;
+        this.resultsPublished = isResultsPublished(Track.SPARK)
+                || isResultsPublished(Track.SPRINT) || isResultsPublished(Track.SUMMIT);
     }
 
     public void deactivate() {

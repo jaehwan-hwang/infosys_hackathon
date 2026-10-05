@@ -1,5 +1,6 @@
 package kr.hyu.isd.hackathon.infrastructure.persistence;
 
+import kr.hyu.isd.hackathon.domain.team.RecruitStatus;
 import kr.hyu.isd.hackathon.domain.team.Team;
 import kr.hyu.isd.hackathon.domain.team.Track;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -54,6 +55,16 @@ public interface TeamRepository extends JpaRepository<Team, Long> {
             """)
     Optional<Team> findByEventIdAndMemberEmail(@Param("eventId") Long eventId,
                                                @Param("email") String email);
+
+    /** 모집 상태로 추린 팀 목록 (팀 합치기 화면용) */
+    @Query("""
+            select distinct t from Team t
+              left join fetch t.members m
+             where t.event.id = :eventId and t.recruiting = :recruiting
+             order by t.id
+            """)
+    List<Team> findByEventIdAndRecruitingWithMembers(@Param("eventId") Long eventId,
+                                                     @Param("recruiting") RecruitStatus recruiting);
 
     long countByEventId(Long eventId);
 

@@ -1,5 +1,6 @@
 package kr.hyu.isd.hackathon.web.team.dto;
 
+import kr.hyu.isd.hackathon.domain.team.RecruitStatus;
 import kr.hyu.isd.hackathon.domain.team.Team;
 import kr.hyu.isd.hackathon.domain.team.Track;
 
@@ -16,6 +17,8 @@ public record TeamResponse(
         String leaderName,
         int memberCount,
         List<TeamMemberResponse> members,
+        RecruitStatus recruiting,
+        String recruitNote,
         Instant createdAt
 ) {
 
@@ -35,6 +38,8 @@ public record TeamResponse(
                 team.getLeader().getName(),
                 members.size(),
                 members,
+                team.getRecruiting(),
+                team.getRecruitNote(),
                 team.getCreatedAt()
         );
     }
@@ -58,6 +63,8 @@ public record TeamResponse(
                 team.getLeader().getName(),
                 members.size(),
                 members,
+                team.getRecruiting(),
+                team.getRecruitNote(),
                 team.getCreatedAt()
         );
     }

@@ -1,5 +1,6 @@
 package kr.hyu.isd.hackathon.web.admin.dto;
 
+import kr.hyu.isd.hackathon.domain.team.RecruitStatus;
 import kr.hyu.isd.hackathon.domain.team.Track;
 import kr.hyu.isd.hackathon.web.team.dto.TeamMemberResponse;
 
@@ -13,6 +14,7 @@ public record TeamAdminResponse(
         Long teamId,
         String teamName,
         Track track,
+        RecruitStatus recruiting,
         String trackReason,
         String leaderName,
         String leaderEmail,

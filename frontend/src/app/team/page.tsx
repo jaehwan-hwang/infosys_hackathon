@@ -3,7 +3,7 @@
 import { Suspense, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { AuthGate } from "@/components/auth-gate";
-import { SubmissionPanel } from "@/components/submission-panel";
+import { TeamMergePanel } from "@/components/team-merge-panel";
 import { TeamRegisterForm } from "@/components/team-register-form";
 import { TeamEditForm } from "@/components/team-edit-form";
 import {
@@ -19,8 +19,10 @@ import {
   trackStyle,
 } from "@/components/ui";
 import type { TrackFilterValue } from "@/components/ui";
+import { FeeNotice } from "@/components/fee-notice";
 import { TextInput } from "@/components/form";
 import { api, publicApi } from "@/lib/api";
+import { RECRUIT_LABEL } from "@/lib/recruit";
 import { TRACK_LABEL, TRACK_TAGLINE } from "@/lib/track-rules";
 import { useApiQuery, useAuth } from "@/lib/use-auth";
 import type { Team, Track } from "@/lib/types";
@@ -28,8 +30,8 @@ import type { Team, Track } from "@/lib/types";
 /**
  * "팀" 화면.
  *
- * 팀이 없으면 등록 폼, 있으면 우리 팀과 다른 팀을 탭으로 보여준다.
- * 우리 팀 탭 안에서 팀 정보 수정과 결과물 제출까지 끝난다 — 따로 페이지를 두지 않는다.
+ * 팀이 없으면 등록 폼, 있으면 우리 팀 / 팀 합치기 / 다른 팀을 탭으로 보여준다.
+ * 결과물 제출은 행사 당일에만 쓰는 화면이라 여기서 빼고 따로 두었다(/submit).
  */
 export default function TeamPage() {
   return (
@@ -86,20 +88,23 @@ function TeamContent() {
     <RegisteredView
       team={teamQuery.data}
       registrationOpen={event?.registrationOpen ?? false}
+      maxTeamSize={event?.maxTeamSize ?? 5}
       onTeamChanged={teamQuery.reload}
     />
   );
 }
 
-type Tab = "mine" | "others";
+type Tab = "mine" | "merge" | "others";
 
 function RegisteredView({
   team,
   registrationOpen,
+  maxTeamSize,
   onTeamChanged,
 }: {
   team: Team;
   registrationOpen: boolean;
+  maxTeamSize: number;
   onTeamChanged: () => void;
 }) {
   const [tab, setTab] = useState<Tab>("mine");
@@ -113,20 +118,28 @@ function RegisteredView({
           onChange={setTab}
           items={[
             { value: "mine", label: "우리 팀" },
+            { value: "merge", label: "팀 합치기" },
             { value: "others", label: "다른 팀" },
           ]}
         />
       </div>
 
-      {tab === "mine" ? (
+      {tab === "mine" && (
         <MyTeamTab
           team={team}
           registrationOpen={registrationOpen}
           onTeamChanged={onTeamChanged}
         />
-      ) : (
-        <OtherTeamsTab myTeamId={team.teamId} />
       )}
+      {tab === "merge" && (
+        <TeamMergePanel
+          team={team}
+          registrationOpen={registrationOpen}
+          maxTeamSize={maxTeamSize}
+          onTeamChanged={onTeamChanged}
+        />
+      )}
+      {tab === "others" && <OtherTeamsTab myTeamId={team.teamId} />}
     </Section>
   );
 }
@@ -140,32 +153,37 @@ function MyTeamTab({
   registrationOpen: boolean;
   onTeamChanged: () => void;
 }) {
-  const { token, user } = useAuth();
-  const isLeader = String(team.leaderId) === user?.id;
-
-  const eventQuery = useApiQuery((signal) => publicApi.getEvent(signal), []);
-  const submissionQuery = useApiQuery(
-    token ? () => api.getMySubmission(token) : null,
-    [token],
-  );
+  const { user } = useAuth();
+  const canManage =
+    String(team.leaderId) === user?.id ||
+    team.members.some(
+      (m) => m.role === "LEADER" && m.userId !== null && String(m.userId) === user?.id,
+    );
 
   const style = trackStyle(team.track);
+  const feeNames = team.members.filter((m) => m.duesPaid === false).map((m) => m.name);
 
   return (
     <div className="space-y-8">
       <Card className={style.ring}>
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <TrackBadge track={team.track} />
               <h2 className="font-display text-2xl tracking-tight">{team.name}</h2>
+              {team.recruiting !== "NONE" && (
+                <Badge tone="info">{RECRUIT_LABEL[team.recruiting]}</Badge>
+              )}
             </div>
+            {team.recruitNote && (
+              <p className="mt-2 text-sm leading-relaxed text-muted">{team.recruitNote}</p>
+            )}
           </div>
           <span className="text-sm text-muted">{team.memberCount}명</span>
         </div>
 
         <div className="mt-6 border-t-2 border-current/10 pt-5">
-          <h3 className="text-sm font-semibold">팀원</h3>
+          <h3 className="text-sm font-bold">팀원</h3>
           <ul className="mt-3 space-y-2">
             {team.members.map((member) => (
               <li
@@ -173,43 +191,39 @@ function MyTeamTab({
                 className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm"
               >
                 {member.role === "LEADER" && (
-                  <span className="rounded bg-brand-100 px-1.5 py-0.5 text-[10px] font-bold text-brand-700 dark:bg-brand-950 dark:text-brand-300">
-                    조장
+                  <span className="rounded-full bg-grad-brand px-2 py-0.5 text-[10px] font-bold text-white">
+                    팀장
                   </span>
                 )}
-                <span className="font-medium">{member.name}</span>
+                <span className="font-bold">{member.name}</span>
                 {member.studentId && <span className="text-subtle">{member.studentId}</span>}
                 {member.email && <span className="text-subtle">{member.email}</span>}
+                {member.duesPaid === false && (
+                  <span className="text-xs font-bold text-brand-600">참가비 대상</span>
+                )}
                 {!member.linked && <span className="text-xs text-amber-600">로그인 대기</span>}
               </li>
             ))}
           </ul>
           <p className="mt-3 text-xs text-subtle">
-            학번과 이메일은 우리 팀에게만 보입니다. 다른 참가자에게는 이름만 공개됩니다.
+            이메일과 학생회비 납부 여부는 우리 팀에게만 보입니다. 다른 참가자에게는 성명과
+            학번만 공개됩니다.
           </p>
         </div>
       </Card>
 
-      {isLeader && (
+      {feeNames.length > 0 && <FeeNotice names={feeNames} />}
+
+      {canManage ? (
         <TeamEditForm
           team={team}
           disabled={!registrationOpen}
           onUpdated={onTeamChanged}
         />
-      )}
-
-      {submissionQuery.loading ? (
-        <Spinner label="제출 현황 불러오는 중" />
-      ) : isLeader ? (
-        <SubmissionPanel
-          team={team}
-          event={eventQuery.data}
-          existing={submissionQuery.data ?? null}
-          onSaved={submissionQuery.reload}
-        />
       ) : (
-        <Alert tone="info" title="결과물 제출은 조장만 할 수 있습니다">
-          {team.members.find((m) => m.role === "LEADER")?.name ?? "조장"}님이 제출합니다.
+        <Alert tone="info" title="팀 정보 수정은 팀장이 합니다">
+          {team.members.find((m) => m.role === "LEADER")?.name ?? "팀장"}님 또는 팀을 등록한
+          분이 수정할 수 있습니다.
         </Alert>
       )}
     </div>
@@ -219,8 +233,8 @@ function MyTeamTab({
 /**
  * 다른 팀 목록.
  *
- * 개인정보는 서버가 빼고 내려주므로 이름만 보인다. 팀이 많아지면 이름으로만 찾기가
- * 번거로우므로 트랙으로 먼저 좁힐 수 있게 했다 — 트랙을 고르고 검색하면 그 트랙 안에서만 찾는다.
+ * 팀을 합치려면 누가 있는 팀인지 알아볼 수 있어야 해서 성명과 학번까지 보여준다.
+ * 이메일과 학생회비 납부 여부는 서버가 빼고 내려준다.
  */
 function OtherTeamsTab({ myTeamId }: { myTeamId: number }) {
   const { token } = useAuth();
@@ -236,7 +250,14 @@ function OtherTeamsTab({ myTeamId }: { myTeamId: number }) {
     return (teamsQuery.data ?? [])
       .filter((t) => t.teamId !== myTeamId)
       .filter((t) => track === "ALL" || t.track === track)
-      .filter((t) => !q || t.name.toLowerCase().includes(q));
+      .filter(
+        (t) =>
+          !q ||
+          t.name.toLowerCase().includes(q) ||
+          t.members.some(
+            (m) => m.name.toLowerCase().includes(q) || (m.studentId ?? "").includes(q),
+          ),
+      );
   }, [teamsQuery.data, myTeamId, track, query]);
 
   if (teamsQuery.loading) return <Spinner label="팀 목록 불러오는 중" />;
@@ -257,7 +278,7 @@ function OtherTeamsTab({ myTeamId }: { myTeamId: number }) {
           type="search"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="팀 이름으로 검색"
+          placeholder="팀 이름, 팀원 이름, 학번으로 검색"
           className="rounded-full"
         />
       </div>
@@ -300,15 +321,28 @@ function TeamCard({ team }: { team: Team }) {
             <TrackBadge track={team.track} />
             <span className="font-display text-lg tracking-tight">{team.name}</span>
             <span className="text-xs text-subtle">{TRACK_TAGLINE[team.track]}</span>
+            {team.recruiting !== "NONE" && (
+              <Badge tone="info">{RECRUIT_LABEL[team.recruiting]}</Badge>
+            )}
           </div>
+          {team.recruitNote && (
+            <p className="mt-2 text-sm leading-relaxed text-muted">{team.recruitNote}</p>
+          )}
         </div>
         <Badge tone="neutral">{team.memberCount}명</Badge>
       </div>
 
-      <p className="mt-4 border-t-2 border-current/10 pt-3 text-sm">
-        <span className="text-muted">팀원 </span>
-        {team.members.map((m) => m.name).join(", ")}
-      </p>
+      <ul className="mt-4 flex flex-wrap gap-x-4 gap-y-1 border-t-2 border-current/10 pt-3 text-sm">
+        {team.members.map((m) => (
+          <li key={m.teamMemberId} className="flex items-center gap-1.5">
+            {m.role === "LEADER" && (
+              <span className="text-[10px] font-bold text-brand-600">팀장</span>
+            )}
+            <span className="font-bold">{m.name}</span>
+            {m.studentId && <span className="text-subtle">{m.studentId}</span>}
+          </li>
+        ))}
+      </ul>
     </Card>
   );
 }

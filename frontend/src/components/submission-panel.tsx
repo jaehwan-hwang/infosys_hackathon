@@ -151,7 +151,6 @@ export function SubmissionPanel({
 
   return (
     <Section
-      nested
       eyebrow="Submission"
       title="결과물 제출"
       description="마감 전까지 몇 번이든 저장할 수 있습니다. 마지막으로 저장된 내용이 심사 대상이 됩니다."

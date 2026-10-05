@@ -24,6 +24,9 @@ export function SiteFooter() {
             <Link href="/team" className="text-muted hover:underline">
               팀
             </Link>
+            <Link href="/submit" className="text-muted hover:underline">
+              결과물
+            </Link>
             <Link href="/evaluate" className="text-muted hover:underline">
               평가
             </Link>

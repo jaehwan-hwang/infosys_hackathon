@@ -8,6 +8,7 @@ import kr.hyu.isd.hackathon.common.dto.response.ApiResponse;
 import kr.hyu.isd.hackathon.domain.team.Track;
 import kr.hyu.isd.hackathon.web.admin.dto.*;
 import kr.hyu.isd.hackathon.web.auth.dto.UserResponse;
+import kr.hyu.isd.hackathon.web.match.dto.JoinRequestResponse;
 import kr.hyu.isd.hackathon.web.event.dto.CriterionResponse;
 import kr.hyu.isd.hackathon.web.event.dto.EventResponse;
 import kr.hyu.isd.hackathon.web.result.dto.TrackResultResponse;
@@ -134,6 +135,30 @@ public class AdminController {
     @GetMapping("/results/{track}")
     public ApiResponse<TrackResultResponse> getTrackResult(@PathVariable Track track) {
         return ApiResponse.success(resultService.getTrackResultForAdmin(track));
+    }
+
+    // ---- 팀 합치기 ----
+
+    /** 들어온 합치기 신청 목록. 대기 중인 것이 위로 온다. */
+    @GetMapping("/join-requests")
+    public ApiResponse<List<JoinRequestResponse>> getJoinRequests() {
+        return ApiResponse.success(adminService.getJoinRequests());
+    }
+
+    /** 두 팀을 합친다. fromTeam의 팀원이 toTeam으로 옮겨 가고 fromTeam은 사라진다. */
+    @PostMapping("/teams/merge")
+    public ApiResponse<TeamAdminResponse> mergeTeams(@RequestParam Long fromTeamId,
+                                                     @RequestParam Long toTeamId,
+                                                     @RequestParam(required = false) String note) {
+        return ApiResponse.successWithMsg(
+                adminService.mergeTeams(fromTeamId, toTeamId, note), "두 팀을 합쳤습니다.");
+    }
+
+    @PostMapping("/join-requests/{requestId}/reject")
+    public ApiResponse<Void> rejectJoinRequest(@PathVariable Long requestId,
+                                               @RequestParam(required = false) String note) {
+        adminService.rejectJoinRequest(requestId, note);
+        return ApiResponse.successWithMsg("신청을 반려했습니다.");
     }
 
     // ---- 수상 ----

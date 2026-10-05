@@ -18,6 +18,7 @@ export default function PrivacyPage() {
           <ul className="mt-3 space-y-1.5 text-sm text-muted">
             <li>· 성명, 학번, 한양대학교 이메일 주소</li>
             <li>· 소속 학과 (선택 입력)</li>
+            <li>· 학생회비 납부 여부 (참가비 대상 확인용)</li>
             <li>· 팀명 및 팀 구성 정보</li>
             <li>· 제출한 결과물 및 파일</li>
             <li>· 평가 점수 및 코멘트</li>
@@ -28,7 +29,8 @@ export default function PrivacyPage() {
           <h2 className="font-bold">2. 수집·이용 목적</h2>
           <ul className="mt-3 space-y-1.5 text-sm text-muted">
             <li>· 해커톤 참가자 신원 확인 및 참가 자격 검증</li>
-            <li>· 팀 구성 및 참가자 연락</li>
+            <li>· 팀 구성, 팀 합치기 중개 및 참가자 연락</li>
+            <li>· 참가비 대상 확인 및 입금 대조</li>
             <li>· 결과물 제출 접수 및 심사 진행</li>
             <li>· 수상자 선정 및 시상</li>
           </ul>
@@ -54,8 +56,9 @@ export default function PrivacyPage() {
           <h2 className="font-bold">5. 제3자 제공</h2>
           <p className="mt-3 text-sm leading-relaxed text-muted">
             수집된 정보는 제3자에게 제공하지 않습니다. 다만 심사를 위해 제출한 결과물과
-            팀명은 심사위원 및 참가 학생에게 공개됩니다. 평가 화면에서는 학번과 이메일이
-            표시되지 않습니다.
+            팀명은 심사위원 및 참가 학생에게 공개됩니다. 팀을 합칠 때 서로를 알아볼 수
+            있도록 <strong className="text-[var(--text)]">성명과 학번</strong>은 다른 참가자에게
+            공개됩니다. 이메일과 학생회비 납부 여부는 같은 팀과 운영진만 볼 수 있습니다.
           </p>
         </Card>
 

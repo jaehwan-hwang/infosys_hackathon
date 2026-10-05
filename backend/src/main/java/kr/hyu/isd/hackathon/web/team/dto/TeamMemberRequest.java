@@ -6,7 +6,9 @@ import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 /**
- * 조장이 등록 폼에서 입력하는 팀원 1명.
+ * 등록 폼에서 입력하는 팀원 1명.
+ *
+ * @param duesPaid 학생회비를 납부한 재학생인지. false면 참가비 1만원 대상이다.
  */
 public record TeamMemberRequest(
         @NotBlank(message = "팀원 성명은 필수입니다.")
@@ -19,6 +21,8 @@ public record TeamMemberRequest(
 
         @NotBlank(message = "이메일은 필수입니다.")
         @Email(message = "이메일 형식이 올바르지 않습니다.")
-        String email
+        String email,
+
+        boolean duesPaid
 ) {
 }
