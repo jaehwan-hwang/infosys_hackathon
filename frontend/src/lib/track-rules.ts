@@ -125,12 +125,6 @@ export const TRACK_TAGLINE: Record<Track, string> = {
   SUMMIT: "완성형 개발",
 };
 
-export const TRACK_DAY: Record<Track, number> = {
-  SPARK: 1,
-  SPRINT: 2,
-  SUMMIT: 2,
-};
-
 export const TRACK_GOAL: Record<Track, string> = {
   SPARK: "제시된 문제를 해결하는 아이디어 제시",
   SPRINT: "문제를 해결하는 기초적인 프로그램 개발",

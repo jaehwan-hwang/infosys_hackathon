@@ -248,9 +248,6 @@ export const api = {
   cancelJoinRequest: (token: string, requestId: number) =>
     request<void>(`/api/v1/join-requests/${requestId}`, { method: "DELETE", token }),
 
-  getTeamsByTrack: (token: string, track: Track) =>
-    request<Team[]>(`/api/v1/teams?track=${track}`, { token }),
-
   /** 전체 팀 목록(공개용). Spark → Sprint → Summit 순으로 내려온다. */
   getTeams: (token: string, signal?: AbortSignal) =>
     request<Team[]>("/api/v1/teams", { token, signal }),
