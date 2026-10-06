@@ -84,7 +84,10 @@ export function SiteHeader() {
             <span className="size-8 animate-pulse rounded-full bg-[var(--bg-muted)]" />
           ) : session?.user ? (
             <>
-              <span className="hidden text-sm text-muted sm:inline">
+              <Link
+                href="/profile"
+                className="hidden text-sm text-muted transition-colors hover:text-[var(--text)] sm:inline"
+              >
                 {session.user.name}
                 {isStaff && (
                   <span
@@ -98,7 +101,7 @@ export function SiteHeader() {
                     {roleLabel}
                   </span>
                 )}
-              </span>
+              </Link>
               <Button variant="secondary" size="sm" onClick={() => signOut()}>
                 로그아웃
               </Button>

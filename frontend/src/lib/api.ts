@@ -165,7 +165,8 @@ export const publicApi = {
 // ---- 인증 필요 API ----
 
 export const api = {
-  getMe: (token: string) => request<User>("/api/v1/auth/me", { token }),
+  getMe: (token: string, signal?: AbortSignal) =>
+    request<User>("/api/v1/auth/me", { token, signal }),
 
   updateProfile: (
     token: string,
