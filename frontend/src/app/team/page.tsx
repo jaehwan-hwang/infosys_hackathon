@@ -21,6 +21,7 @@ import {
 import type { TrackFilterValue } from "@/components/ui";
 import { TextInput } from "@/components/form";
 import { api, publicApi } from "@/lib/api";
+import { TeamMemberList } from "@/components/team-member-list";
 import { maskStudentId } from "@/lib/format";
 import { RECRUIT_LABEL } from "@/lib/recruit";
 import { TRACK_LABEL, TRACK_TAGLINE } from "@/lib/track-rules";
@@ -203,10 +204,6 @@ function MyTeamTab({
               </li>
             ))}
           </ul>
-          <p className="mt-3 text-xs text-subtle">
-            이메일은 우리 팀에게만 보입니다. 학번은 입학년도까지만 보이고, 뒷자리는 운영진만
-            확인할 수 있습니다.
-          </p>
         </div>
       </Card>
 
@@ -328,19 +325,9 @@ function TeamCard({ team }: { team: Team }) {
         <Badge tone="neutral">{team.memberCount}명</Badge>
       </div>
 
-      <ul className="mt-4 flex flex-wrap gap-x-4 gap-y-1 border-t-2 border-current/10 pt-3 text-sm">
-        {team.members.map((m) => (
-          <li key={m.teamMemberId} className="flex items-center gap-1.5">
-            {m.role === "LEADER" && (
-              <span className="text-[10px] font-bold text-brand-600">팀장</span>
-            )}
-            <span className="font-bold">{m.name}</span>
-            {m.studentId && (
-              <span className="text-subtle">{maskStudentId(m.studentId)}</span>
-            )}
-          </li>
-        ))}
-      </ul>
+      <div className="mt-4 border-t-2 border-current/10 pt-3">
+        <TeamMemberList members={team.members} />
+      </div>
     </Card>
   );
 }

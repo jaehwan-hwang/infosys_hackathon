@@ -12,8 +12,10 @@ public record TeamMemberResponse(
         TeamMemberRole role,
         /** 이 팀원이 서비스에 로그인해 계정이 연결됐는지 */
         boolean linked,
-        /** 학생회비 납부 여부. 공개용에서는 내려주지 않는다. */
-        Boolean duesPaid
+        /** 학생회비 납부 여부. 운영진만 받는다. */
+        Boolean duesPaid,
+        /** 연락처. 운영진만 받는다. 본인이 프로필에 넣기 전까지는 비어 있다. */
+        String phone
 ) {
 
     /**
@@ -32,11 +34,12 @@ public record TeamMemberResponse(
                 member.getEmail(),
                 member.getRole(),
                 member.getUser() != null,
+                null,
                 null
         );
     }
 
-    /** 운영진용. 학번 전체와 학생회비 납부 여부까지 본다. */
+    /** 운영진용. 학번 전체·학생회비 납부 여부·전화번호까지 본다. */
     public static TeamMemberResponse adminView(TeamMember member) {
         return new TeamMemberResponse(
                 member.getId(),
@@ -46,7 +49,8 @@ public record TeamMemberResponse(
                 member.getEmail(),
                 member.getRole(),
                 member.getUser() != null,
-                member.isDuesPaid()
+                member.isDuesPaid(),
+                member.getUser() != null ? member.getUser().getPhone() : null
         );
     }
 
@@ -65,6 +69,7 @@ public record TeamMemberResponse(
                 null,
                 member.getRole(),
                 member.getUser() != null,
+                null,
                 null
         );
     }

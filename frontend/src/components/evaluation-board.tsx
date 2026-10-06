@@ -250,8 +250,10 @@ function ScoreForm({
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <div className="flex items-center gap-2">
+              <h2 className="font-display mr-1 text-xl tracking-tight">
+                {target.teamName}
+              </h2>
               <TrackBadge track={target.track} />
-              <h2 className="text-lg font-bold">{target.teamName}</h2>
             </div>
             {target.projectName && (
               <p className="mt-2 font-medium">{target.projectName}</p>

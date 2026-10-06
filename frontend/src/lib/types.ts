@@ -132,8 +132,10 @@ export interface TeamMember {
   email: string | null;
   role: TeamMemberRole;
   linked: boolean;
-  /** 학생회비 납부 여부. 우리 팀과 운영진에게만 내려온다. */
+  /** 학생회비 납부 여부. 운영진에게만 내려온다. */
   duesPaid: boolean | null;
+  /** 연락처. 운영진에게만 내려온다. */
+  phone: string | null;
 }
 
 export interface Team {

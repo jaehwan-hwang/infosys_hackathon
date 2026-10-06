@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { AuthGate } from "@/components/auth-gate";
+import { PeriodGate } from "@/components/period-gate";
 import { SubmissionPanel } from "@/components/submission-panel";
 import { Alert, EmptyState, Section, Spinner } from "@/components/ui";
 import { api, publicApi } from "@/lib/api";
@@ -23,7 +24,7 @@ export default function SubmitPage() {
 }
 
 function SubmitContent() {
-  const { token, user, isStaff } = useAuth();
+  const { token, user } = useAuth();
 
   const eventQuery = useApiQuery((signal) => publicApi.getEvent(signal), []);
   const teamQuery = useApiQuery(token ? () => api.getMyTeam(token) : null, [token]);
@@ -57,30 +58,6 @@ function SubmitContent() {
     );
   }
 
-  // 아직 제출이 열리지 않았으면 폼 대신 안내만 보여준다 (운영진은 미리 본다)
-  if (event?.beforeSubmissionOpen && !isStaff) {
-    return (
-      <Section eyebrow="Submission" title="결과물 제출">
-        <EmptyState
-          title="이용 기간이 아닙니다"
-          description={
-            event.submitOpensAt
-              ? `결과물 제출은 ${formatDateTime(event.submitOpensAt)}부터 열립니다.`
-              : "결과물 제출은 행사 당일에 열립니다."
-          }
-          action={
-            <Link
-              href="/team"
-              className="inline-flex h-11 items-center justify-center rounded-full border-2 border-current/15 px-6 text-sm font-bold transition-colors hover:bg-current/5"
-            >
-              우리 팀 보기
-            </Link>
-          }
-        />
-      </Section>
-    );
-  }
-
   const canManage =
     String(team.leaderId) === user?.id ||
     team.members.some(
@@ -100,12 +77,23 @@ function SubmitContent() {
 
   if (submissionQuery.loading) return <Spinner label="제출 현황 불러오는 중" />;
 
+  // 아직 제출이 열리지 않았으면 폼 대신 안내만 보여준다. 운영진은 미리 볼 수 있다.
   return (
-    <SubmissionPanel
-      team={team}
-      event={event}
-      existing={submissionQuery.data ?? null}
-      onSaved={submissionQuery.reload}
-    />
+    <PeriodGate
+      open={!event?.beforeSubmissionOpen}
+      title="결과물 제출"
+      description={
+        event?.submitOpensAt
+          ? `결과물 제출은 ${formatDateTime(event.submitOpensAt)}부터 열립니다.`
+          : "결과물 제출은 행사 당일에 열립니다."
+      }
+    >
+      <SubmissionPanel
+        team={team}
+        event={event}
+        existing={submissionQuery.data ?? null}
+        onSaved={submissionQuery.reload}
+      />
+    </PeriodGate>
   );
 }

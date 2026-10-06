@@ -11,6 +11,7 @@ import {
   TrackBadge,
   cx,
 } from "@/components/ui";
+import { TeamMemberList } from "@/components/team-member-list";
 import { api } from "@/lib/api";
 import { formatDateTime } from "@/lib/format";
 import { RECRUIT_LABEL, RECRUIT_OPTIONS, counterpart } from "@/lib/recruit";
@@ -303,16 +304,16 @@ function MatchCard({
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
+            <span className="font-display mr-1 text-lg tracking-tight">{team.name}</span>
             <TrackBadge track={team.track} />
-            <span className="font-display text-lg tracking-tight">{team.name}</span>
             <Badge tone="info">{RECRUIT_LABEL[team.recruiting]}</Badge>
           </div>
           {team.recruitNote && (
             <p className="mt-2 text-sm leading-relaxed text-muted">{team.recruitNote}</p>
           )}
-          <p className="mt-2 text-sm text-subtle">
-            {team.memberCount}명 · 합치면 {merged}명
-          </p>
+          <div className="mt-3">
+            <TeamMemberList members={team.members} />
+          </div>
         </div>
 
         {requested ? (

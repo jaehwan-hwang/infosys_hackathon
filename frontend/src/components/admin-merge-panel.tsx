@@ -140,8 +140,10 @@ function RequestCard({
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
+            <span className="font-display mr-1 text-lg tracking-tight">
+              {request.fromTeamName}
+            </span>
             {request.fromTeamTrack && <TrackBadge track={request.fromTeamTrack} />}
-            <span className="font-display text-lg tracking-tight">{request.fromTeamName}</span>
             <Badge tone="neutral">{request.fromTeamMemberCount}명</Badge>
             {request.toTeamName ? (
               <span className="text-sm text-muted">→ {request.toTeamName} 팀에 신청</span>

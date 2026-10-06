@@ -21,6 +21,7 @@ import {
 import type { TrackFilterValue } from "@/components/ui";
 import { api, downloadCsv } from "@/lib/api";
 import { formatDateTime, formatScore, rankLabel } from "@/lib/format";
+import { RECRUIT_LABEL } from "@/lib/recruit";
 import { TRACK_LABEL } from "@/lib/track-rules";
 import { useApiMutation, useApiQuery, useAuth } from "@/lib/use-auth";
 import type { Track } from "@/lib/types";
@@ -135,7 +136,7 @@ function Overview({
     { label: "등록 팀", value: data.totalTeams, tab: "teams" },
     { label: "참가자", value: data.totalParticipants, tab: "participants" },
     { label: "제출물", value: data.totalSubmissions, tab: "submissions" },
-    { label: "교수 평가", value: data.professorVoteCount, tab: "results" },
+    { label: "평가", value: data.professorVoteCount, tab: "results" },
   ];
 
   return (
@@ -400,8 +401,13 @@ function TeamsPanel() {
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-2">
+                  <span className="font-display mr-1 text-lg tracking-tight">
+                    {team.teamName}
+                  </span>
                   <TrackBadge track={team.track} />
-                  <span className="font-bold">{team.teamName}</span>
+                  {team.recruiting !== "NONE" && (
+                    <Badge tone="info">{RECRUIT_LABEL[team.recruiting]}</Badge>
+                  )}
                   {team.submitted ? (
                     <Badge tone={team.submissionComplete ? "success" : "warning"}>
                       {team.submissionComplete ? "제출 완료" : "필수 항목 미충족"}
@@ -411,13 +417,33 @@ function TeamsPanel() {
                   )}
                 </div>
 
-                <p className="mt-2 text-sm text-muted">
-                  조장 {team.leaderName} · {team.leaderEmail} · {team.memberCount}명
-                </p>
-
-                {team.trackReason && (
-                  <p className="mt-1 text-xs text-subtle">배정 근거 — {team.trackReason}</p>
-                )}
+                <ul className="mt-3 space-y-1 text-sm">
+                  {[...team.members]
+                    .sort((a, b) => Number(b.role === "LEADER") - Number(a.role === "LEADER"))
+                    .map((m) => (
+                      <li key={m.teamMemberId} className="flex flex-wrap items-center gap-x-3">
+                        <span
+                          className={cx(
+                            "w-9 shrink-0 text-[11px] font-bold",
+                            m.role === "LEADER" ? "text-brand-600" : "text-subtle",
+                          )}
+                        >
+                          {m.role === "LEADER" ? "팀장" : "팀원"}
+                        </span>
+                        <span className="font-bold">{m.name}</span>
+                        <span className="tabular-nums text-subtle">{m.studentId}</span>
+                        <span
+                          className={cx(
+                            "tabular-nums",
+                            m.phone ? "text-subtle" : "text-amber-600",
+                          )}
+                        >
+                          {m.phone ?? "전화번호 미등록"}
+                        </span>
+                        <span className="text-subtle">{m.email}</span>
+                      </li>
+                    ))}
+                </ul>
 
                 {team.missingRequirements.length > 0 && (
                   <p className="mt-1 text-xs text-amber-600">
@@ -519,9 +545,9 @@ function ResultsPanel() {
 
   return (
     <div className="space-y-8">
-      <Alert tone="info">
-        이 집계는 운영진에게만 보입니다. 참가자 공개 여부는 &ldquo;현황&rdquo; 탭에서
-        조절합니다.
+      <Alert tone="info" title="여기 숫자는 참가자에게 보이지 않습니다">
+        시상 전에 운영진이 순위를 미리 확인하는 화면입니다. 참가자가 보는 리더보드는
+        &ldquo;현황&rdquo; 탭에서 트랙별 <strong>시상 공개</strong>를 눌러야 열립니다.
       </Alert>
 
       {(resultsQuery.data ?? []).map((track) => (
