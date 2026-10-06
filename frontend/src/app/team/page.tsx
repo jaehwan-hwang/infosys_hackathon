@@ -19,7 +19,6 @@ import {
   trackStyle,
 } from "@/components/ui";
 import type { TrackFilterValue } from "@/components/ui";
-import { FeeNotice } from "@/components/fee-notice";
 import { TextInput } from "@/components/form";
 import { api, publicApi } from "@/lib/api";
 import { RECRUIT_LABEL } from "@/lib/recruit";
@@ -161,7 +160,6 @@ function MyTeamTab({
     );
 
   const style = trackStyle(team.track);
-  const feeNames = team.members.filter((m) => m.duesPaid === false).map((m) => m.name);
 
   return (
     <div className="space-y-8">
@@ -169,8 +167,8 @@ function MyTeamTab({
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <div className="flex flex-wrap items-center gap-2">
+              <h2 className="font-display mr-1 text-2xl tracking-tight">{team.name}</h2>
               <TrackBadge track={team.track} />
-              <h2 className="font-display text-2xl tracking-tight">{team.name}</h2>
               {team.recruiting !== "NONE" && (
                 <Badge tone="info">{RECRUIT_LABEL[team.recruiting]}</Badge>
               )}
@@ -199,7 +197,7 @@ function MyTeamTab({
                 {member.studentId && <span className="text-subtle">{member.studentId}</span>}
                 {member.email && <span className="text-subtle">{member.email}</span>}
                 {member.duesPaid === false && (
-                  <span className="text-xs font-bold text-brand-600">참가비 대상</span>
+                  <span className="text-xs font-bold text-brand-600">학생회비 미납·휴학</span>
                 )}
                 {!member.linked && <span className="text-xs text-amber-600">로그인 대기</span>}
               </li>
@@ -211,8 +209,6 @@ function MyTeamTab({
           </p>
         </div>
       </Card>
-
-      {feeNames.length > 0 && <FeeNotice names={feeNames} track={team.track} />}
 
       {canManage ? (
         <TeamEditForm
@@ -318,12 +314,12 @@ function TeamCard({ team }: { team: Team }) {
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
+            <span className="font-display mr-1 text-lg tracking-tight">{team.name}</span>
             <TrackBadge track={team.track} />
-            <span className="font-display text-lg tracking-tight">{team.name}</span>
-            <span className="text-xs text-subtle">{TRACK_TAGLINE[team.track]}</span>
             {team.recruiting !== "NONE" && (
               <Badge tone="info">{RECRUIT_LABEL[team.recruiting]}</Badge>
             )}
+            <span className="text-xs text-subtle">{TRACK_TAGLINE[team.track]}</span>
           </div>
           {team.recruitNote && (
             <p className="mt-2 text-sm leading-relaxed text-muted">{team.recruitNote}</p>

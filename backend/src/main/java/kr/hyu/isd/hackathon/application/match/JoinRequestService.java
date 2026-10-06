@@ -112,7 +112,12 @@ public class JoinRequestService {
                 .toList();
     }
 
-    /** 보낸 신청 취소 */
+    /**
+     * 보낸 신청을 거둔다.
+     *
+     * 상태만 "취소"로 바꾸면 적어 둔 글이 목록에 그대로 남는다. 거두는 쪽은 흔적까지
+     * 없애려는 것이므로 행을 지운다. 운영진 목록에서도 함께 사라진다.
+     */
     @Transactional
     public void cancel(Long userId, Long requestId) {
         JoinRequest request = joinRequestRepository.findById(requestId)
@@ -123,6 +128,6 @@ public class JoinRequestService {
         if (!request.isPending()) {
             throw new HackathonException(ErrorCode.INVALID_INPUT, "이미 처리된 신청입니다.");
         }
-        request.cancel();
+        joinRequestRepository.delete(request);
     }
 }

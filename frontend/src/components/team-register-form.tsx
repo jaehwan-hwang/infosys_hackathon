@@ -186,9 +186,6 @@ export function TeamRegisterForm({
                     {TRACK_TAGLINE[item.track]}
                   </p>
                   <p className="mt-2 text-xs leading-relaxed text-muted">{item.description}</p>
-                  <p className="mt-2 text-xs font-bold">
-                    참가비 {formatFee(entryFeeOf(item.track))}
-                  </p>
                 </button>
               ))}
             </div>
@@ -196,9 +193,16 @@ export function TeamRegisterForm({
 
           <fieldset>
             <legend className="text-base font-bold">3. 팀원 정보</legend>
-            <p className="mt-1.5 text-sm text-muted">
+            <p className="mt-1.5 text-sm leading-relaxed text-muted">
               본인을 포함해 {minTeamSize}~{maxTeamSize}명까지 등록할 수 있습니다. 혼자
               신청해도 되고, 뒤에서 다른 팀과 합칠 수 있습니다.
+            </p>
+            <p className="mt-1.5 text-sm leading-relaxed text-muted">
+              학생회비를 낸 재학생은 참가비가 없습니다. 미납자와 휴학생만{" "}
+              <strong className="text-[var(--text)]">
+                {TRACK_LABEL[track]} 기준 1인 {formatFee(entryFeeOf(track))}
+              </strong>
+              을 냅니다.
             </p>
 
             <Card className="mt-4">
@@ -362,6 +366,10 @@ export function TeamRegisterForm({
             <p className="mt-1.5 text-sm leading-relaxed text-muted">
               인원이 모자라면 모집 상태를 켜 두세요. 팀원을 찾는 팀에게는 팀장을 찾는 쪽이,
               팀장을 찾는 쪽에는 팀원을 찾는 팀이 보입니다. 등록 뒤에도 바꿀 수 있습니다.
+            </p>
+            <p className="mt-1.5 text-sm leading-relaxed text-muted">
+              다만 남은 인원이 맞아떨어져야 합칠 수 있어, 신청해도 짝을 찾지 못할 수
+              있습니다. 최대 {maxTeamSize}명을 넘기는 조합은 합칠 수 없습니다.
             </p>
 
             <div className="mt-4 grid gap-3 sm:grid-cols-3">

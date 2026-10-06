@@ -403,7 +403,8 @@ function OpenRequestCard({
       <h3 className="text-base font-bold">마음에 드는 팀이 없나요</h3>
       <p className="mt-1.5 text-sm leading-relaxed text-muted">
         특정 팀을 고르지 않고 &ldquo;어느 팀이든 좋습니다&rdquo;로 신청해 두면, 운영진이
-        남은 인원을 보고 자리를 찾아 연결해 드립니다.
+        남은 인원을 보고 자리를 찾아 연결해 드립니다. 다만 남은 인원이 맞아떨어져야
+        합칠 수 있어, 신청해도 짝을 찾지 못할 수 있습니다.
       </p>
 
       <div className="mt-4">

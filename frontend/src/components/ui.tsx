@@ -22,6 +22,15 @@ export function cx(...parts: (string | false | null | undefined)[]): string {
 /** 2px 선으로 둘러싼 면. 카드·입력·알약이 모두 같은 선 색을 쓴다. */
 export const HAIRLINE = "border-2 border-current/15";
 
+/**
+ * 이름 옆에 붙는 작은 태그의 공통 치수.
+ *
+ * 트랙 배지와 상태 배지가 나란히 놓이는 자리가 많아, 크기가 다르면 줄이 울퉁불퉁해진다.
+ * 테두리 두께까지 같아야 높이가 맞으므로 채운 배지에도 투명한 선을 둔다.
+ */
+export const TAG_SIZE =
+  "inline-flex items-center gap-1.5 rounded-full border-2 px-3 py-0.5 text-xs font-bold";
+
 /** 강조 면 — 홈의 파란 그라데이션 */
 export const FILLED = "bg-grad-brand text-white";
 
@@ -186,17 +195,17 @@ export function TrackFilter({
  */
 const TRACK_STYLES: Record<Track, { badge: string; accent: string; ring: string }> = {
   SPARK: {
-    badge: "border-2 border-brand-500/40 text-brand-600 dark:text-brand-300",
+    badge: "border-brand-500/40 text-brand-600 dark:text-brand-300",
     accent: "text-brand-500 dark:text-brand-300",
     ring: "ring-2 ring-brand-400/40",
   },
   SPRINT: {
-    badge: "border-2 border-brand-600/50 text-brand-700 dark:text-brand-200",
+    badge: "border-brand-600/50 text-brand-700 dark:text-brand-200",
     accent: "text-brand-600 dark:text-brand-300",
     ring: "ring-2 ring-brand-500/50",
   },
   SUMMIT: {
-    badge: "bg-grad-brand text-white",
+    badge: "border-transparent bg-grad-brand text-white",
     accent: "text-brand-700 dark:text-brand-200",
     ring: "ring-2 ring-brand-600/60",
   },
@@ -216,13 +225,7 @@ export function TrackBadge({
   className?: string;
 }) {
   return (
-    <span
-      className={cx(
-        "inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold",
-        TRACK_STYLES[track].badge,
-        className,
-      )}
-    >
+    <span className={cx(TAG_SIZE, TRACK_STYLES[track].badge, className)}>
       {TRACK_LABEL[track]}
       {showTagline && (
         <span className="font-medium opacity-70">{TRACK_TAGLINE[track]}</span>
@@ -241,22 +244,13 @@ export function Badge({
   tone?: "neutral" | "success" | "warning" | "danger" | "info";
 }) {
   const tones = {
-    neutral: "border-2 border-current/20 text-muted",
-    success: "border-2 border-emerald-500/50 text-emerald-700 dark:text-emerald-300",
-    warning: "border-2 border-amber-500/50 text-amber-700 dark:text-amber-300",
-    danger: "border-2 border-red-500/50 text-red-700 dark:text-red-300",
-    info: "border-2 border-brand-500/40 text-brand-600 dark:text-brand-300",
+    neutral: "border-current/20 text-muted",
+    success: "border-emerald-500/50 text-emerald-700 dark:text-emerald-300",
+    warning: "border-amber-500/50 text-amber-700 dark:text-amber-300",
+    danger: "border-red-500/50 text-red-700 dark:text-red-300",
+    info: "border-brand-500/40 text-brand-600 dark:text-brand-300",
   };
-  return (
-    <span
-      className={cx(
-        "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold",
-        tones[tone],
-      )}
-    >
-      {children}
-    </span>
-  );
+  return <span className={cx(TAG_SIZE, tones[tone])}>{children}</span>;
 }
 
 /** 실패·주의 안내. 폼 상단에 에러 메시지를 띄울 때 쓴다. */

@@ -54,7 +54,7 @@ export function SiteHeader() {
           aria-label="홈으로"
           className="font-display text-lg tracking-[-0.02em] transition-opacity hover:opacity-60"
         >
-          IS HACKATHON
+          INFOSYS HACKATHON
         </Link>
 
         <nav aria-label="주요 메뉴" className="ml-auto hidden items-center gap-1 lg:flex">

@@ -6,7 +6,7 @@
 export type Track = "SPARK" | "SPRINT" | "SUMMIT";
 /** 팀이 무엇을 찾고 있는지. 서로 반대인 팀끼리 이어 준다. */
 export type RecruitStatus = "NONE" | "MEMBERS" | "LEADER";
-export type JoinRequestStatus = "PENDING" | "MERGED" | "REJECTED" | "CANCELED";
+export type JoinRequestStatus = "PENDING" | "MERGED" | "REJECTED";
 export type Role = "STUDENT" | "PROFESSOR" | "ADMIN";
 export type GoodsItem = "HOODIE" | "STICKER" | "KEYRING";
 export type EvaluatorType = "STUDENT" | "PROFESSOR";

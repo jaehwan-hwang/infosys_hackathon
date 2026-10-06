@@ -9,8 +9,7 @@ package kr.hyu.isd.hackathon.domain.match;
 public enum JoinRequestStatus {
     PENDING("대기"),
     MERGED("합침"),
-    REJECTED("반려"),
-    CANCELED("취소");
+    REJECTED("반려");
 
     private final String label;
 

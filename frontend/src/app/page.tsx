@@ -36,8 +36,8 @@ const TRACKS_INTRO = {
   lede: "결과물의 완성도 단계에 따라 제출물과 평가 기준이 다른 세 트랙으로 나뉩니다.",
   items: [
     { num: "01", name: "SPARK", sub: "아이디어톤 · 1일차" },
-    { num: "02", name: "SPRINT", sub: "기초 개발 · 2일차" },
-    { num: "03", name: "SUMMIT", sub: "완성형 개발 · 2일차" },
+    { num: "02", name: "SPRINT", sub: "기초 개발 · 1, 2일차" },
+    { num: "03", name: "SUMMIT", sub: "완성형 개발 · 1, 2일차" },
   ],
 };
 
@@ -103,7 +103,7 @@ const DAYS = [
   {
     title: "DAY 2",
     kicker: "SPRINT · SUMMIT 트랙",
-    lede: "Sprint와 Summit 트랙은 2일차 일정으로 진행됩니다. 2일차 결과물은 두 트랙이 함께 제출합니다.",
+    lede: "Sprint와 Summit 트랙은 1, 2일차 일정으로 진행됩니다. 2일차 결과물은 두 트랙이 함께 제출합니다.",
     rows: dayRows("SPRINT · SUMMIT"),
   },
 ] as const;

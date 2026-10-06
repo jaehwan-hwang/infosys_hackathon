@@ -105,10 +105,6 @@ public class JoinRequest extends BaseTimeEntity {
         this.handledNote = note;
     }
 
-    public void cancel() {
-        this.status = JoinRequestStatus.CANCELED;
-    }
-
     /**
      * 사라지는 팀과의 연결을 끊는다.
      *
