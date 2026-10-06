@@ -92,7 +92,9 @@ export function AuthGate({
 function ProfileForm() {
   const { token, user, refresh } = useAuth();
   const [name, setName] = useState(() => cleanPersonName(user?.name));
-  const [studentId, setStudentId] = useState("");
+  // 전화번호·동의가 생기기 전에 가입한 사람은 이 화면을 다시 보게 된다.
+  // 이미 낸 학번까지 다시 치게 할 이유는 없다.
+  const [studentId, setStudentId] = useState(() => user?.studentId ?? "");
   const [department, setDepartment] = useState("정보시스템학과");
   const [phone, setPhone] = useState("");
   const [consent, setConsent] = useState(false);
@@ -139,7 +141,8 @@ function ProfileForm() {
       <Card className="p-7">
         <h1 className="font-display text-2xl tracking-tight">프로필 등록</h1>
         <p className="mt-2 text-sm leading-relaxed text-muted">
-          처음 로그인하셨네요. 참가자 명단 작성을 위해 성명과 학번을 한 번만 입력해 주세요.
+          참가자 명단 작성과 연락을 위해 한 번만 입력해 주세요. 이미 입력한 항목은 채워져
+          있습니다.
         </p>
 
         {error && !error.fields && (

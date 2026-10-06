@@ -94,6 +94,18 @@ public class User extends BaseTimeEntity {
         return Boolean.TRUE.equals(this.privacyConsent);
     }
 
+    /**
+     * 참가에 필요한 정보가 다 모였는가.
+     *
+     * 저장된 깃발만 보지 않는다. 전화번호와 동의를 받기 전에 가입한 사람은 깃발이
+     * 켜져 있어도 두 값이 비어 있어서, 프로필 화면이 다시 뜨지 않으면 동의할 길이
+     * 없는 채로 팀 등록만 막힌다. 빠진 것이 있으면 다시 받는다.
+     */
+    public boolean isProfileReady() {
+        return this.profileCompleted && hasPrivacyConsent()
+                && this.phone != null && !this.phone.isBlank();
+    }
+
     public void changeRole(Role role) {
         this.role = role;
     }

@@ -58,7 +58,7 @@ public class AuthService {
                 accessToken,
                 jwtProvider.getExpirySeconds(),
                 UserResponse.from(user, authProperties.isSuperAdmin(user.getEmail())),
-                !user.isProfileCompleted()
+                !user.isProfileReady()
         );
     }
 

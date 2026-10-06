@@ -69,13 +69,11 @@ public class TeamService {
 
         User leader = userRepository.findById(userId)
                 .orElseThrow(() -> new HackathonException(ErrorCode.USER_NOT_FOUND));
-        if (!leader.isProfileCompleted()) {
-            throw new HackathonException(ErrorCode.PROFILE_REQUIRED);
-        }
-        // 동의는 프로필 등록에서 본인이 직접 한다. 팀장이 팀원 몫까지 대신 할 수 없다.
-        if (!leader.hasPrivacyConsent()) {
+        // 동의와 전화번호는 프로필 등록에서 본인이 직접 채운다.
+        // 팀장이 팀원 몫까지 대신 동의할 수는 없다.
+        if (!leader.isProfileReady()) {
             throw new HackathonException(ErrorCode.PROFILE_REQUIRED,
-                    "개인정보 수집·이용에 동의한 뒤 팀을 등록할 수 있습니다.");
+                    "프로필(전화번호·개인정보 동의)을 먼저 채워 주세요.");
         }
 
         // 한 사람이 두 팀에 속할 수 없다.

@@ -32,7 +32,8 @@ public record UserResponse(
                 user.getRole(),
                 superAdmin ? "최고 관리자" : user.getRole().getLabel(),
                 superAdmin,
-                user.isProfileCompleted(),
+                // 전화번호·동의가 생기기 전에 가입한 사람은 아직 덜 끝난 것으로 본다
+                user.isProfileReady(),
                 user.hasPrivacyConsent()
         );
     }
