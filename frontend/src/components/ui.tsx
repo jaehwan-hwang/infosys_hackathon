@@ -195,12 +195,12 @@ export function TrackFilter({
  */
 const TRACK_STYLES: Record<Track, { badge: string; accent: string; ring: string }> = {
   SPARK: {
-    badge: "border-brand-500/40 text-brand-600 dark:text-brand-300",
+    badge: "border-transparent bg-grad-brand text-white",
     accent: "text-brand-500 dark:text-brand-300",
     ring: "ring-2 ring-brand-400/40",
   },
   SPRINT: {
-    badge: "border-brand-600/50 text-brand-700 dark:text-brand-200",
+    badge: "border-transparent bg-grad-brand text-white",
     accent: "text-brand-600 dark:text-brand-300",
     ring: "ring-2 ring-brand-500/50",
   },

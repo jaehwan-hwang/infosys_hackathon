@@ -51,6 +51,19 @@ export function formatBytes(bytes: number): string {
   return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
 }
 
+/**
+ * 학번에서 입학년도만 남긴다 (2024******).
+ *
+ * 같은 과 학생끼리 누가 누군지 알아보는 데는 입학년도면 충분하다. 뒷자리까지
+ * 띄워 두면 학번 전체가 명단처럼 떠돌게 되므로 운영진 화면에만 남긴다.
+ */
+export function maskStudentId(studentId: string | null | undefined): string {
+  if (!studentId) return "";
+  const digits = studentId.trim();
+  if (digits.length <= 4) return digits;
+  return digits.slice(0, 4) + "*".repeat(digits.length - 4);
+}
+
 /** 순위를 메달 이모지 또는 숫자로 표시한다. */
 export function rankLabel(rank: number): string {
   if (rank === 1) return "🥇";

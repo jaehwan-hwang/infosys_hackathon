@@ -21,6 +21,7 @@ import {
 import type { TrackFilterValue } from "@/components/ui";
 import { TextInput } from "@/components/form";
 import { api, publicApi } from "@/lib/api";
+import { maskStudentId } from "@/lib/format";
 import { RECRUIT_LABEL } from "@/lib/recruit";
 import { TRACK_LABEL, TRACK_TAGLINE } from "@/lib/track-rules";
 import { useApiQuery, useAuth } from "@/lib/use-auth";
@@ -194,18 +195,17 @@ function MyTeamTab({
                   </span>
                 )}
                 <span className="font-bold">{member.name}</span>
-                {member.studentId && <span className="text-subtle">{member.studentId}</span>}
-                {member.email && <span className="text-subtle">{member.email}</span>}
-                {member.duesPaid === false && (
-                  <span className="text-xs font-bold text-brand-600">학생회비 미납·휴학</span>
+                {member.studentId && (
+                  <span className="text-subtle">{maskStudentId(member.studentId)}</span>
                 )}
+                {member.email && <span className="text-subtle">{member.email}</span>}
                 {!member.linked && <span className="text-xs text-amber-600">로그인 대기</span>}
               </li>
             ))}
           </ul>
           <p className="mt-3 text-xs text-subtle">
-            이메일과 학생회비 납부 여부는 우리 팀에게만 보입니다. 다른 참가자에게는 성명과
-            학번만 공개됩니다.
+            이메일은 우리 팀에게만 보입니다. 학번은 입학년도까지만 보이고, 뒷자리는 운영진만
+            확인할 수 있습니다.
           </p>
         </div>
       </Card>
@@ -335,7 +335,9 @@ function TeamCard({ team }: { team: Team }) {
               <span className="text-[10px] font-bold text-brand-600">팀장</span>
             )}
             <span className="font-bold">{m.name}</span>
-            {m.studentId && <span className="text-subtle">{m.studentId}</span>}
+            {m.studentId && (
+              <span className="text-subtle">{maskStudentId(m.studentId)}</span>
+            )}
           </li>
         ))}
       </ul>

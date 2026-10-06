@@ -478,7 +478,7 @@ function DuesChoice({
 }) {
   const options = [
     { value: true, label: "학생회비 납부 재학생" },
-    { value: false, label: "미납 또는 휴학 (참가비 1만원)" },
+    { value: false, label: "미납 또는 휴학" },
   ];
 
   return (

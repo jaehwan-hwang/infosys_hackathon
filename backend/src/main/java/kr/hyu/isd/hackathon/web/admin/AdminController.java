@@ -17,6 +17,7 @@ import kr.hyu.isd.hackathon.web.match.dto.JoinRequestResponse;
 import kr.hyu.isd.hackathon.web.event.dto.CriterionResponse;
 import kr.hyu.isd.hackathon.web.event.dto.EventResponse;
 import kr.hyu.isd.hackathon.web.result.dto.TrackResultResponse;
+import kr.hyu.isd.hackathon.web.submission.dto.SubmissionResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
@@ -54,6 +55,18 @@ public class AdminController {
     @GetMapping("/teams")
     public ApiResponse<List<TeamAdminResponse>> getTeams() {
         return ApiResponse.success(adminService.getTeams());
+    }
+
+    /** 참가자 전체 명단. 학번·전화번호·이메일을 한 줄에 모은다. */
+    @GetMapping("/participants")
+    public ApiResponse<List<ParticipantResponse>> getParticipants() {
+        return ApiResponse.success(adminService.getParticipants());
+    }
+
+    /** 제출물 전체 */
+    @GetMapping("/submissions")
+    public ApiResponse<List<SubmissionResponse>> getSubmissions() {
+        return ApiResponse.success(adminService.getSubmissions());
     }
 
     /** 트랙 자동 배정 결과 수동 정정 */

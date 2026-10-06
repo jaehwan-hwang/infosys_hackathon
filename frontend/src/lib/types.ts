@@ -339,6 +339,22 @@ export interface Dashboard {
   votingOpen: Record<Track, boolean>;
 }
 
+/** 운영진이 보는 참가자 한 명 */
+export interface Participant {
+  teamMemberId: number;
+  teamId: number;
+  teamName: string;
+  track: Track;
+  name: string;
+  studentId: string;
+  email: string;
+  /** 본인이 프로필에 넣는 값. 아직 로그인 전이면 null */
+  phone: string | null;
+  leader: boolean;
+  linked: boolean;
+  duesPaid: boolean;
+}
+
 export interface TeamAdmin {
   teamId: number;
   teamName: string;

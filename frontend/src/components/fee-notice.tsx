@@ -32,7 +32,11 @@ export function FeeNotice({
       </p>
       <p className="mt-1.5 text-sm leading-relaxed text-muted">
         학생회비 미납자와 휴학생은 1인당 {formatFee(fee)}을 입금해 주세요.{" "}
-        {TRACK_LABEL[track]} 트랙 기준이며, 학생회비를 납부한 재학생은 참가비가 없습니다.
+        {TRACK_LABEL[track]} 트랙 기준이며, 학생회비를 납부한 재학생은 참가비가 없습니다.{" "}
+        <strong className="text-[var(--text)]">
+          각자의 계좌로 참가비를 입금해주세요. 한 사람이 보내면 추가 입금으로 간주되어
+          환불됩니다.
+        </strong>
       </p>
 
       <dl className="mt-4 space-y-2 border-t-2 border-current/10 pt-4 text-sm">
@@ -51,10 +55,8 @@ export function FeeNotice({
           <dd className="text-right font-bold">이름 + 해커톤</dd>
         </div>
         <div className="flex justify-between gap-3">
-          <dt className="text-muted">합계</dt>
-          <dd className="text-right font-bold tabular-nums">
-            {formatFee(fee * names.length)}
-          </dd>
+          <dt className="text-muted">참가비</dt>
+          <dd className="text-right font-bold tabular-nums">1인 {formatFee(fee)}</dd>
         </div>
       </dl>
 

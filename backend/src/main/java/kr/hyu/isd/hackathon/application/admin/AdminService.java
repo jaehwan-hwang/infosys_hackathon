@@ -21,6 +21,7 @@ import kr.hyu.isd.hackathon.web.auth.dto.UserResponse;
 import kr.hyu.isd.hackathon.web.match.dto.JoinRequestResponse;
 import kr.hyu.isd.hackathon.web.event.dto.CriterionResponse;
 import kr.hyu.isd.hackathon.web.event.dto.EventResponse;
+import kr.hyu.isd.hackathon.web.submission.dto.SubmissionResponse;
 import kr.hyu.isd.hackathon.web.team.dto.TeamMemberResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -121,7 +122,7 @@ public class AdminService {
     private TeamAdminResponse toAdminResponse(Team team, Submission submission) {
         List<TeamMemberResponse> members = team.getMembers().stream()
                 .sorted(Comparator.comparing(m -> !m.isLeader()))
-                .map(TeamMemberResponse::from)
+                .map(TeamMemberResponse::adminView)
                 .toList();
 
         List<String> missing = submission != null ? submission.findMissingRequirements() : List.of();
@@ -142,6 +143,26 @@ public class AdminService {
                 submission != null ? submission.getSubmittedAt() : null,
                 team.getCreatedAt()
         );
+    }
+
+    /** 참가자 전체 명단. 팀 → 팀장 → 팀원 순으로 늘어놓는다. */
+    @Transactional(readOnly = true)
+    public List<ParticipantResponse> getParticipants() {
+        HackathonEvent event = eventService.getActiveEvent();
+        return teamRepository.findAllByEventIdWithMembers(event.getId()).stream()
+                .flatMap(team -> team.getMembers().stream()
+                        .sorted(Comparator.comparing(m -> !m.isLeader()))
+                        .map(m -> ParticipantResponse.from(team, m)))
+                .toList();
+    }
+
+    /** 제출물 전체. 아직 내지 않은 팀도 한 줄로 남겨 누락을 바로 본다. */
+    @Transactional(readOnly = true)
+    public List<SubmissionResponse> getSubmissions() {
+        HackathonEvent event = eventService.getActiveEvent();
+        return submissionRepository.findAllByEventId(event.getId()).stream()
+                .map(SubmissionResponse::from)
+                .toList();
     }
 
     // ---- 행사 설정 ----

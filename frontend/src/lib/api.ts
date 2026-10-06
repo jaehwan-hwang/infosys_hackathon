@@ -22,6 +22,7 @@ import type {
   GoodsOrder,
   GoodsItem,
   JoinRequest,
+  Participant,
   RecruitStatus,
   TrackResult,
   UploadResult,
@@ -355,6 +356,13 @@ export const api = {
         body: input,
         token,
       }),
+
+    /** 참가자 전체 명단. 학번·전화번호·이메일 포함 */
+    getParticipants: (token: string) =>
+      request<Participant[]>("/api/v1/admin/participants", { token }),
+
+    getSubmissions: (token: string) =>
+      request<Submission[]>("/api/v1/admin/submissions", { token }),
 
     getJoinRequests: (token: string) =>
       request<JoinRequest[]>("/api/v1/admin/join-requests", { token }),

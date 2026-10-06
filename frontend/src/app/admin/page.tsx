@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { AdminEventForm } from "@/components/admin-event-form";
 import { AdminMergePanel } from "@/components/admin-merge-panel";
+import { AdminParticipantsPanel } from "@/components/admin-participants-panel";
+import { AdminSubmissionsPanel } from "@/components/admin-submissions-panel";
 import { AuthGate } from "@/components/auth-gate";
 import { Button, Field, TextInput } from "@/components/form";
 import {
@@ -14,6 +16,7 @@ import {
   Spinner,
   TrackBadge,
   TrackFilter,
+  cx,
 } from "@/components/ui";
 import type { TrackFilterValue } from "@/components/ui";
 import { api, downloadCsv } from "@/lib/api";
@@ -24,7 +27,15 @@ import type { Track } from "@/lib/types";
 
 const TRACKS: Track[] = ["SPARK", "SPRINT", "SUMMIT"];
 
-type Tab = "overview" | "teams" | "merge" | "results" | "settings" | "staff";
+type Tab =
+  | "overview"
+  | "teams"
+  | "participants"
+  | "submissions"
+  | "merge"
+  | "results"
+  | "settings"
+  | "staff";
 
 export default function AdminPage() {
   return (
@@ -58,6 +69,8 @@ function AdminDashboard() {
   const tabs: { id: Tab; label: string }[] = [
     { id: "overview", label: "현황" },
     { id: "teams", label: "팀 관리" },
+    { id: "participants", label: "참가자" },
+    { id: "submissions", label: "제출물" },
     { id: "merge", label: "팀 합치기" },
     { id: "results", label: "집계" },
     { id: "settings", label: "행사 설정" },
@@ -75,10 +88,10 @@ function AdminDashboard() {
         />
       </div>
 
-      {tab === "overview" && (
-        <Overview dashboard={dashboardQuery} />
-      )}
+      {tab === "overview" && <Overview dashboard={dashboardQuery} onGoTo={setTab} />}
       {tab === "teams" && <TeamsPanel />}
+      {tab === "participants" && <AdminParticipantsPanel />}
+      {tab === "submissions" && <AdminSubmissionsPanel />}
       {tab === "merge" && <AdminMergePanel />}
       {tab === "results" && <ResultsPanel />}
       {tab === "settings" && <AdminEventForm />}
@@ -89,8 +102,11 @@ function AdminDashboard() {
 
 function Overview({
   dashboard,
+  onGoTo,
 }: {
   dashboard: ReturnType<typeof useApiQuery<Awaited<ReturnType<typeof api.admin.getDashboard>>>>;
+  /** 숫자를 누르면 그 내용이 있는 탭으로 보낸다 */
+  onGoTo: (tab: Tab) => void;
 }) {
   const { token, isSuperAdmin } = useAuth();
 
@@ -114,25 +130,44 @@ function Overview({
   const data = dashboard.data;
   if (!data) return null;
 
-  const stats = [
-    { label: "등록 팀", value: data.totalTeams },
-    { label: "참가자", value: data.totalParticipants },
-    { label: "제출물", value: data.totalSubmissions },
-    { label: "교수 평가", value: data.professorVoteCount },
+  // 숫자만 보고 끝나는 일이 없다. 누르면 그 명단이 있는 탭으로 간다.
+  const stats: { label: string; value: number; tab?: Tab }[] = [
+    { label: "등록 팀", value: data.totalTeams, tab: "teams" },
+    { label: "참가자", value: data.totalParticipants, tab: "participants" },
+    { label: "제출물", value: data.totalSubmissions, tab: "submissions" },
+    { label: "교수 평가", value: data.professorVoteCount, tab: "results" },
   ];
 
   return (
     <div className="space-y-8">
-      <dl className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {stats.map((stat) => (
-          <Card key={stat.label}>
-            <dt className="text-xs font-medium uppercase tracking-wider text-subtle">
-              {stat.label}
-            </dt>
-            <dd className="mt-1 text-3xl font-bold tabular-nums">{stat.value}</dd>
-          </Card>
+          <button
+            key={stat.label}
+            type="button"
+            onClick={() => stat.tab && onGoTo(stat.tab)}
+            disabled={!stat.tab}
+            className={cx(
+              "rounded-2xl border-2 border-current/15 bg-[var(--bg)] p-5 text-left transition-colors sm:p-6",
+              stat.tab && "hover:border-brand-600 hover:bg-brand-600/5",
+            )}
+          >
+            <span className="flex items-center justify-between gap-2">
+              <span className="text-xs font-bold uppercase tracking-wider text-subtle">
+                {stat.label}
+              </span>
+              {stat.tab && (
+                <span aria-hidden="true" className="text-subtle">
+                  →
+                </span>
+              )}
+            </span>
+            <span className="font-display mt-1 block text-3xl tabular-nums">
+              {stat.value}
+            </span>
+          </button>
         ))}
-      </dl>
+      </div>
 
       <Card>
         <h2 className="text-base font-bold">일차별 평가 전환</h2>
