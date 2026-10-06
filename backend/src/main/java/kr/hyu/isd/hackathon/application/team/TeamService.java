@@ -63,9 +63,6 @@ public class TeamService {
     public TeamResponse register(Long userId, TeamRegisterRequest request) {
         HackathonEvent event = eventService.getActiveEvent();
 
-        if (!request.privacyConsent()) {
-            throw new HackathonException(ErrorCode.BAD_REQUEST, "개인정보 수집·이용 동의가 필요합니다.");
-        }
         if (!event.isRegistrationOpen(Instant.now())) {
             throw new HackathonException(ErrorCode.REGISTRATION_CLOSED);
         }
@@ -74,6 +71,11 @@ public class TeamService {
                 .orElseThrow(() -> new HackathonException(ErrorCode.USER_NOT_FOUND));
         if (!leader.isProfileCompleted()) {
             throw new HackathonException(ErrorCode.PROFILE_REQUIRED);
+        }
+        // 동의는 프로필 등록에서 본인이 직접 한다. 팀장이 팀원 몫까지 대신 할 수 없다.
+        if (!leader.hasPrivacyConsent()) {
+            throw new HackathonException(ErrorCode.PROFILE_REQUIRED,
+                    "개인정보 수집·이용에 동의한 뒤 팀을 등록할 수 있습니다.");
         }
 
         // 한 사람이 두 팀에 속할 수 없다.

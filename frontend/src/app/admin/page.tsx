@@ -34,6 +34,18 @@ export default function AdminPage() {
   );
 }
 
+/**
+ * 되돌리기 어려운 조작을 가리는 안내.
+ *
+ * 권한 부여, 평가 열기·닫기, 시상 공개, 팀 삭제는 한 번 누르면 수습이 어렵다.
+ * 운영진 여럿이 같은 화면을 보므로 이 네 가지는 최고 관리자에게만 보인다.
+ */
+function SuperAdminOnly({ what }: { what: string }) {
+  return (
+    <p className="text-sm text-subtle">{what}는 최고 관리자만 할 수 있습니다.</p>
+  );
+}
+
 function AdminDashboard() {
   const { token } = useAuth();
   const [tab, setTab] = useState<Tab>("overview");
@@ -80,7 +92,7 @@ function Overview({
 }: {
   dashboard: ReturnType<typeof useApiQuery<Awaited<ReturnType<typeof api.admin.getDashboard>>>>;
 }) {
-  const { token } = useAuth();
+  const { token, isSuperAdmin } = useAuth();
 
   const votingMutation = useApiMutation(async (track: Track, open: boolean) => {
     if (!token) throw new Error("no token");
@@ -129,21 +141,27 @@ function Overview({
           평가는 자동으로 닫힙니다 — 1일차 발표를 보지 않은 사람이 Spark에 투표하는 일을
           막기 위한 것입니다. 발표가 끝난 뒤 눌러주세요.
         </p>
-        <div className="mt-4 flex flex-wrap gap-2">
-          {([1, 2] as const).map((day) => (
-            <Button
-              key={day}
-              variant="secondary"
-              loading={dayMutation.pending}
-              onClick={async () => {
-                await dayMutation.run(day);
-                dashboard.reload();
-              }}
-            >
-              {day}일차 평가 열기
-            </Button>
-          ))}
-        </div>
+        {isSuperAdmin ? (
+          <div className="mt-4 flex flex-wrap gap-2">
+            {([1, 2] as const).map((day) => (
+              <Button
+                key={day}
+                variant="secondary"
+                loading={dayMutation.pending}
+                onClick={async () => {
+                  await dayMutation.run(day);
+                  dashboard.reload();
+                }}
+              >
+                {day}일차 평가 열기
+              </Button>
+            ))}
+          </div>
+        ) : (
+          <div className="mt-4">
+            <SuperAdminOnly what="평가 열기" />
+          </div>
+        )}
         {dayMutation.error && (
           <div className="mt-3">
             <Alert tone="error">{dayMutation.error.message}</Alert>
@@ -184,32 +202,44 @@ function Overview({
               <div className="mt-4 space-y-2 border-t-2 border-current/10 pt-3">
                 <div className="flex items-center justify-between gap-2">
                   <span className="text-sm text-muted">평가</span>
-                  <Button
-                    size="sm"
-                    variant={data.votingOpen[track] ? "danger" : "primary"}
-                    loading={votingMutation.pending}
-                    onClick={async () => {
-                      await votingMutation.run(track, !data.votingOpen[track]);
-                      dashboard.reload();
-                    }}
-                  >
-                    {data.votingOpen[track] ? "평가 닫기" : "평가 열기"}
-                  </Button>
+                  {isSuperAdmin ? (
+                    <Button
+                      size="sm"
+                      variant={data.votingOpen[track] ? "danger" : "primary"}
+                      loading={votingMutation.pending}
+                      onClick={async () => {
+                        await votingMutation.run(track, !data.votingOpen[track]);
+                        dashboard.reload();
+                      }}
+                    >
+                      {data.votingOpen[track] ? "평가 닫기" : "평가 열기"}
+                    </Button>
+                  ) : (
+                    <Badge tone={data.votingOpen[track] ? "success" : "neutral"}>
+                      {data.votingOpen[track] ? "열림" : "닫힘"}
+                    </Badge>
+                  )}
                 </div>
 
                 <div className="flex items-center justify-between gap-2">
                   <span className="text-sm text-muted">리더보드</span>
-                  <Button
-                    size="sm"
-                    variant={data.resultsPublished[track] ? "danger" : "primary"}
-                    loading={publishMutation.pending}
-                    onClick={async () => {
-                      await publishMutation.run(track, !data.resultsPublished[track]);
-                      dashboard.reload();
-                    }}
-                  >
-                    {data.resultsPublished[track] ? "다시 비공개" : "시상 공개"}
-                  </Button>
+                  {isSuperAdmin ? (
+                    <Button
+                      size="sm"
+                      variant={data.resultsPublished[track] ? "danger" : "primary"}
+                      loading={publishMutation.pending}
+                      onClick={async () => {
+                        await publishMutation.run(track, !data.resultsPublished[track]);
+                        dashboard.reload();
+                      }}
+                    >
+                      {data.resultsPublished[track] ? "다시 비공개" : "시상 공개"}
+                    </Button>
+                  ) : (
+                    <Badge tone={data.resultsPublished[track] ? "success" : "neutral"}>
+                      {data.resultsPublished[track] ? "공개됨" : "비공개"}
+                    </Badge>
+                  )}
                 </div>
               </div>
             </Card>
@@ -249,9 +279,12 @@ function ExportPanel() {
     { kind: "participants" as const, label: "참가자 명단", description: "팀원 한 명이 한 행" },
     { kind: "submissions" as const, label: "제출 현황", description: "미제출 팀 포함" },
     { kind: "results" as const, label: "최종 순위표", description: "학생·교수 평균 포함" },
+    { kind: "goods" as const, label: "굿즈 신청", description: "품목별 수량과 예상 금액" },
   ];
 
-  const handleDownload = async (kind: "participants" | "submissions" | "results") => {
+  const handleDownload = async (
+    kind: "participants" | "submissions" | "results" | "goods",
+  ) => {
     if (!token) return;
     setBusy(kind);
     setError(null);
@@ -268,10 +301,11 @@ function ExportPanel() {
     <Card>
       <h2 className="text-base font-bold">데이터 내보내기</h2>
       <p className="mt-1 text-sm text-muted">
-        Excel에서 바로 열 수 있는 UTF-8 CSV로 저장됩니다.
+        Excel에서 바로 열 수 있는 UTF-8 CSV로 저장됩니다. 참가자 명단에는 전화번호와
+        학생회비·참가비가 함께 들어갑니다.
       </p>
 
-      <div className="mt-4 grid gap-2 sm:grid-cols-3">
+      <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
         {exports.map((item) => (
           <Button
             key={item.kind}
@@ -296,7 +330,7 @@ function ExportPanel() {
 }
 
 function TeamsPanel() {
-  const { token } = useAuth();
+  const { token, isSuperAdmin } = useAuth();
   const teamsQuery = useApiQuery(token ? () => api.admin.getTeams(token) : null, [token]);
   const [filter, setFilter] = useState<TrackFilterValue>("ALL");
 
@@ -383,36 +417,37 @@ function TeamsPanel() {
                   ))}
                 </select>
 
-                {confirmingId === team.teamId ? (
-                  <>
+                {isSuperAdmin &&
+                  (confirmingId === team.teamId ? (
+                    <>
+                      <Button
+                        variant="secondary"
+                        className="h-9 px-3 text-sm"
+                        onClick={() => setConfirmingId(null)}
+                      >
+                        취소
+                      </Button>
+                      <Button
+                        className="h-9 bg-red-600 px-3 text-sm hover:bg-red-700"
+                        loading={deleteMutation.pending}
+                        onClick={async () => {
+                          await deleteMutation.run(team.teamId);
+                          setConfirmingId(null);
+                          teamsQuery.reload();
+                        }}
+                      >
+                        정말 삭제
+                      </Button>
+                    </>
+                  ) : (
                     <Button
                       variant="secondary"
-                      className="h-9 px-3 text-sm"
-                      onClick={() => setConfirmingId(null)}
+                      className="h-9 px-3 text-sm text-red-600"
+                      onClick={() => setConfirmingId(team.teamId)}
                     >
-                      취소
+                      삭제
                     </Button>
-                    <Button
-                      className="h-9 bg-red-600 px-3 text-sm hover:bg-red-700"
-                      loading={deleteMutation.pending}
-                      onClick={async () => {
-                        await deleteMutation.run(team.teamId);
-                        setConfirmingId(null);
-                        teamsQuery.reload();
-                      }}
-                    >
-                      정말 삭제
-                    </Button>
-                  </>
-                ) : (
-                  <Button
-                    variant="secondary"
-                    className="h-9 px-3 text-sm text-red-600"
-                    onClick={() => setConfirmingId(team.teamId)}
-                  >
-                    삭제
-                  </Button>
-                )}
+                  ))}
               </div>
             </div>
 
@@ -518,7 +553,7 @@ function ResultsPanel() {
 }
 
 function StaffPanel() {
-  const { token } = useAuth();
+  const { token, isSuperAdmin } = useAuth();
   const staffQuery = useApiQuery(token ? () => api.admin.getStaff(token) : null, [token]);
 
   const [email, setEmail] = useState("");
@@ -546,7 +581,13 @@ function StaffPanel() {
           아직 로그인하지 않은 이메일도 미리 등록할 수 있습니다. 해당 계정이 처음 로그인할 때
           권한이 적용됩니다.
         </p>
+        {!isSuperAdmin && (
+          <div className="mt-3">
+            <SuperAdminOnly what="권한 부여" />
+          </div>
+        )}
 
+        {isSuperAdmin && (
         <form onSubmit={handleSubmit} className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-end">
           <div className="flex-1">
             <Field label="이메일" required>
@@ -582,6 +623,7 @@ function StaffPanel() {
             부여하기
           </Button>
         </form>
+        )}
 
         {error && (
           <div className="mt-3">
@@ -603,8 +645,12 @@ function StaffPanel() {
                     <span className="text-sm font-medium">{user.name}</span>
                     <span className="ml-2 text-sm text-muted">{user.email}</span>
                   </div>
-                  <Badge tone={user.role === "ADMIN" ? "danger" : "info"}>
-                    {user.role === "ADMIN" ? "운영진" : "교수"}
+                  <Badge
+                    tone={
+                      user.superAdmin ? "danger" : user.role === "ADMIN" ? "warning" : "info"
+                    }
+                  >
+                    {user.roleLabel}
                   </Badge>
                 </Card>
               </li>

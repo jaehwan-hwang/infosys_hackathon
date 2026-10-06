@@ -33,6 +33,9 @@ export function SiteFooter() {
             <Link href="/results" className="text-muted hover:underline">
               리더보드
             </Link>
+            <Link href="/goods" className="text-muted hover:underline">
+              굿즈
+            </Link>
             <Link href="/privacy" className="text-muted hover:underline">
               개인정보 처리방침
             </Link>

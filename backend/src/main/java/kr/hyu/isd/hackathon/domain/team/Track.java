@@ -7,16 +7,18 @@ package kr.hyu.isd.hackathon.domain.team;
  * SUMMIT : 완성된 프로그램 개발 (2일차). 교수 평가 포함
  */
 public enum Track {
-    SPARK(1, 1),
-    SPRINT(2, 3),
-    SUMMIT(2, 3);
+    SPARK(1, 1, 5_000),
+    SPRINT(2, 3, 10_000),
+    SUMMIT(2, 3, 10_000);
 
     private final int day;
     private final int awardCount;
+    private final int entryFee;
 
-    Track(int day, int awardCount) {
+    Track(int day, int awardCount, int entryFee) {
         this.day = day;
         this.awardCount = awardCount;
+        this.entryFee = entryFee;
     }
 
     /** 해당 트랙이 진행되는 행사 일차 (1 또는 2) */
@@ -30,6 +32,15 @@ public enum Track {
      */
     public int getAwardCount() {
         return awardCount;
+    }
+
+    /**
+     * 학생회비 미납자·휴학생이 내는 참가비(원).
+     *
+     * 1일차만 하는 Spark가 더 싸다. 학생회비를 낸 재학생은 트랙과 무관하게 0원이다.
+     */
+    public int getEntryFee() {
+        return entryFee;
     }
 
     /** 화면과 안내 문구에 쓰는 이름 (Spark / Sprint / Summit) */

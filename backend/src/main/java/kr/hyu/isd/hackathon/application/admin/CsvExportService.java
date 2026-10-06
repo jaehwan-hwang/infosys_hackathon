@@ -3,9 +3,13 @@ package kr.hyu.isd.hackathon.application.admin;
 import kr.hyu.isd.hackathon.application.event.EventService;
 import kr.hyu.isd.hackathon.application.result.ResultService;
 import kr.hyu.isd.hackathon.domain.event.HackathonEvent;
+import kr.hyu.isd.hackathon.domain.goods.GoodsItem;
+import kr.hyu.isd.hackathon.domain.goods.GoodsOrder;
 import kr.hyu.isd.hackathon.domain.submission.Submission;
 import kr.hyu.isd.hackathon.domain.team.Team;
 import kr.hyu.isd.hackathon.domain.team.TeamMember;
+import kr.hyu.isd.hackathon.domain.user.User;
+import kr.hyu.isd.hackathon.infrastructure.persistence.GoodsOrderRepository;
 import kr.hyu.isd.hackathon.infrastructure.persistence.SubmissionRepository;
 import kr.hyu.isd.hackathon.infrastructure.persistence.TeamRepository;
 import kr.hyu.isd.hackathon.web.result.dto.TeamResultResponse;
@@ -35,6 +39,7 @@ public class CsvExportService {
     private final SubmissionRepository submissionRepository;
     private final ResultService resultService;
     private final EventService eventService;
+    private final GoodsOrderRepository goodsOrderRepository;
 
     /** Excel 호환을 위한 UTF-8 BOM */
     private static final String BOM = "﻿";
@@ -50,22 +55,59 @@ public class CsvExportService {
     public String exportParticipants() {
         HackathonEvent event = eventService.getActiveEvent();
         StringBuilder sb = new StringBuilder(BOM);
-        sb.append("팀명,트랙,배정사유,역할,성명,학번,이메일,등록일시\n");
+        sb.append("팀명,트랙,역할,성명,학번,이메일,전화번호,학생회비,참가비,등록일시\n");
 
         for (Team team : teamRepository.findAllByEventIdWithMembers(event.getId())) {
             for (TeamMember member : team.getMembers()) {
+                // 전화번호는 본인이 프로필에 넣는 값이라, 아직 로그인하지 않은 팀원은 비어 있다
+                String phone = member.getUser() != null ? member.getUser().getPhone() : null;
                 appendRow(sb,
                         team.getName(),
-                        team.getTrack().name(),
-                        team.getTrackReason(),
-                        member.isLeader() ? "조장" : "팀원",
+                        team.getTrack().getLabel(),
+                        member.isLeader() ? "팀장" : "팀원",
                         member.getName(),
                         member.getStudentId(),
                         member.getEmail(),
+                        phone != null ? phone : "(미등록)",
+                        member.isDuesPaid() ? "납부" : "미납·휴학",
+                        member.needsEntryFee()
+                                ? String.valueOf(team.getTrack().getEntryFee()) : "0",
                         format(team.getCreatedAt()));
             }
         }
         return sb.toString();
+    }
+
+    /**
+     * 굿즈 사전 신청 집계. 품목별 수량과 예상 금액을 한 사람씩 적는다.
+     */
+    @Transactional(readOnly = true)
+    public String exportGoods() {
+        HackathonEvent event = eventService.getActiveEvent();
+        StringBuilder sb = new StringBuilder(BOM);
+
+        sb.append("성명,학번,이메일,전화번호");
+        for (GoodsItem item : GoodsItem.values()) sb.append(',').append(item.getLabel());
+        sb.append(",예상금액,신청일시\n");
+
+        for (GoodsOrder order : goodsOrderRepository.findAllByEventId(event.getId())) {
+            if (order.isEmpty()) continue;
+            User user = order.getUser();
+            List<String> row = new java.util.ArrayList<>(List.of(
+                    nullSafe(user.getName()), nullSafe(user.getStudentId()),
+                    nullSafe(user.getEmail()), nullSafe(user.getPhone())));
+            for (GoodsItem item : GoodsItem.values()) {
+                row.add(String.valueOf(order.quantityOf(item)));
+            }
+            row.add(String.valueOf(order.estimatedTotal()));
+            row.add(format(order.getUpdatedAt()));
+            appendRow(sb, row.toArray(String[]::new));
+        }
+        return sb.toString();
+    }
+
+    private static String nullSafe(String value) {
+        return value != null ? value : "";
     }
 
     /**

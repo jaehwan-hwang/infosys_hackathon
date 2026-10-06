@@ -135,7 +135,17 @@ const PROFESSORS = [
       "다학제적 융합 연구",
     ],
   },
-  { name: null, email: null, fields: [] },
+  {
+    name: "박현석",
+    email: "hp@hanyang.ac.kr",
+    fields: [
+      "기술경영",
+      "기술혁신",
+      "제품-서비스 시스템",
+      "엔지니어링 디자인",
+      "특허분석 방법론",
+    ],
+  },
 ] as const;
 
 const JOIN = {
@@ -522,6 +532,10 @@ function Professors() {
           </div>
         ))}
       </div>
+
+      <p className="mt-[min(20px,2.4dvh)] text-center text-[13px] opacity-45 lg:text-[15px]">
+        심사 교수님은 추후 변동되거나 추가될 수 있습니다.
+      </p>
     </Slide>
   );
 }

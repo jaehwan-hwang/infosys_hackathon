@@ -8,6 +8,7 @@ export type Track = "SPARK" | "SPRINT" | "SUMMIT";
 export type RecruitStatus = "NONE" | "MEMBERS" | "LEADER";
 export type JoinRequestStatus = "PENDING" | "MERGED" | "REJECTED" | "CANCELED";
 export type Role = "STUDENT" | "PROFESSOR" | "ADMIN";
+export type GoodsItem = "HOODIE" | "STICKER" | "KEYRING";
 export type EvaluatorType = "STUDENT" | "PROFESSOR";
 export type TeamMemberRole = "LEADER" | "MEMBER";
 
@@ -31,8 +32,14 @@ export interface User {
   name: string;
   studentId: string | null;
   department: string | null;
+  phone: string | null;
   role: Role;
+  roleLabel: string;
+  /** 되돌리기 어려운 조작을 할 수 있는 최고 관리자인가 */
+  superAdmin: boolean;
   profileCompleted: boolean;
+  /** 개인정보 수집·이용 동의 여부. 프로필 등록에서 본인이 직접 한다. */
+  privacyConsent: boolean;
 }
 
 export interface LoginResponse {
@@ -180,7 +187,20 @@ export interface TeamRegisterInput {
   recruitNote?: string;
   /** 등록하는 본인의 학생회비 납부 여부 */
   duesPaid: boolean;
-  privacyConsent: boolean;
+}
+
+/** 굿즈 한 품목. 가격은 수량에 따라 조정될 수 있는 예상값이다. */
+export interface GoodsItemInfo {
+  item: GoodsItem;
+  label: string;
+  price: number;
+}
+
+export interface GoodsOrder {
+  quantities: Record<GoodsItem, number>;
+  /** 예상 금액. 확정 금액은 단톡방에서 안내된다. */
+  estimatedTotal: number;
+  updatedAt: string | null;
 }
 
 export interface Submission {

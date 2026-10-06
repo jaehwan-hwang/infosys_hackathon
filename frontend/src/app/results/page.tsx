@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { LeaderboardBoard } from "@/components/leaderboard-board";
+import { PeriodGate } from "@/components/period-gate";
 import { ApiError, publicApi } from "@/lib/api";
 import type { PublicTrackResult } from "@/lib/types";
 import { Alert, Section } from "@/components/ui";
@@ -39,16 +40,14 @@ export default async function ResultsPage() {
   const openCount = tracks.filter((t) => t.published).length;
 
   return (
-    <Section
-      eyebrow="Leaderboard"
+    <PeriodGate
+      open={openCount > 0}
       title="리더보드"
-      description={
-        openCount === 0
-          ? "시상이 끝난 트랙부터 순서대로 공개됩니다. Spark는 1일차, Sprint와 Summit은 2일차에 열립니다."
-          : "트랙별 수상 팀입니다."
-      }
+      description="시상이 끝난 트랙부터 순서대로 공개됩니다. Spark는 1일차, Sprint와 Summit은 2일차에 열립니다."
     >
-      <LeaderboardBoard tracks={tracks} />
-    </Section>
+      <Section eyebrow="Leaderboard" title="리더보드" description="트랙별 수상 팀입니다.">
+        <LeaderboardBoard tracks={tracks} />
+      </Section>
+    </PeriodGate>
   );
 }

@@ -21,6 +21,8 @@ declare module "next-auth" {
       role: Role;
       studentId: string | null;
       profileCompleted: boolean;
+      /** 되돌리기 어려운 조작을 할 수 있는 최고 관리자인가 */
+      superAdmin: boolean;
     };
   }
 }
@@ -34,6 +36,7 @@ declare module "next-auth/jwt" {
     role?: Role;
     studentId?: string | null;
     profileCompleted?: boolean;
+    superAdmin?: boolean;
     /** 백엔드에서 사용자 정보를 마지막으로 다시 읽은 시각 (epoch ms) */
     syncedAt?: number;
   }

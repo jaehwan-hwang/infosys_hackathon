@@ -21,6 +21,7 @@ const NAV_ITEMS = [
   { href: "/submit", label: "결과물" },
   { href: "/evaluate", label: "평가" },
   { href: "/results", label: "리더보드" },
+  { href: "/goods", label: "굿즈" },
 ];
 
 export function SiteHeader() {
@@ -32,6 +33,7 @@ export function SiteHeader() {
   if (pathname === "/") return null;
 
   const role = session?.user?.role;
+  const superAdmin = Boolean(session?.user?.superAdmin);
   const isStaff = role === "ADMIN" || role === "PROFESSOR";
 
   // 운영진 메뉴는 운영진에게만 보인다. 주소를 직접 쳐서 들어오면 페이지가 막는다.
@@ -39,6 +41,8 @@ export function SiteHeader() {
     ...NAV_ITEMS,
     ...(role === "ADMIN" ? [{ href: "/admin", label: "운영진" }] : []),
   ];
+
+  const roleLabel = superAdmin ? "최고 관리자" : role === "ADMIN" ? "운영진" : "교수";
 
   return (
     <header className="sticky top-0 z-40 border-b-2 border-current/10 bg-[var(--bg)]/85 backdrop-blur">
@@ -83,8 +87,15 @@ export function SiteHeader() {
               <span className="hidden text-sm text-muted sm:inline">
                 {session.user.name}
                 {isStaff && (
-                  <span className="ml-1.5 rounded-full border-2 border-brand-500/40 px-2 py-0.5 text-[10px] font-bold text-brand-600 dark:text-brand-300">
-                    {role === "ADMIN" ? "운영진" : "교수"}
+                  <span
+                    className={cx(
+                      "ml-1.5 rounded-full px-2 py-0.5 text-[10px] font-bold",
+                      superAdmin
+                        ? "bg-grad-brand text-white"
+                        : "border-2 border-brand-500/40 text-brand-600 dark:text-brand-300",
+                    )}
+                  >
+                    {roleLabel}
                   </span>
                 )}
               </span>

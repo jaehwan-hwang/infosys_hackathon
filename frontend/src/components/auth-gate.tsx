@@ -7,7 +7,7 @@ import { api } from "@/lib/api";
 import { cleanPersonName } from "@/lib/format";
 import { useApiMutation, useAuth } from "@/lib/use-auth";
 import type { Role } from "@/lib/types";
-import { Button, Field, TextInput } from "./form";
+import { Button, CheckCard, Field, TextInput } from "./form";
 import { Alert, Card, EmptyState, Spinner } from "./ui";
 
 /**
@@ -84,18 +84,28 @@ export function AuthGate({
 }
 
 /**
- * 최초 로그인 후 학번·성명을 받는다.
- * 이 정보가 없으면 팀 등록 시 참가자 명단을 만들 수 없어 먼저 받는다.
+ * 최초 로그인 후 성명·학번·전화번호를 받는다.
+ *
+ * 개인정보 수집·이용 동의도 여기서 본인에게 직접 받는다. 팀 등록 폼에서 팀장이
+ * 팀원 몫까지 한꺼번에 동의하던 방식은 동의라고 보기 어려웠다.
  */
 function ProfileForm() {
   const { token, user, refresh } = useAuth();
   const [name, setName] = useState(() => cleanPersonName(user?.name));
   const [studentId, setStudentId] = useState("");
   const [department, setDepartment] = useState("정보시스템학과");
+  const [phone, setPhone] = useState("");
+  const [consent, setConsent] = useState(false);
   const [done, setDone] = useState(false);
 
   const { run, pending, error } = useApiMutation(
-    async (input: { name: string; studentId: string; department: string }) => {
+    async (input: {
+      name: string;
+      studentId: string;
+      department: string;
+      phone: string;
+      privacyConsent: boolean;
+    }) => {
       if (!token) throw new Error("no token");
       return api.updateProfile(token, input);
     },
@@ -106,7 +116,13 @@ function ProfileForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const result = await run({ name: name.trim(), studentId: studentId.trim(), department });
+    const result = await run({
+      name: name.trim(),
+      studentId: studentId.trim(),
+      department,
+      phone: phone.trim(),
+      privacyConsent: consent,
+    });
     if (result) {
       setDone(true);
       // 세션의 profileCompleted를 갱신해 관문을 통과시킨다
@@ -169,6 +185,29 @@ function ProfileForm() {
             )}
           </Field>
 
+          <Field
+            label="전화번호"
+            required
+            hint="운영진이 연락할 번호입니다"
+            error={fieldError("phone")}
+          >
+            {(id, describedBy) => (
+              <TextInput
+                id={id}
+                aria-describedby={describedBy}
+                type="tel"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                autoComplete="tel"
+                inputMode="numeric"
+                required
+                maxLength={13}
+                placeholder="010-1234-5678"
+                invalid={Boolean(fieldError("phone"))}
+              />
+            )}
+          </Field>
+
           <Field label="학과" error={fieldError("department")}>
             {(id, describedBy) => (
               <TextInput
@@ -181,15 +220,52 @@ function ProfileForm() {
             )}
           </Field>
 
-          <Button type="submit" size="lg" className="w-full" loading={pending}>
+          <div className="border-t-2 border-current/10 pt-5">
+            <h2 className="text-sm font-bold">개인정보 수집·이용 동의</h2>
+
+            <Card className="mt-3 text-xs leading-relaxed text-muted">
+              <p>
+                <strong className="text-[var(--text)]">수집 항목</strong> — 성명, 학번,
+                한양대학교 이메일, 전화번호, 학생회비 납부 여부
+              </p>
+              <p className="mt-2">
+                <strong className="text-[var(--text)]">수집 목적</strong> — 참가자 확인, 팀
+                구성 및 연락, 참가비 확인, 결과물 제출·평가 진행, 시상
+              </p>
+              <p className="mt-2">
+                <strong className="text-[var(--text)]">보유·이용 기간</strong> — 행사 종료 후
+                3개월 이내 파기
+              </p>
+              <p className="mt-2">
+                다른 참가자에게는 <strong className="text-[var(--text)]">성명과 학번</strong>만
+                공개됩니다. 전화번호·이메일·학생회비 납부 여부는 같은 팀과 운영진만 봅니다.
+              </p>
+              <p className="mt-2">
+                동의를 거부할 수 있으나, 참가자 확인에 필요한 정보라 거부하면 참가가
+                제한됩니다.
+              </p>
+            </Card>
+
+            <div className="mt-3">
+              <CheckCard
+                checked={consent}
+                onChange={setConsent}
+                label="개인정보 수집·이용에 동의합니다"
+                description="본인이 직접 동의합니다."
+              />
+            </div>
+          </div>
+
+          <Button
+            type="submit"
+            size="lg"
+            className="w-full"
+            loading={pending}
+            disabled={!consent}
+          >
             저장하고 계속하기
           </Button>
         </form>
-
-        <p className="mt-5 text-xs leading-relaxed text-subtle">
-          입력한 정보는 해커톤 참가자 확인과 시상 목적으로만 사용되며, 행사 종료 후
-          파기됩니다.
-        </p>
       </Card>
     </div>
   );

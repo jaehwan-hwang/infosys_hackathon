@@ -6,6 +6,8 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.time.Instant;
+
 /**
  * 서비스 사용자. Google 로그인(@hanyang.ac.kr) 시 최초 1회 생성되고,
  * 성명/학번은 프로필 입력 폼에서 한 번 수집한다.
@@ -35,6 +37,22 @@ public class User extends BaseTimeEntity {
     @Column(length = 50)
     private String department;
 
+    /** 운영진 연락용. 참가자 명단 내보내기에 함께 나간다. */
+    @Column(length = 20)
+    private String phone;
+
+    /**
+     * 개인정보 수집·이용 동의.
+     *
+     * 팀 등록이 아니라 프로필 등록에서 본인이 직접 한다 — 팀장이 팀원 몫까지 대신
+     * 동의하는 형태는 동의라고 보기 어렵다.
+     */
+    @Column(name = "privacy_consent")
+    private Boolean privacyConsent;
+
+    @Column(name = "privacy_consent_at")
+    private Instant privacyConsentAt;
+
     @Column(name = "profile_completed", nullable = false)
     private boolean profileCompleted;
 
@@ -58,11 +76,22 @@ public class User extends BaseTimeEntity {
     }
 
     /** 최초 로그인 이후 학번·학과를 채우면 프로필 완료로 표시한다. */
-    public void completeProfile(String name, String studentId, String department) {
+    public void completeProfile(String name, String studentId, String department,
+                               String phone, boolean privacyConsent) {
         this.name = name;
         this.studentId = studentId;
         this.department = department;
+        this.phone = phone;
+        if (privacyConsent && !Boolean.TRUE.equals(this.privacyConsent)) {
+            this.privacyConsent = true;
+            this.privacyConsentAt = Instant.now();
+        }
         this.profileCompleted = true;
+    }
+
+    /** 개인정보 수집·이용에 동의했는가 */
+    public boolean hasPrivacyConsent() {
+        return Boolean.TRUE.equals(this.privacyConsent);
     }
 
     public void changeRole(Role role) {
@@ -70,7 +99,7 @@ public class User extends BaseTimeEntity {
     }
 
     public boolean isAdmin() {
-        return this.role == Role.ADMIN;
+        return this.role.isStaff();
     }
 
     public boolean isProfessor() {

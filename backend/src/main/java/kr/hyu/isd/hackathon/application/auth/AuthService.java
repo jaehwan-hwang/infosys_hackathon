@@ -57,7 +57,7 @@ public class AuthService {
         return new LoginResponse(
                 accessToken,
                 jwtProvider.getExpirySeconds(),
-                UserResponse.from(user),
+                UserResponse.from(user, authProperties.isSuperAdmin(user.getEmail())),
                 !user.isProfileCompleted()
         );
     }
@@ -70,6 +70,8 @@ public class AuthService {
 
     /** 설정에 지정된 권한이 있으면 그것을, 없으면 STUDENT를 돌려준다. */
     private Role resolveConfiguredRole(String email) {
+        // 최고 관리자도 DB상으로는 운영진이다. 구분은 설정의 이메일 목록으로만 한다.
+        if (containsIgnoreCase(authProperties.superAdminEmails(), email)) return Role.ADMIN;
         if (containsIgnoreCase(authProperties.adminEmails(), email)) return Role.ADMIN;
         if (containsIgnoreCase(authProperties.professorEmails(), email)) return Role.PROFESSOR;
         return Role.STUDENT;
@@ -117,14 +119,33 @@ public class AuthService {
     /** 최초 로그인 후 학번·성명을 등록한다. */
     @Transactional
     public UserResponse completeProfile(Long userId, ProfileRequest request) {
+        if (!request.privacyConsent()) {
+            throw new HackathonException(ErrorCode.BAD_REQUEST,
+                    "개인정보 수집·이용에 동의해야 참가할 수 있습니다.");
+        }
         User user = findUser(userId);
-        user.completeProfile(request.name(), request.studentId(), request.department());
-        return UserResponse.from(user);
+        user.completeProfile(request.name(), request.studentId(), request.department(),
+                normalizePhone(request.phone()), true);
+        return UserResponse.from(user, authProperties.isSuperAdmin(user.getEmail()));
+    }
+
+    /** 전화번호를 010-1234-5678 꼴로 맞춘다. 명단을 뽑을 때 표기가 섞이지 않게 한다. */
+    private String normalizePhone(String raw) {
+        if (raw == null) return null;
+        String digits = raw.replaceAll("[^0-9]", "");
+        if (digits.length() == 11) {
+            return digits.substring(0, 3) + "-" + digits.substring(3, 7) + "-" + digits.substring(7);
+        }
+        if (digits.length() == 10) {
+            return digits.substring(0, 3) + "-" + digits.substring(3, 6) + "-" + digits.substring(6);
+        }
+        return raw.trim();
     }
 
     @Transactional(readOnly = true)
     public UserResponse getMe(Long userId) {
-        return UserResponse.from(findUser(userId));
+        User user = findUser(userId);
+        return UserResponse.from(user, authProperties.isSuperAdmin(user.getEmail()));
     }
 
     private User findUser(Long userId) {

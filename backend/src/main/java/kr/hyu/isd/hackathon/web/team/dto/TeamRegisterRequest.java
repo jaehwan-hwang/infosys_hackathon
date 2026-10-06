@@ -39,9 +39,6 @@ public record TeamRegisterRequest(
         @Size(max = 300)
         String recruitNote,
 
-        boolean duesPaid,
-
-        /** 개인정보 수집·이용 동의. 동의 없이는 등록할 수 없다. */
-        boolean privacyConsent
+        boolean duesPaid
 ) {
 }

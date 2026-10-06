@@ -1,11 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { Button, CheckCard, Field, TextArea, TextInput } from "@/components/form";
+import { Button, Field, TextArea, TextInput } from "@/components/form";
 import { FeeNotice } from "@/components/fee-notice";
 import { Alert, Card, Section, TrackBadge, cx, trackStyle } from "@/components/ui";
 import { api } from "@/lib/api";
 import { EMPTY_SELF_CHECK, TRACK_GOAL, TRACK_LABEL, TRACK_TAGLINE } from "@/lib/track-rules";
+import { entryFeeOf, formatFee } from "@/lib/fee";
 import { RECRUIT_OPTIONS } from "@/lib/recruit";
 import { useApiMutation, useAuth } from "@/lib/use-auth";
 import type { RecruitStatus, TeamMemberInput, Track } from "@/lib/types";
@@ -64,7 +65,6 @@ export function TeamRegisterForm({
   const [leaderEmail, setLeaderEmail] = useState("");
   const [recruiting, setRecruiting] = useState<RecruitStatus>("NONE");
   const [recruitNote, setRecruitNote] = useState("");
-  const [consent, setConsent] = useState(false);
 
   const myEmail = (user?.email ?? "").toLowerCase();
 
@@ -84,7 +84,6 @@ export function TeamRegisterForm({
       recruiting,
       recruitNote: recruitNote.trim() || undefined,
       duesPaid: myDuesPaid,
-      privacyConsent: consent,
     });
   });
 
@@ -93,7 +92,7 @@ export function TeamRegisterForm({
   const membersFilled = members.every(
     (m) => m.name.trim() && m.studentId.trim() && m.email.trim(),
   );
-  const canSubmit = name.trim().length > 0 && consent && sizeValid && membersFilled;
+  const canSubmit = name.trim().length > 0 && sizeValid && membersFilled;
 
   const fieldError = (field: string) =>
     error?.fields?.find((f) => f.field === field)?.message;
@@ -130,10 +129,10 @@ export function TeamRegisterForm({
       description="팀마다 한 번만 등록하면 됩니다. 인원이 모자라도 먼저 등록한 뒤 다른 팀과 합칠 수 있습니다."
     >
       <div className="mb-8">
-        <Alert tone="info" title="팀원은 따로 등록하지 않습니다">
-          등록하는 사람이 팀원 정보를 함께 입력합니다. 팀원은 적어 넣은 한양대학교 이메일로{" "}
-          <strong>로그인만</strong> 하면 자동으로 팀에 연결됩니다. 이미 우리 팀이 등록됐다면
-          이 화면에서 또 등록하지 마세요.
+        <Alert tone="info" title="팀마다 한 사람만 등록합니다">
+          등록하는 사람이 팀원 정보를 함께 입력합니다. 팀원은 <strong>따로 등록할 필요가
+          없고</strong>, 적어 넣은 한양대학교 이메일로 로그인하면 자동으로 우리 팀에
+          들어옵니다. 등록이 끝난 뒤에는 팀원이 다른 팀을 새로 만들 수 없습니다.
         </Alert>
       </div>
 
@@ -164,7 +163,8 @@ export function TeamRegisterForm({
             <p className="mt-1.5 text-sm text-muted">
               {fromSelfCheck
                 ? `자가진단이 권한 ${TRACK_LABEL[initialTrack]}이(가) 선택되어 있습니다. 바꿔도 됩니다.`
-                : "Spark는 1일차 아이디어톤, Sprint와 Summit은 2일차 개발 트랙입니다."}
+                : "Spark는 1일차 아이디어톤, Sprint와 Summit은 2일차 개발 트랙입니다."}{" "}
+              학생회비 미납 또는 휴학생은 참가 트랙에 따라 참가비가 달라집니다.
             </p>
 
             <div className="mt-4 grid gap-3 sm:grid-cols-3">
@@ -186,6 +186,9 @@ export function TeamRegisterForm({
                     {TRACK_TAGLINE[item.track]}
                   </p>
                   <p className="mt-2 text-xs leading-relaxed text-muted">{item.description}</p>
+                  <p className="mt-2 text-xs font-bold">
+                    참가비 {formatFee(entryFeeOf(item.track))}
+                  </p>
                 </button>
               ))}
             </div>
@@ -313,7 +316,7 @@ export function TeamRegisterForm({
 
             {feeNames.length > 0 && (
               <div className="mt-5">
-                <FeeNotice names={feeNames} />
+                <FeeNotice names={feeNames} track={track} />
               </div>
             )}
           </fieldset>
@@ -399,38 +402,6 @@ export function TeamRegisterForm({
                 </Field>
               </div>
             )}
-          </fieldset>
-
-          <fieldset>
-            <legend className="text-base font-bold">6. 개인정보 수집·이용 동의</legend>
-
-            <Card className="mt-4 text-xs leading-relaxed text-muted">
-              <p>
-                <strong className="text-[var(--text)]">수집 항목</strong> — 성명, 학번, 한양대학교
-                이메일, 학생회비 납부 여부
-              </p>
-              <p className="mt-2">
-                <strong className="text-[var(--text)]">수집 목적</strong> — 해커톤 참가자 확인, 팀
-                구성 및 연락, 참가비 확인, 결과물 제출 및 평가 진행, 시상
-              </p>
-              <p className="mt-2">
-                <strong className="text-[var(--text)]">보유·이용 기간</strong> — 행사 종료 후 3개월
-                이내 파기
-              </p>
-              <p className="mt-2">
-                다른 참가자에게는 <strong className="text-[var(--text)]">성명과 학번</strong>만
-                공개됩니다. 이메일과 학생회비 납부 여부는 우리 팀과 운영진만 봅니다.
-              </p>
-            </Card>
-
-            <div className="mt-3">
-              <CheckCard
-                checked={consent}
-                onChange={setConsent}
-                label="위 내용에 동의합니다"
-                description="팀원 전원의 동의를 받았음을 확인합니다."
-              />
-            </div>
           </fieldset>
 
           {error && (

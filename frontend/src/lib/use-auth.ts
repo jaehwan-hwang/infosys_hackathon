@@ -19,11 +19,17 @@ export function useAuth() {
    */
   const refresh = useCallback(() => update({}), [update]);
 
+  const role = session?.user?.role;
+
   return {
     session,
     token: session?.accessToken,
     user: session?.user,
-    role: session?.user?.role,
+    role,
+    /** 운영진 화면을 쓸 수 있는가 */
+    isStaff: role === "ADMIN",
+    /** 되돌리기 어려운 조작(권한·평가 열기·시상 공개·팀 삭제)을 할 수 있는가 */
+    isSuperAdmin: Boolean(session?.user?.superAdmin),
     isLoading: status === "loading",
     isAuthenticated: status === "authenticated" && Boolean(session?.accessToken),
     /** 프로필(학번) 입력이 아직 안 된 상태 */

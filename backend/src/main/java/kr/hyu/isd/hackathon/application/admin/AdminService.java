@@ -1,6 +1,7 @@
 package kr.hyu.isd.hackathon.application.admin;
 
 import kr.hyu.isd.hackathon.application.event.EventService;
+import kr.hyu.isd.hackathon.common.auth.AuthProperties;
 import kr.hyu.isd.hackathon.common.exception.ErrorCode;
 import kr.hyu.isd.hackathon.common.exception.HackathonException;
 import kr.hyu.isd.hackathon.domain.evaluation.Award;
@@ -53,6 +54,7 @@ public class AdminService {
     private final AwardRepository awardRepository;
     private final UserRepository userRepository;
     private final JoinRequestRepository joinRequestRepository;
+    private final AuthProperties authProperties;
     private final TeamMemberRepository teamMemberRepository;
     private final EventService eventService;
 
@@ -409,7 +411,7 @@ public class AdminService {
         user.changeRole(request.role());
 
         log.info("권한 변경: email={}, role={}", email, request.role());
-        return UserResponse.from(user);
+        return UserResponse.from(user, authProperties.isSuperAdmin(user.getEmail()));
     }
 
     @Transactional(readOnly = true)
@@ -417,7 +419,7 @@ public class AdminService {
         return java.util.stream.Stream.concat(
                         userRepository.findByRole(Role.ADMIN).stream(),
                         userRepository.findByRole(Role.PROFESSOR).stream())
-                .map(UserResponse::from)
+                .map(u -> UserResponse.from(u, authProperties.isSuperAdmin(u.getEmail())))
                 .toList();
     }
 }

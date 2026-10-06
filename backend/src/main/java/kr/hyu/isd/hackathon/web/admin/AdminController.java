@@ -4,7 +4,12 @@ import jakarta.validation.Valid;
 import kr.hyu.isd.hackathon.application.admin.AdminService;
 import kr.hyu.isd.hackathon.application.admin.CsvExportService;
 import kr.hyu.isd.hackathon.application.result.ResultService;
+import kr.hyu.isd.hackathon.common.auth.AuthPrincipal;
+import kr.hyu.isd.hackathon.common.auth.AuthProperties;
+import kr.hyu.isd.hackathon.common.auth.CurrentUser;
 import kr.hyu.isd.hackathon.common.dto.response.ApiResponse;
+import kr.hyu.isd.hackathon.common.exception.ErrorCode;
+import kr.hyu.isd.hackathon.common.exception.HackathonException;
 import kr.hyu.isd.hackathon.domain.team.Track;
 import kr.hyu.isd.hackathon.web.admin.dto.*;
 import kr.hyu.isd.hackathon.web.auth.dto.UserResponse;
@@ -34,6 +39,7 @@ import java.util.List;
 public class AdminController {
 
     private final AdminService adminService;
+    private final AuthProperties authProperties;
     private final CsvExportService csvExportService;
     private final ResultService resultService;
 
@@ -60,9 +66,11 @@ public class AdminController {
 
     // ---- 행사 설정 ----
 
-    /** 팀 삭제. 제출물·받은 평가·수상까지 함께 지운다. */
+    /** 팀 삭제. 제출물·받은 평가·수상까지 함께 지운다. 최고 관리자만. */
     @DeleteMapping("/teams/{teamId}")
-    public ApiResponse<Void> deleteTeam(@PathVariable Long teamId) {
+    public ApiResponse<Void> deleteTeam(@CurrentUser AuthPrincipal principal,
+                                        @PathVariable Long teamId) {
+        requireSuperAdmin(principal);
         adminService.deleteTeam(teamId);
         return ApiResponse.success(null);
     }
@@ -72,9 +80,11 @@ public class AdminController {
         return ApiResponse.success(adminService.updateEvent(request));
     }
 
-    /** 발표 종료 후 트랙별 평가 열기/닫기 */
+    /** 발표 종료 후 트랙별 평가 열기/닫기. 최고 관리자만. */
     @PostMapping("/event/voting")
-    public ApiResponse<EventResponse> toggleVoting(@Valid @RequestBody VotingToggleRequest request) {
+    public ApiResponse<EventResponse> toggleVoting(@CurrentUser AuthPrincipal principal,
+                                                   @Valid @RequestBody VotingToggleRequest request) {
+        requireSuperAdmin(principal);
         return ApiResponse.success(adminService.toggleVoting(request));
     }
 
@@ -83,14 +93,18 @@ public class AdminController {
      * 토글 세 개를 손으로 맞추는 실수를 막기 위한 단축 동작이다.
      */
     @PostMapping("/event/voting/day/{day}")
-    public ApiResponse<EventResponse> openVotingForDay(@PathVariable int day) {
+    public ApiResponse<EventResponse> openVotingForDay(@CurrentUser AuthPrincipal principal,
+                                                       @PathVariable int day) {
+        requireSuperAdmin(principal);
         return ApiResponse.success(adminService.openVotingForDay(day));
     }
 
-    /** 시상식에서 트랙별 리더보드 공개 */
+    /** 시상식에서 트랙별 리더보드 공개. 최고 관리자만. */
     @PostMapping("/event/publish")
-    public ApiResponse<EventResponse> publishResults(@RequestParam Track track,
+    public ApiResponse<EventResponse> publishResults(@CurrentUser AuthPrincipal principal,
+                                                     @RequestParam Track track,
                                                      @RequestParam boolean published) {
+        requireSuperAdmin(principal);
         return ApiResponse.success(adminService.publishResults(track, published));
     }
 
@@ -182,10 +196,25 @@ public class AdminController {
         return ApiResponse.success(adminService.getStaff());
     }
 
-    /** 교수·운영진 권한 부여 */
+    /** 교수·운영진 권한 부여. 최고 관리자만. */
     @PutMapping("/staff")
-    public ApiResponse<UserResponse> updateRole(@Valid @RequestBody RoleUpdateRequest request) {
+    public ApiResponse<UserResponse> updateRole(@CurrentUser AuthPrincipal principal,
+                                                @Valid @RequestBody RoleUpdateRequest request) {
+        requireSuperAdmin(principal);
         return ApiResponse.success(adminService.updateRole(request));
+    }
+
+    /**
+     * 되돌리기 어려운 조작을 막는다.
+     *
+     * 권한 부여, 평가 열기·닫기, 시상 공개, 팀 삭제는 한 번 누르면 수습이 어렵다.
+     * 행사 당일 운영진 여럿이 같은 화면을 보므로, 이 네 가지만 최고 관리자에게 남긴다.
+     */
+    private void requireSuperAdmin(AuthPrincipal principal) {
+        if (!authProperties.isSuperAdmin(principal.email())) {
+            throw new HackathonException(ErrorCode.INSUFFICIENT_PERMISSION,
+                    "최고 관리자만 할 수 있습니다. 운영진에게 요청해 주세요.");
+        }
     }
 
     // ---- CSV 내보내기 ----
@@ -198,6 +227,11 @@ public class AdminController {
     @GetMapping("/export/submissions")
     public ResponseEntity<Resource> exportSubmissions() {
         return csvResponse(csvExportService.exportSubmissions(), "submissions");
+    }
+
+    @GetMapping("/export/goods")
+    public ResponseEntity<Resource> exportGoods() {
+        return csvResponse(csvExportService.exportGoods(), "goods");
     }
 
     @GetMapping("/export/results")

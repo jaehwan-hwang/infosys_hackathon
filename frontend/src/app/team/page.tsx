@@ -212,7 +212,7 @@ function MyTeamTab({
         </div>
       </Card>
 
-      {feeNames.length > 0 && <FeeNotice names={feeNames} />}
+      {feeNames.length > 0 && <FeeNotice names={feeNames} track={team.track} />}
 
       {canManage ? (
         <TeamEditForm

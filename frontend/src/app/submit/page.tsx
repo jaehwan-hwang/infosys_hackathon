@@ -23,7 +23,7 @@ export default function SubmitPage() {
 }
 
 function SubmitContent() {
-  const { token, user } = useAuth();
+  const { token, user, isStaff } = useAuth();
 
   const eventQuery = useApiQuery((signal) => publicApi.getEvent(signal), []);
   const teamQuery = useApiQuery(token ? () => api.getMyTeam(token) : null, [token]);
@@ -57,16 +57,16 @@ function SubmitContent() {
     );
   }
 
-  // 아직 제출이 열리지 않았으면 폼 대신 안내만 보여준다
-  if (event?.beforeSubmissionOpen) {
+  // 아직 제출이 열리지 않았으면 폼 대신 안내만 보여준다 (운영진은 미리 본다)
+  if (event?.beforeSubmissionOpen && !isStaff) {
     return (
       <Section eyebrow="Submission" title="결과물 제출">
         <EmptyState
-          title="결과물 제출은 행사 당일에 열립니다"
+          title="이용 기간이 아닙니다"
           description={
             event.submitOpensAt
-              ? `${formatDateTime(event.submitOpensAt)}부터 이 화면에서 제출할 수 있습니다.`
-              : "행사 당일 이 화면에서 제출할 수 있습니다."
+              ? `결과물 제출은 ${formatDateTime(event.submitOpensAt)}부터 열립니다.`
+              : "결과물 제출은 행사 당일에 열립니다."
           }
           action={
             <Link

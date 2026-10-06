@@ -18,6 +18,9 @@ import type {
   Track,
   PublicTrackResult,
   EventUpdateInput,
+  GoodsItemInfo,
+  GoodsOrder,
+  GoodsItem,
   JoinRequest,
   RecruitStatus,
   TrackResult,
@@ -150,6 +153,10 @@ export const publicApi = {
    * 리더보드. 로그인 없이 열리고, 공개하지 않은 트랙은 빈 칸으로 내려온다.
    * 공개한 트랙도 시상 등수까지만, 점수 없이 온다.
    */
+  /** 굿즈 품목과 예상 가격. 로그인 없이 볼 수 있다. */
+  getGoodsItems: (signal?: AbortSignal) =>
+    request<GoodsItemInfo[]>("/api/v1/goods/items", { signal }),
+
   getResults: (signal?: AbortSignal) =>
     request<PublicTrackResult[]>("/api/v1/results", { signal }),
 };
@@ -161,11 +168,30 @@ export const api = {
 
   updateProfile: (
     token: string,
-    profile: { name: string; studentId: string; department?: string },
+    profile: {
+      name: string;
+      studentId: string;
+      department?: string;
+      phone: string;
+      privacyConsent: boolean;
+    },
   ) =>
     request<User>("/api/v1/auth/me/profile", {
       method: "PUT",
       body: profile,
+      token,
+    }),
+
+  // ---- 굿즈 ----
+
+  getGoodsOrder: (token: string, signal?: AbortSignal) =>
+    request<GoodsOrder>("/api/v1/goods/me", { token, signal }),
+
+  /** 신청 저장. 다시 내면 수량을 덮어쓴다. */
+  saveGoodsOrder: (token: string, quantities: Record<GoodsItem, number>) =>
+    request<GoodsOrder>("/api/v1/goods/me", {
+      method: "PUT",
+      body: { quantities },
       token,
     }),
 
@@ -385,7 +411,7 @@ export const api = {
       request<string[]>("/api/v1/admin/criteria/validate", { token }),
 
     /** CSV 다운로드 URL. 브라우저가 직접 열도록 링크로 쓴다. */
-    exportUrl: (kind: "participants" | "submissions" | "results") =>
+    exportUrl: (kind: "participants" | "submissions" | "results" | "goods") =>
       `${BASE_URL}/api/v1/admin/export/${kind}`,
   },
 };
@@ -396,7 +422,7 @@ export const api = {
  */
 export async function downloadCsv(
   token: string,
-  kind: "participants" | "submissions" | "results",
+  kind: "participants" | "submissions" | "results" | "goods",
 ): Promise<void> {
   const res = await fetch(api.admin.exportUrl(kind), {
     headers: { Authorization: `Bearer ${token}` },

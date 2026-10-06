@@ -74,6 +74,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           token.role = data.user.role;
           token.studentId = data.user.studentId;
           token.profileCompleted = data.user.profileCompleted;
+          token.superAdmin = data.user.superAdmin;
           token.syncedAt = Date.now();
           token.authError = undefined;
         } catch {
@@ -101,6 +102,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             token.role = user.role;
             token.studentId = user.studentId;
             token.profileCompleted = user.profileCompleted;
+            token.superAdmin = user.superAdmin;
             // 구글이 주는 표시 이름은 "황재환 | 정보시스템학과 | 한양대(서울)"처럼 길다.
             // 참가자가 프로필에 적은 이름이 있으면 화면에는 그쪽을 쓴다.
             if (user.name) token.name = user.name;
@@ -130,6 +132,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         session.user.role = token.role as Role;
         session.user.studentId = token.studentId as string | null;
         session.user.profileCompleted = Boolean(token.profileCompleted);
+        session.user.superAdmin = Boolean(token.superAdmin);
       }
       return session;
     },

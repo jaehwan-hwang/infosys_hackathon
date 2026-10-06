@@ -2,8 +2,10 @@
 
 import { AuthGate } from "@/components/auth-gate";
 import { EvaluationBoard } from "@/components/evaluation-board";
+import { PeriodGate } from "@/components/period-gate";
 import { Spinner } from "@/components/ui";
-import { useAuth } from "@/lib/use-auth";
+import { publicApi } from "@/lib/api";
+import { useApiQuery, useAuth } from "@/lib/use-auth";
 
 /**
  * 평가 화면 하나로 통합했다.
@@ -22,6 +24,22 @@ export default function EvaluatePage() {
 
 function EvaluateContent() {
   const { role, isLoading } = useAuth();
-  if (isLoading) return <Spinner />;
-  return <EvaluationBoard evaluatorType={role === "PROFESSOR" ? "PROFESSOR" : "STUDENT"} />;
+  const eventQuery = useApiQuery((signal) => publicApi.getEvent(signal), []);
+
+  if (isLoading || eventQuery.loading) return <Spinner />;
+
+  const votingOpen = eventQuery.data?.votingOpen;
+  const anyOpen = votingOpen
+    ? votingOpen.SPARK || votingOpen.SPRINT || votingOpen.SUMMIT
+    : false;
+
+  return (
+    <PeriodGate
+      open={anyOpen}
+      title="평가"
+      description="평가는 발표가 끝난 트랙부터 운영진이 순서대로 엽니다. 그때 이 화면에서 투표할 수 있습니다."
+    >
+      <EvaluationBoard evaluatorType={role === "PROFESSOR" ? "PROFESSOR" : "STUDENT"} />
+    </PeriodGate>
+  );
 }

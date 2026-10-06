@@ -65,6 +65,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/v1/results/**").permitAll()
                         // 자가진단은 저장 없는 계산이라 랜딩 페이지에서 로그인 전에도 쓴다
                         .requestMatchers(HttpMethod.POST, "/api/v1/teams/self-check").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/goods/items").permitAll()
                         .requestMatchers("/actuator/health").permitAll()
 
                         // 운영진 전용
