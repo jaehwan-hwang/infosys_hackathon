@@ -11,6 +11,7 @@ import kr.hyu.isd.hackathon.domain.team.Team;
 import kr.hyu.isd.hackathon.domain.team.TeamMember;
 import kr.hyu.isd.hackathon.domain.team.TeamMemberRole;
 import kr.hyu.isd.hackathon.domain.team.Track;
+import kr.hyu.isd.hackathon.domain.user.Role;
 import kr.hyu.isd.hackathon.domain.user.User;
 import kr.hyu.isd.hackathon.infrastructure.persistence.TeamRepository;
 import kr.hyu.isd.hackathon.infrastructure.persistence.UserRepository;
@@ -69,6 +70,13 @@ public class TeamService {
 
         User leader = userRepository.findById(userId)
                 .orElseThrow(() -> new HackathonException(ErrorCode.USER_NOT_FOUND));
+        // 운영진과 교수는 심사·운영을 맡으므로 참가 팀을 만들 수 없다.
+        // 자기 팀이 있으면 평가에서 빠지거나 자기 팀을 평가하는 일이 생긴다.
+        if (leader.getRole() != Role.STUDENT) {
+            throw new HackathonException(ErrorCode.INSUFFICIENT_PERMISSION,
+                    "운영진과 교수는 팀을 등록할 수 없습니다.");
+        }
+
         // 동의와 전화번호는 프로필 등록에서 본인이 직접 채운다.
         // 팀장이 팀원 몫까지 대신 동의할 수는 없다.
         if (!leader.isProfileReady()) {

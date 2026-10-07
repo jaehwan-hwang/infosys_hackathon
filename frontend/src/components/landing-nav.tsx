@@ -67,16 +67,18 @@ export function LandingNav() {
   const go = (key: string) => scrollToSlide(`[data-nav="${key}"]`);
 
   return (
+    // 화면 폭과 무관하게 가운데에 두고, 알약은 내용만큼만 넓어진다.
+    // 예전에는 좁은 화면에서 좌우로 늘어나 글자가 양 끝에 흩어져 깨져 보였다.
     <nav
       aria-label="섹션 이동"
-      className="fixed inset-x-3 bottom-4 z-50 md:inset-x-auto md:bottom-7 md:left-1/2 md:-translate-x-1/2"
+      className="pointer-events-none fixed inset-x-0 bottom-4 z-50 flex justify-center px-3 md:bottom-7"
     >
       <ul
         className={cx(
-          "flex items-center justify-between rounded-full",
+          "pointer-events-auto flex max-w-full items-center rounded-full",
           // 유리 느낌 — 뒤에 깔린 슬라이드를 흐리게 비친다
           "backdrop-blur-[14px] backdrop-saturate-150",
-          "h-10 px-3 md:h-11 md:gap-[8px] md:px-[18px]",
+          "h-10 gap-0.5 px-2 md:h-11 md:gap-[8px] md:px-[18px]",
         )}
         style={{ background: BAR_BG }}
       >
@@ -95,7 +97,7 @@ export function LandingNav() {
                   "flex items-center justify-center rounded-full font-bold whitespace-nowrap text-white",
                   "transition-colors",
                   // 좁은 화면에서는 영문 다섯 개가 알약을 넘치므로 폭에 따라 줄인다
-                  "h-8 px-1 text-[clamp(9px,2.9vw,11px)] md:h-9 md:px-2 md:text-[15px]",
+                  "h-8 px-1.5 text-[clamp(8px,2.4vw,11px)] md:h-9 md:px-2 md:text-[15px]",
                   // 디자인 파일에는 선택 표시가 없지만, 지금 보는 위치를 잃지 않도록
                   // 유리 톤을 해치지 않는 선에서 옅게만 띄운다
                   isActive ? "bg-white/20" : "text-white/85 hover:text-white",

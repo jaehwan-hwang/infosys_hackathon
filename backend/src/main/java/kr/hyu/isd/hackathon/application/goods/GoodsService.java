@@ -6,6 +6,7 @@ import kr.hyu.isd.hackathon.common.exception.HackathonException;
 import kr.hyu.isd.hackathon.domain.event.HackathonEvent;
 import kr.hyu.isd.hackathon.domain.goods.GoodsItem;
 import kr.hyu.isd.hackathon.domain.goods.GoodsOrder;
+import kr.hyu.isd.hackathon.domain.user.Role;
 import kr.hyu.isd.hackathon.domain.user.User;
 import kr.hyu.isd.hackathon.infrastructure.persistence.GoodsOrderRepository;
 import kr.hyu.isd.hackathon.infrastructure.persistence.TeamRepository;
@@ -60,14 +61,16 @@ public class GoodsService {
     public GoodsOrderResponse save(Long userId, GoodsOrderRequest request) {
         HackathonEvent event = eventService.getActiveEvent();
 
-        // 굿즈는 해커톤 신청자에게만 판다
-        if (teamRepository.findByEventIdAndMemberUserId(event.getId(), userId).isEmpty()) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new HackathonException(ErrorCode.USER_NOT_FOUND));
+
+        // 굿즈는 해커톤 신청자에게 판다. 운영진과 교수는 팀을 만들 수 없으므로
+        // 팀 소속을 따지면 영영 살 수 없게 된다 — 그 둘은 그냥 통과시킨다.
+        if (user.getRole() == Role.STUDENT
+                && teamRepository.findByEventIdAndMemberUserId(event.getId(), userId).isEmpty()) {
             throw new HackathonException(ErrorCode.TEAM_NOT_FOUND,
                     "해커톤에 참가 신청한 분만 굿즈를 신청할 수 있습니다.");
         }
-
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new HackathonException(ErrorCode.USER_NOT_FOUND));
 
         GoodsOrder order = goodsOrderRepository.findByEventIdAndUserId(event.getId(), userId)
                 .orElseGet(() -> goodsOrderRepository.save(GoodsOrder.create(event, user)));

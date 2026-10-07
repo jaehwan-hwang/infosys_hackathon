@@ -45,7 +45,7 @@ export default function TeamPage() {
 }
 
 function TeamContent() {
-  const { token } = useAuth();
+  const { token, isStaff, role } = useAuth();
   const params = useSearchParams();
 
   const eventQuery = useApiQuery((signal) => publicApi.getEvent(signal), []);
@@ -57,6 +57,20 @@ function TeamContent() {
   const event = eventQuery.data;
 
   if (!teamQuery.data) {
+    // 운영진과 교수는 심사·운영을 맡으므로 참가 팀을 만들 수 없다.
+    // 서버도 막지만, 폼부터 띄워 두면 다 채우고 나서야 거절당한다.
+    if (isStaff || role === "PROFESSOR") {
+      return (
+        <Section eyebrow="Team" title="팀">
+          <Alert tone="info" title="운영진과 교수는 팀을 등록하지 않습니다">
+            심사와 운영을 맡는 계정이라 참가 팀을 만들 수 없습니다. 등록된 팀은{" "}
+            {isStaff ? "운영진 화면에서" : "평가 화면에서"} 볼 수 있고, 굿즈는 신청할 수
+            있습니다.
+          </Alert>
+        </Section>
+      );
+    }
+
     if (event && !event.registrationOpen) {
       return (
         <Section title="팀 등록">
