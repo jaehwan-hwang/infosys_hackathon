@@ -39,19 +39,19 @@ function GoodsContent() {
       </p>
 
       {/* 나중에 "못 들었다"가 나오는 두 가지라 눈에 띄게 둘러싼다 */}
-      <div className="mt-6 rounded-2xl border-2 border-brand-500/40 px-5 py-4 sm:px-6 sm:py-5">
-        <p className="text-xs font-bold uppercase tracking-[0.16em] text-brand-600">
+      <div className="mt-6 rounded-2xl border-2 border-[var(--accent)]/40 px-5 py-4 sm:px-6 sm:py-5">
+        <p className="text-xs font-bold uppercase tracking-[0.16em] text-[var(--accent)]">
           꼭 읽어 주세요
         </p>
         <ul className="mt-3 space-y-2.5 text-sm leading-relaxed">
           <li className="flex gap-2">
-            <span aria-hidden="true" className="text-brand-600">
+            <span aria-hidden="true" className="text-[var(--accent)]">
               *
             </span>
             <span>현장 구매는 한정 수량으로 진행되어, 조기 마감될 수 있습니다.</span>
           </li>
           <li className="flex gap-2">
-            <span aria-hidden="true" className="text-brand-600">
+            <span aria-hidden="true" className="text-[var(--accent)]">
               *
             </span>
             <span>

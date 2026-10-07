@@ -82,7 +82,7 @@ export function AdminSubmissionsPanel() {
             type="checkbox"
             checked={onlyMissing}
             onChange={(e) => setOnlyMissing(e.target.checked)}
-            className="size-4 accent-brand-600"
+            className="size-4 accent-[var(--accent)]"
           />
           미제출만 보기
         </label>

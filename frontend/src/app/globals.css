@@ -50,18 +50,40 @@
 
   /* 디자인 파일의 큰 원 세 개가 쓰는 그라데이션 */
   --grad-brand: linear-gradient(180deg, #117aaf 0%, #2b35ba 70.19%);
+
+  /*
+   * 강조색.
+   *
+   * 밝은 테마에서는 팔레트의 진한 파랑을 그대로 쓰지만, 어두운 테마에서는 같은 색이
+   * 어두운 바탕에 묻힌다. 색을 쓰는 쪽은 이 변수만 보고, 테마에 따른 값은 여기서 정한다.
+   */
+  --accent: #2b35ba;
+  --accent-strong: #242d9c;
+  --accent-tint: rgba(43, 53, 186, 0.06);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
     --bg: #0c1020;
-    --bg-subtle: #131829;
+    --bg-subtle: #141a2c;
     --bg-muted: #1b2135;
-    --border: #272e46;
+    --border: #2a3250;
     --border-strong: #3a435f;
-    --text: #f1f3f8;
-    --text-muted: #a9b0c4;
-    --text-subtle: #7b8299;
+    --text: #eef1f7;
+    --text-muted: #aeb6ca;
+    --text-subtle: #848ca3;
+
+    /* 어두운 바탕에서 읽히는 밝은 파랑으로 바꿔 끼운다 */
+    --accent: #8fb8ec;
+    --accent-strong: #b7d2f5;
+    --accent-tint: rgba(143, 184, 236, 0.12);
+
+    /*
+     * 채운 면(선택된 탭·배지·버튼)에 쓰는 그라데이션.
+     * 원래 값은 어두운 바탕 위에서 거의 바탕색처럼 가라앉아 눌린 것이 보이지 않는다.
+     * 흰 글씨가 올라가므로 너무 밝히지는 않는다.
+     */
+    --grad-brand: linear-gradient(180deg, #1d86bd 0%, #3b47c7 70.19%);
   }
 }
 

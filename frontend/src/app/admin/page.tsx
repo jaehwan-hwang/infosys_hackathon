@@ -150,7 +150,7 @@ function Overview({
             disabled={!stat.tab}
             className={cx(
               "rounded-2xl border-2 border-current/15 bg-[var(--bg)] p-5 text-left transition-colors sm:p-6",
-              stat.tab && "hover:border-brand-600 hover:bg-brand-600/5",
+              stat.tab && "hover:border-[var(--accent)] hover:bg-[var(--accent-tint)]",
             )}
           >
             <span className="flex items-center justify-between gap-2">
@@ -425,7 +425,7 @@ function TeamsPanel() {
                         <span
                           className={cx(
                             "w-9 shrink-0 text-[11px] font-bold",
-                            m.role === "LEADER" ? "text-brand-600" : "text-subtle",
+                            m.role === "LEADER" ? "text-[var(--accent)]" : "text-subtle",
                           )}
                         >
                           {m.role === "LEADER" ? "팀장" : "팀원"}

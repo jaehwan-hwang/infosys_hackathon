@@ -65,7 +65,7 @@ export function Section({
       {(eyebrow || title || description) && (
         <header className={nested ? "mb-6" : "mb-10"}>
           {eyebrow && (
-            <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-brand-600">
+            <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-[var(--accent)]">
               {eyebrow}
             </p>
           )}
@@ -196,18 +196,18 @@ export function TrackFilter({
 const TRACK_STYLES: Record<Track, { badge: string; accent: string; ring: string }> = {
   SPARK: {
     badge: "border-transparent bg-grad-brand text-white",
-    accent: "text-brand-500 dark:text-brand-300",
-    ring: "ring-2 ring-brand-400/40",
+    accent: "text-[var(--accent)]",
+    ring: "ring-2 ring-[var(--accent)]/40",
   },
   SPRINT: {
     badge: "border-transparent bg-grad-brand text-white",
-    accent: "text-brand-600 dark:text-brand-300",
-    ring: "ring-2 ring-brand-500/50",
+    accent: "text-[var(--accent)]",
+    ring: "ring-2 ring-[var(--accent)]/50",
   },
   SUMMIT: {
     badge: "border-transparent bg-grad-brand text-white",
-    accent: "text-brand-700 dark:text-brand-200",
-    ring: "ring-2 ring-brand-600/60",
+    accent: "text-[var(--accent-strong)]",
+    ring: "ring-2 ring-[var(--accent)]/60",
   },
 };
 
@@ -248,7 +248,7 @@ export function Badge({
     success: "border-emerald-500/50 text-emerald-700 dark:text-emerald-300",
     warning: "border-amber-500/50 text-amber-700 dark:text-amber-300",
     danger: "border-red-500/50 text-red-700 dark:text-red-300",
-    info: "border-brand-500/40 text-brand-600 dark:text-brand-300",
+    info: "border-[var(--accent)]/40 text-[var(--accent)]",
   };
   return <span className={cx(TAG_SIZE, tones[tone])}>{children}</span>;
 }
@@ -266,7 +266,7 @@ export function Alert({
   const tones = {
     error: "border-red-500/40 text-red-800 dark:text-red-200",
     warning: "border-amber-500/50 text-amber-800 dark:text-amber-200",
-    info: "border-brand-500/40 text-brand-700 dark:text-brand-200",
+    info: "border-[var(--accent)]/40 text-[var(--accent-strong)]",
     success: "border-emerald-500/50 text-emerald-800 dark:text-emerald-200",
   };
   return (
@@ -305,7 +305,7 @@ export function EmptyState({
 export function Spinner({ label = "불러오는 중" }: { label?: string }) {
   return (
     <div role="status" className="flex items-center justify-center gap-3 py-14">
-      <span className="size-4 animate-spin rounded-full border-2 border-brand-600 border-t-transparent" />
+      <span className="size-4 animate-spin rounded-full border-2 border-[var(--accent)] border-t-transparent" />
       <span className="text-sm text-muted">{label}</span>
     </div>
   );

@@ -149,7 +149,7 @@ function RecruitForm({
             className={cx(
               "rounded-2xl border-2 p-4 text-left transition-colors disabled:opacity-50",
               recruiting === option.value
-                ? "border-brand-600 bg-brand-600/5"
+                ? "border-[var(--accent)] bg-[var(--accent-tint)]"
                 : "border-current/15 hover:bg-current/5",
             )}
           >

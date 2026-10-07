@@ -183,12 +183,12 @@ export function TeamRegisterForm({
                   className={cx(
                     "rounded-2xl border-2 p-4 text-left transition-colors",
                     track === item.track
-                      ? "border-brand-600 bg-brand-600/5"
+                      ? "border-[var(--accent)] bg-[var(--accent-tint)]"
                       : "border-current/15 hover:bg-current/5",
                   )}
                 >
                   <p className="font-bold">{TRACK_LABEL[item.track]}</p>
-                  <p className="mt-0.5 text-xs font-medium text-brand-600">
+                  <p className="mt-0.5 text-xs font-medium text-[var(--accent)]">
                     {TRACK_TAGLINE[item.track]}
                   </p>
                   <p className="mt-2 text-xs leading-relaxed text-muted">{item.description}</p>
@@ -388,7 +388,7 @@ export function TeamRegisterForm({
                   className={cx(
                     "rounded-2xl border-2 p-4 text-left transition-colors",
                     recruiting === option.value
-                      ? "border-brand-600 bg-brand-600/5"
+                      ? "border-[var(--accent)] bg-[var(--accent-tint)]"
                       : "border-current/15 hover:bg-current/5",
                   )}
                 >
@@ -506,7 +506,7 @@ function DuesChoice({
           className={cx(
             "rounded-full border-2 px-4 py-2 text-xs font-bold transition-colors",
             value === option.value
-              ? "border-brand-600 bg-brand-600/5 text-brand-700 dark:text-brand-200"
+              ? "border-[var(--accent)] bg-[var(--accent-tint)] text-[var(--accent-strong)]"
               : "border-current/15 text-muted hover:bg-current/5",
           )}
         >

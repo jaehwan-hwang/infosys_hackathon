@@ -420,7 +420,7 @@ function SubmissionSlot({
         <div>
           <p className="text-sm font-semibold">
             {field.label}
-            {field.required && <span className="ml-1 text-brand-600">*</span>}
+            {field.required && <span className="ml-1 text-[var(--accent)]">*</span>}
           </p>
           <p className="mt-0.5 text-xs text-muted">{field.description}</p>
         </div>

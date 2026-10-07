@@ -23,7 +23,7 @@ export function TeamMemberList({ members }: { members: TeamMember[] }) {
             <span
               className={cx(
                 "text-[10px] font-bold",
-                leader ? "text-brand-600" : "text-subtle",
+                leader ? "text-[var(--accent)]" : "text-subtle",
               )}
             >
               {leader ? "팀장" : "팀원"}

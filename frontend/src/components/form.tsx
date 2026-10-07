@@ -84,7 +84,7 @@ export function Field({ label, hint, error, required, children }: FieldProps) {
     <div>
       <label htmlFor={id} className="block text-sm font-bold">
         {label}
-        {required && <span className="ml-1 text-brand-600">*</span>}
+        {required && <span className="ml-1 text-[var(--accent)]">*</span>}
       </label>
       {hint && (
         <p id={hintId} className="mt-1 text-xs text-subtle">
@@ -103,7 +103,7 @@ export function Field({ label, hint, error, required, children }: FieldProps) {
 
 const CONTROL_CLASS =
   `w-full rounded-xl ${HAIRLINE} bg-[var(--bg)] px-4 py-2.5 text-sm ` +
-  "placeholder:text-[var(--text-subtle)] focus:border-brand-600 focus:outline-none " +
+  "placeholder:text-[var(--text-subtle)] focus:border-[var(--accent)] focus:outline-none " +
   "disabled:opacity-50";
 
 export function TextInput({
@@ -154,7 +154,7 @@ export function CheckCard({
       className={cx(
         "flex cursor-pointer gap-3 rounded-2xl border-2 p-4 transition-colors",
         checked
-          ? "border-brand-600 bg-brand-600/5"
+          ? "border-[var(--accent)] bg-[var(--accent-tint)]"
           : "border-current/15 hover:bg-current/5",
       )}
     >
@@ -162,7 +162,7 @@ export function CheckCard({
         type="checkbox"
         checked={checked}
         onChange={(e) => onChange(e.target.checked)}
-        className="mt-0.5 size-4 shrink-0 accent-brand-600"
+        className="mt-0.5 size-4 shrink-0 accent-[var(--accent)]"
       />
       <span>
         <span className="block text-sm font-bold">{label}</span>

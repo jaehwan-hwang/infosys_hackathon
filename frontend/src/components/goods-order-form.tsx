@@ -161,7 +161,7 @@ function GoodsCard({
   const checkboxId = `goods-${info.item}`;
 
   return (
-    <Card className={cx("h-full", checked && "border-brand-600")}>
+    <Card className={cx("h-full", checked && "border-[var(--accent)]")}>
       <GoodsImage item={info.item} label={info.label} />
 
       <div className="mt-4 flex items-start gap-3">
@@ -170,7 +170,7 @@ function GoodsCard({
           type="checkbox"
           checked={checked}
           onChange={(e) => onChange(e.target.checked ? 1 : 0)}
-          className="mt-1 size-4 shrink-0 accent-brand-600"
+          className="mt-1 size-4 shrink-0 accent-[var(--accent)]"
         />
         <label htmlFor={checkboxId} className="cursor-pointer">
           <span className="block font-bold">{info.label}</span>

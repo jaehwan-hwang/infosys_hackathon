@@ -569,7 +569,7 @@ function Join() {
         <div className="mt-[min(36px,3.5dvh)] flex flex-col gap-2.5 sm:flex-row sm:gap-3.5">
           <Link
             href="/self-check"
-            className="inline-flex h-12 items-center justify-center rounded-full bg-white px-10 text-[15px] font-bold text-brand-600 transition-opacity hover:opacity-90 sm:h-14 lg:h-[60px] lg:text-[17px]"
+            className="inline-flex h-12 items-center justify-center rounded-full bg-white px-10 text-[15px] font-bold text-[var(--accent)] transition-opacity hover:opacity-90 sm:h-14 lg:h-[60px] lg:text-[17px]"
           >
             자가진단 시작하기
           </Link>

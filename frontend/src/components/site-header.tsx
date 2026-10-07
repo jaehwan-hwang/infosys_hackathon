@@ -95,7 +95,7 @@ export function SiteHeader() {
                       "ml-1.5 rounded-full px-2 py-0.5 text-[10px] font-bold",
                       superAdmin
                         ? "bg-grad-brand text-white"
-                        : "border-2 border-brand-500/40 text-brand-600 dark:text-brand-300",
+                        : "border-2 border-[var(--accent)]/40 text-[var(--accent)]",
                     )}
                   >
                     {roleLabel}

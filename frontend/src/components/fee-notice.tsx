@@ -26,7 +26,7 @@ export function FeeNotice({
   const fee = entryFeeOf(track);
 
   return (
-    <Card className={cx("border-brand-500/40", className)}>
+    <Card className={cx("border-[var(--accent)]/40", className)}>
       <p className="font-bold">
         참가비 {formatFee(fee)} 대상 {names.length}명
       </p>
