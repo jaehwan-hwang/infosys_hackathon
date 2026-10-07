@@ -115,7 +115,9 @@ export function EvaluationBoard({ evaluatorType }: { evaluatorType: EvaluatorTyp
                   )}
                 >
                   <div className="flex items-start justify-between gap-2">
-                    <span className="text-sm font-semibold">{target.teamName}</span>
+                    <span className="min-w-0 break-all text-sm font-semibold">
+                      {target.teamName}
+                    </span>
                     {target.evaluated && <Badge tone="success">완료</Badge>}
                   </div>
                   {/* 여러 트랙이 한 목록에 섞이므로 어느 트랙 팀인지 보여준다 */}
@@ -250,7 +252,7 @@ function ScoreForm({
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <div className="flex items-center gap-2">
-              <h2 className="font-display mr-1 text-xl tracking-tight">
+              <h2 className="font-display mr-1 max-w-full break-all text-xl tracking-tight">
                 {target.teamName}
               </h2>
               <TrackBadge track={target.track} />

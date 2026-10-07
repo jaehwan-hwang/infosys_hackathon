@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Button, Field, TextInput } from "@/components/form";
 import { Alert, Card } from "@/components/ui";
 import { api } from "@/lib/api";
+import { LIMITS, remainingHint } from "@/lib/limits";
 import { useApiMutation, useAuth } from "@/lib/use-auth";
 import type { Team } from "@/lib/types";
 
@@ -55,7 +56,12 @@ export function TeamEditForm({
       </p>
 
       <form onSubmit={handleSubmit} className="mt-5 space-y-5">
-        <Field label="팀명" required error={fieldError("name")}>
+        <Field
+          label="팀명"
+          required
+          hint={remainingHint(name, LIMITS.teamName) ?? `${LIMITS.teamName}자까지`}
+          error={fieldError("name")}
+        >
           {(id, describedBy) => (
             <TextInput
               id={id}
@@ -65,7 +71,7 @@ export function TeamEditForm({
                 setName(e.target.value);
                 setSaved(false);
               }}
-              maxLength={60}
+              maxLength={LIMITS.teamName}
               required
               disabled={disabled}
               invalid={Boolean(fieldError("name"))}

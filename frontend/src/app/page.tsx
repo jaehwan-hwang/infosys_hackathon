@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { LandingAccountLink } from "@/components/landing-account-link";
 import { LandingNav } from "@/components/landing-nav";
 import { SlideFit } from "@/components/slide-fit";
 import { TrackJumpList } from "@/components/track-jump";
@@ -50,7 +51,7 @@ const TRACKS = [
     metas: [
       { label: "필수 제출물", values: ["발표 자료"] },
       { label: "평가", values: ["해커톤 참가자 투표 100%"] },
-      { label: "제출 마감", values: ["11월 7일 1일차 18:00", "마감 후 자동 잠금"] },
+      { label: "제출 마감", values: ["11월 7일 1일차 19:00", "마감 후 자동 잠금"] },
     ],
     tags: ["아이디어톤", "개발 결과물 제출 금지"],
   },
@@ -84,11 +85,11 @@ const TRACKS = [
  * DAY 1·2 진행 순서는 같다. 그날 결과물을 내는 트랙만 다르므로,
  * 제출 마감 줄에는 어느 트랙이 내는 마감인지 트랙 이름을 함께 적는다.
  */
-const dayRows = (tracks: string) => [
+const dayRows = (tracks: string, submitAt: string, presentAt: string) => [
   { time: "10:00", label: "시작", hi: false },
   { time: "13:00", label: "점심 식사", hi: false },
-  { time: "18:00", label: `${tracks} 결과물 제출 마감 및 저녁 식사`, hi: true },
-  { time: "19:00", label: "발표 및 투표", hi: false },
+  { time: submitAt, label: `${tracks} 결과물 제출 마감 및 저녁 식사`, hi: true },
+  { time: presentAt, label: "발표 및 투표", hi: false },
   { time: "21:00", label: "시상", hi: true },
   { time: "22:00", label: "마무리", hi: false },
 ];
@@ -98,13 +99,13 @@ const DAYS = [
     title: "DAY 1",
     kicker: "SPARK 트랙",
     lede: "Spark 트랙은 1일차에만 진행되는 별도 트랙입니다. 1일차 결과물은 Spark 트랙만 제출합니다.",
-    rows: dayRows("SPARK"),
+    rows: dayRows("SPARK", "19:00", "20:00"),
   },
   {
     title: "DAY 2",
     kicker: "SPRINT · SUMMIT 트랙",
     lede: "Sprint와 Summit 트랙은 1, 2일차 일정으로 진행됩니다. 2일차 결과물은 두 트랙이 함께 제출합니다.",
-    rows: dayRows("SPRINT · SUMMIT"),
+    rows: dayRows("SPRINT · SUMMIT", "18:00", "19:00"),
   },
 ] as const;
 
@@ -125,17 +126,6 @@ const PROFESSORS = [
     ],
   },
   {
-    name: "김은찬",
-    email: "eckim@hanyang.ac.kr",
-    fields: [
-      "인공지능",
-      "데이터 인텔리전스",
-      "비즈니스 인텔리전스",
-      "지능형 시스템",
-      "다학제적 융합 연구",
-    ],
-  },
-  {
     name: "박현석",
     email: "hp@hanyang.ac.kr",
     fields: [
@@ -146,16 +136,27 @@ const PROFESSORS = [
       "특허분석 방법론",
     ],
   },
+  {
+    name: "김은찬",
+    email: "eckim@hanyang.ac.kr",
+    fields: [
+      "인공지능",
+      "데이터 인텔리전스",
+      "비즈니스 인텔리전스",
+      "지능형 시스템",
+      "다학제적 융합 연구",
+    ],
+  },
 ] as const;
 
 const JOIN = {
   title: "어느 트랙에 참가해야 할까요",
   lede: "SPARK, SPRINT, SUMMIT 중 무엇에 참가해야 할지 몇 가지 설문을 통해 확인할 수 있습니다.",
-  footer: [
-    "한양대학교 정보시스템학과 학생회",
-    "참가 자격 · @hanyang.ac.kr 계정",
-    "문의 · [오픈채팅 링크]",
-  ],
+  footer: ["한양대학교 정보시스템학과 학생회", "참가 자격 · 정보시스템학과 학생"],
+  contact: {
+    label: "문의 · 오픈채팅",
+    href: "https://open.kakao.com/o/si2uNnfi",
+  },
 };
 
 export default function HomePage() {
@@ -177,6 +178,7 @@ export default function HomePage() {
         <Professors />
         <Join />
       </div>
+      <LandingAccountLink />
       <LandingNav />
     </>
   );
@@ -225,7 +227,8 @@ function Slide({
       className={cx(
         SLIDE_FRAME,
         // 디자인 파일의 두 색: 흰 바탕 + 검정 글씨 ↔ 파란 그라데이션 + 흰 글씨
-        inverted ? "bg-grad-brand text-white" : "bg-[var(--bg)] text-black",
+        // 어두운 테마에서 글씨를 검정으로 두면 어두운 바탕에 묻혀 읽히지 않는다
+        inverted ? "bg-grad-brand text-white" : "bg-[var(--bg)] text-[var(--text)]",
       )}
     >
       <SlideFit className="mx-auto w-full max-w-[1296px]">{children}</SlideFit>
@@ -263,20 +266,14 @@ function Lion({
  * 두 벌이 한 픽셀도 어긋나면 안 되므로 같은 컴포넌트를 두 번 그린다.
  */
 function HeroContent({ gradient = false }: { gradient?: boolean }) {
-  const tint = gradient
-    ? {
-        backgroundImage: "var(--grad-brand)",
-        WebkitBackgroundClip: "text",
-        backgroundClip: "text",
-        color: "transparent",
-      }
-    : undefined;
+  // 색은 globals.css가 쥔다. 어두운 테마에서는 두 겹을 뒤집어야 읽히기 때문이다.
+  const tint = gradient ? "hero-ink-base" : "hero-ink-circle";
 
   return (
     <div className="w-full">
       <p
-        className="font-hero font-bold leading-none tracking-[-0.01em]"
-        style={{ fontSize: "min(2.8cqw, 7dvh)", ...tint }}
+        className={cx("font-hero font-bold leading-none tracking-[-0.01em]", tint)}
+        style={{ fontSize: "min(2.8cqw, 7dvh)" }}
       >
         {EYEBROW}
       </p>
@@ -286,12 +283,8 @@ function HeroContent({ gradient = false }: { gradient?: boolean }) {
         className="font-hero-display mt-[0.6cqw] leading-[0.77] tracking-[-0.03em]"
         style={{ fontSize: HEADLINE_SIZE }}
       >
-        <p className="whitespace-nowrap" style={tint}>
-          INFOSYS
-        </p>
-        <p className="whitespace-nowrap" style={tint}>
-          HACKATHON
-        </p>
+        <p className={cx("whitespace-nowrap", tint)}>INFOSYS</p>
+        <p className={cx("whitespace-nowrap", tint)}>HACKATHON</p>
       </div>
     </div>
   );
@@ -302,7 +295,7 @@ function Hero() {
     <section
       id="about"
       data-nav="about"
-      className={cx(SLIDE_BOX, SLIDE_PAD, HERO_PAD_TOP, "bg-[var(--bg)] text-black")}
+      className={cx(SLIDE_BOX, SLIDE_PAD, HERO_PAD_TOP, "bg-[var(--bg)] text-[var(--text)]")}
     >
       {/* 배경 원 세 개. 세로로 긴 디자인 아트보드를 위쪽에 맞춰 잘라 쓴다. */}
       <div
@@ -316,8 +309,13 @@ function Hero() {
         <HeroContent gradient />
         {/* 첫 줄 오른쪽 빈자리. 디자인에서 사자는 INFOSYS와 같은 높이에 선다. */}
         {/* 디자인에서 사자 높이는 첫 줄 글자 높이와 거의 같다(769:728).
-            Inter는 같은 폭에서 글자가 더 낮으므로, 단 너비가 아니라 제목 크기를 기준으로 맞춘다. */}
-        <Lion tone="black" className="absolute right-[7.9cqw] top-[3.4cqw] w-[17.2cqw]" />
+            Inter는 같은 폭에서 글자가 더 낮으므로, 단 너비가 아니라 제목 크기를 기준으로 맞춘다.
+            검정 사자는 어두운 테마에서 묻히므로 그때는 흰 사자로 바꿔 끼운다. */}
+        <Lion
+          tone="black"
+          className="absolute right-[7.9cqw] top-[3.4cqw] w-[17.2cqw] dark:hidden"
+        />
+        <Lion className="absolute right-[7.9cqw] top-[3.4cqw] hidden w-[17.2cqw] dark:block" />
       </div>
 
       {/* 같은 글자를 검정으로 한 벌 더 올리고 원 모양으로만 남긴다 — 원 안의 글자만 검정이 된다.
@@ -589,6 +587,14 @@ function Join() {
           {JOIN.footer.map((f) => (
             <span key={f}>{f}</span>
           ))}
+          <a
+            href={JOIN.contact.href}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline underline-offset-4 transition-opacity hover:opacity-100"
+          >
+            {JOIN.contact.label}
+          </a>
         </div>
       </SlideFit>
     </section>

@@ -20,7 +20,7 @@ import java.util.List;
  */
 public record TeamRegisterRequest(
         @NotBlank(message = "팀명은 필수입니다.")
-        @Size(max = 60, message = "팀명은 60자 이하여야 합니다.")
+        @Size(max = 20, message = "팀명은 20자 이하여야 합니다.")
         String name,
 
         @NotNull(message = "트랙 선택은 필수입니다.")
@@ -36,7 +36,7 @@ public record TeamRegisterRequest(
 
         RecruitStatus recruiting,
 
-        @Size(max = 300)
+        @Size(max = 150, message = "모집 글은 150자 이하여야 합니다.")
         String recruitNote,
 
         boolean duesPaid

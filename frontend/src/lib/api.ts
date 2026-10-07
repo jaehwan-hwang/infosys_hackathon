@@ -200,7 +200,8 @@ export const api = {
   // ---- 팀 ----
 
   /** 내 팀. 아직 등록하지 않았으면 null이 온다. */
-  getMyTeam: (token: string) => request<Team | null>("/api/v1/teams/me", { token }),
+  getMyTeam: (token: string, signal?: AbortSignal) =>
+    request<Team | null>("/api/v1/teams/me", { token, signal }),
 
   registerTeam: (token: string, input: TeamRegisterInput) =>
     request<Team>("/api/v1/teams", { method: "POST", body: input, token }),

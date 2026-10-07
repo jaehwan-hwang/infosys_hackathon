@@ -135,6 +135,37 @@ body {
 }
 
 /**
+ * 첫 화면 제목의 두 겹 색.
+ *
+ * 같은 글자를 두 번 그려 겹친다. 바탕 한 겹(hero-ink-base)과, 원 모양으로만 오려낸
+ * 덧판 한 겹(hero-ink-circle)이다. 밝은 테마에서는 흰 바탕 위 파란 그라데이션에
+ * 원 안만 검정이 되고, 어두운 테마에서는 그 반대로 둬야 읽힌다 — 어두운 바탕에
+ * 파란 그라데이션 글씨를 두면 바탕에 묻힌다.
+ */
+.hero-ink-base {
+  background-image: var(--grad-brand);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.hero-ink-circle {
+  color: var(--text);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .hero-ink-base {
+    background-image: none;
+    color: var(--text);
+  }
+
+  /* 원 안은 원보다 밝은 하늘빛으로 둬야 두 겹이 구분된다 */
+  :root:not([data-theme="light"]) .hero-ink-circle {
+    color: #b0d0e9;
+  }
+}
+
+/**
  * 페이지 전환. app/template.tsx가 이동할 때마다 이 클래스를 다시 붙인다.
  *
  * 들어오는 화면을 부드럽게 올리며 띄운다. 로고를 눌러 홈으로 갈 때처럼 생김새가 크게

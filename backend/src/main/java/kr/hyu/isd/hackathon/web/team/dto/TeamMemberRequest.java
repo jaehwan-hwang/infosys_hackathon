@@ -12,7 +12,7 @@ import jakarta.validation.constraints.Size;
  */
 public record TeamMemberRequest(
         @NotBlank(message = "팀원 성명은 필수입니다.")
-        @Size(max = 50)
+        @Size(max = 20, message = "성명은 20자 이하여야 합니다.")
         String name,
 
         @NotBlank(message = "학번은 필수입니다.")

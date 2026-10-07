@@ -15,6 +15,7 @@ import {
 import { ApiError, api } from "@/lib/api";
 import { formatBytes, formatDateTime } from "@/lib/format";
 import { SUBMISSION_FIELDS, type SubmissionField } from "@/lib/track-rules";
+import { LIMITS, remainingHint } from "@/lib/limits";
 import { useApiMutation, useAuth } from "@/lib/use-auth";
 import type { HackathonEvent, Submission, SubmissionInput, Team } from "@/lib/types";
 
@@ -160,7 +161,9 @@ export function SubmissionPanel({
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <div className="flex items-center gap-2">
-              <span className="font-display mr-1 text-lg tracking-tight">{team.name}</span>
+              <span className="font-display mr-1 max-w-full break-all text-lg tracking-tight">
+                {team.name}
+              </span>
               <TrackBadge track={team.track} />
             </div>
             <p className="mt-2 text-sm text-muted">
@@ -217,14 +220,17 @@ export function SubmissionPanel({
             <Field
               label="한 줄 요약"
               required
-              hint="평가 화면에서 다른 참가자들에게 보이는 설명입니다"
+              hint={
+                remainingHint(form.summary, LIMITS.summary) ??
+                "평가 화면에서 다른 참가자들에게 보이는 설명입니다"
+              }
             >
               {(id) => (
                 <TextInput
                   id={id}
                   value={form.summary}
                   onChange={(e) => set("summary")(e.target.value)}
-                  maxLength={300}
+                  maxLength={LIMITS.summary}
                   required
                 />
               )}

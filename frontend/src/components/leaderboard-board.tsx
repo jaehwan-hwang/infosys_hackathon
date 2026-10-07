@@ -146,7 +146,12 @@ function WinnerRow({ team: winner, track }: { team: PublicTeamResult; track: Tra
       <MedalTag rank={winner.rank} />
 
       <div className="min-w-0">
-        <p className={cx("font-display tracking-tight", first ? "text-2xl" : "text-xl")}>
+        <p
+          className={cx(
+            "font-display break-all tracking-tight",
+            first ? "text-2xl" : "text-xl",
+          )}
+        >
           {winner.teamName}
         </p>
         {winner.projectName && (
@@ -195,7 +200,7 @@ function PlainRow({ team }: { team: PublicTeamResult }) {
       <span className="w-12 shrink-0 text-sm font-bold tabular-nums text-subtle">
         {team.rank}등
       </span>
-      <span className="min-w-0 font-bold">{team.teamName}</span>
+      <span className="min-w-0 break-all font-bold">{team.teamName}</span>
     </div>
   );
 }

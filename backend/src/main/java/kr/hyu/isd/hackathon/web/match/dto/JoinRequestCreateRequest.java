@@ -11,7 +11,7 @@ import jakarta.validation.constraints.Size;
 public record JoinRequestCreateRequest(
         Long toTeamId,
 
-        @Size(max = 500)
+        @Size(max = 300, message = "한마디는 300자 이하여야 합니다.")
         String message
 ) {
 }

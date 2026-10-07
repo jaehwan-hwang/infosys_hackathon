@@ -36,9 +36,12 @@ export function GoodsOrderForm({
   );
   const [saved, setSaved] = useState(false);
 
-  const mutation = useApiMutation(async () => {
+  const mutation = useApiMutation(async (override?: Record<string, number>) => {
     if (!token) throw new Error("no token");
-    return api.saveGoodsOrder(token, quantities as Record<GoodsItem, number>);
+    return api.saveGoodsOrder(
+      token,
+      (override ?? quantities) as Record<GoodsItem, number>,
+    );
   });
 
   const quantityOf = (item: GoodsItem) => quantities[item] ?? 0;
@@ -50,6 +53,10 @@ export function GoodsOrderForm({
 
   const total = items.reduce((sum, i) => sum + i.price * quantityOf(i.item), 0);
   const picked = items.filter((i) => quantityOf(i.item) > 0);
+  // 이미 접수된 신청이 있는가. 처음 들어온 사람에게 "신청 취소"를 띄우면 안 된다.
+  const ordered = Object.values(order?.quantities ?? {}).some((q) => q > 0);
+  const changed =
+    ordered && items.some((i) => quantityOf(i.item) !== (order?.quantities?.[i.item] ?? 0));
 
   // 참가 신청을 하지 않았으면 서버가 막는다. 그 안내를 그대로 보여준다.
   if (error) return <Alert tone="warning">{error}</Alert>;
@@ -80,18 +87,39 @@ export function GoodsOrderForm({
             </p>
             <p className="mt-1 text-sm text-muted">
               {picked.length === 0
-                ? "아직 고른 품목이 없습니다."
-                : picked
-                    .map((i) => `${i.label} ${quantityOf(i.item)}개`)
-                    .join(" · ")}
+                ? ordered
+                  ? "품목을 모두 비웠습니다. 신청 취소를 누르면 접수가 취소됩니다."
+                  : "신청할 품목을 골라 주세요."
+                : picked.map((i) => `${i.label} ${quantityOf(i.item)}개`).join(" · ")}
             </p>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
             {saved && <span className="text-sm text-emerald-600">저장했습니다</span>}
+
+            {/* 아직 신청하지 않았으면 "신청하기" 하나만 둔다.
+                접수된 뒤에야 수량 변경과 신청 취소가 의미를 가진다. */}
+            {ordered && (
+              <Button
+                variant="secondary"
+                loading={mutation.pending}
+                onClick={async () => {
+                  setQuantities({});
+                  const result = await mutation.run({});
+                  if (result) {
+                    setSaved(true);
+                    onSaved();
+                  }
+                }}
+              >
+                신청 취소
+              </Button>
+            )}
+
             <Button
               size="lg"
               loading={mutation.pending}
+              disabled={picked.length === 0 || (ordered && !changed)}
               onClick={async () => {
                 const result = await mutation.run();
                 if (result) {
@@ -100,7 +128,7 @@ export function GoodsOrderForm({
                 }
               }}
             >
-              {picked.length === 0 ? "신청 취소하기" : "신청 저장"}
+              {ordered ? "수량 변경 저장" : "신청하기"}
             </Button>
           </div>
         </div>

@@ -13,6 +13,7 @@ import {
 } from "@/components/ui";
 import { TeamMemberList } from "@/components/team-member-list";
 import { api } from "@/lib/api";
+import { LIMITS, remainingHint } from "@/lib/limits";
 import { formatDateTime } from "@/lib/format";
 import { RECRUIT_LABEL, RECRUIT_OPTIONS, counterpart } from "@/lib/recruit";
 import { useApiMutation, useApiQuery, useAuth } from "@/lib/use-auth";
@@ -160,7 +161,10 @@ function RecruitForm({
 
       {recruiting !== "NONE" && (
         <div className="mt-4">
-          <Field label="모집 글 한마디">
+          <Field
+            label="모집 글 한마디"
+            hint={remainingHint(note, LIMITS.recruitNote)}
+          >
             {(id) => (
               <TextArea
                 id={id}
@@ -169,7 +173,7 @@ function RecruitForm({
                   setNote(e.target.value);
                   setSaved(false);
                 }}
-                maxLength={300}
+                maxLength={LIMITS.recruitNote}
                 disabled={disabled}
                 placeholder="예: 프론트엔드 1명 더 구합니다. 2일차 Sprint로 참가 예정입니다."
               />
@@ -304,12 +308,16 @@ function MatchCard({
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="font-display mr-1 text-lg tracking-tight">{team.name}</span>
+            <span className="font-display mr-1 max-w-full break-all text-lg tracking-tight">
+              {team.name}
+            </span>
             <TrackBadge track={team.track} />
             <Badge tone="info">{RECRUIT_LABEL[team.recruiting]}</Badge>
           </div>
           {team.recruitNote && (
-            <p className="mt-2 text-sm leading-relaxed text-muted">{team.recruitNote}</p>
+            <p className="mt-2 break-words text-sm leading-relaxed text-muted">
+              {team.recruitNote}
+            </p>
           )}
           <div className="mt-3">
             <TeamMemberList members={team.members} />
@@ -337,7 +345,7 @@ function MatchCard({
                 id={id}
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
-                maxLength={500}
+                maxLength={LIMITS.joinMessage}
                 placeholder="예: 저희는 2명이고 Sprint 트랙입니다. 백엔드를 맡을 수 있습니다."
               />
             )}
@@ -415,7 +423,7 @@ function OpenRequestCard({
               id={id}
               value={message}
               onChange={(e) => setMessage(e.target.value)}
-              maxLength={500}
+              maxLength={LIMITS.joinMessage}
               placeholder="예: 혼자 신청했습니다. 어느 트랙이든 괜찮습니다."
             />
           )}
@@ -470,7 +478,7 @@ function RequestList({
             <Card className="py-4">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div className="min-w-0">
-                  <p className="text-sm font-bold">
+                  <p className="break-all text-sm font-bold">
                     {r.outgoing
                       ? r.toTeamName
                         ? `${r.toTeamName} 팀에 신청`
@@ -478,7 +486,9 @@ function RequestList({
                       : `${r.fromTeamName} 팀이 우리 팀에 신청`}
                   </p>
                   {r.message && (
-                    <p className="mt-1 text-sm leading-relaxed text-muted">{r.message}</p>
+                    <p className="mt-1 break-words text-sm leading-relaxed text-muted">
+                      {r.message}
+                    </p>
                   )}
                   {r.handledNote && (
                     <p className="mt-1 text-xs text-subtle">{r.handledNote}</p>

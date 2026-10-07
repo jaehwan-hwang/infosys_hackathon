@@ -7,6 +7,7 @@ import { Alert, Card, Section, TrackBadge, cx, trackStyle } from "@/components/u
 import { api } from "@/lib/api";
 import { EMPTY_SELF_CHECK, TRACK_GOAL, TRACK_LABEL, TRACK_TAGLINE } from "@/lib/track-rules";
 import { entryFeeOf, formatFee } from "@/lib/fee";
+import { LIMITS, remainingHint } from "@/lib/limits";
 import { RECRUIT_OPTIONS } from "@/lib/recruit";
 import { useApiMutation, useAuth } from "@/lib/use-auth";
 import type { RecruitStatus, TeamMemberInput, Track } from "@/lib/types";
@@ -142,14 +143,19 @@ export function TeamRegisterForm({
             <legend className="text-base font-bold">1. 팀명</legend>
             <p className="text-sm text-muted">등록 후에도 신청 기간 동안 고칠 수 있습니다.</p>
 
-            <Field label="팀명" required error={fieldError("name")}>
+            <Field
+              label="팀명"
+              required
+              hint={remainingHint(name, LIMITS.teamName) ?? `${LIMITS.teamName}자까지`}
+              error={fieldError("name")}
+            >
               {(id, describedBy) => (
                 <TextInput
                   id={id}
                   aria-describedby={describedBy}
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  maxLength={60}
+                  maxLength={LIMITS.teamName}
                   required
                   placeholder="예: 정보의 파수꾼"
                   invalid={Boolean(fieldError("name"))}
@@ -249,7 +255,7 @@ export function TeamRegisterForm({
                           id={id}
                           value={member.name}
                           onChange={(e) => updateMember(index, { name: e.target.value })}
-                          maxLength={50}
+                          maxLength={LIMITS.memberName}
                           required
                         />
                       )}
@@ -396,14 +402,20 @@ export function TeamRegisterForm({
 
             {recruiting !== "NONE" && (
               <div className="mt-4">
-                <Field label="모집 글 한마디" hint="어떤 사람을 찾는지 적어 두면 연락이 빨라집니다">
+                <Field
+                  label="모집 글 한마디"
+                  hint={
+                    remainingHint(recruitNote, LIMITS.recruitNote) ??
+                    "어떤 사람을 찾는지 적어 두면 연락이 빨라집니다"
+                  }
+                >
                   {(id, describedBy) => (
                     <TextArea
                       id={id}
                       aria-describedby={describedBy}
                       value={recruitNote}
                       onChange={(e) => setRecruitNote(e.target.value)}
-                      maxLength={300}
+                      maxLength={LIMITS.recruitNote}
                       placeholder="예: 프론트엔드 1명 더 구합니다. 2일차 Sprint로 참가 예정입니다."
                     />
                   )}

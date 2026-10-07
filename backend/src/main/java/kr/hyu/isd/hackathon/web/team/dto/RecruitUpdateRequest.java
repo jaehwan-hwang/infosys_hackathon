@@ -9,7 +9,7 @@ public record RecruitUpdateRequest(
         @NotNull(message = "모집 상태는 필수입니다.")
         RecruitStatus recruiting,
 
-        @Size(max = 300)
+        @Size(max = 150, message = "모집 글은 150자 이하여야 합니다.")
         String recruitNote
 ) {
 }

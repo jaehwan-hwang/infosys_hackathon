@@ -140,7 +140,7 @@ function RequestCard({
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="font-display mr-1 text-lg tracking-tight">
+            <span className="font-display mr-1 max-w-full break-all text-lg tracking-tight">
               {request.fromTeamName}
             </span>
             {request.fromTeamTrack && <TrackBadge track={request.fromTeamTrack} />}
@@ -152,7 +152,9 @@ function RequestCard({
             )}
           </div>
           {request.message && (
-            <p className="mt-2 text-sm leading-relaxed text-muted">{request.message}</p>
+            <p className="mt-2 break-words text-sm leading-relaxed text-muted">
+              {request.message}
+            </p>
           )}
           <p className="mt-1 text-xs text-subtle">{formatDateTime(request.createdAt)}</p>
         </div>

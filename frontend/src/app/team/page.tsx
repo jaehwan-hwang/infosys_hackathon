@@ -167,19 +167,23 @@ function MyTeamTab({
     <div className="space-y-8">
       <Card className={style.ring}>
         <div className="flex flex-wrap items-start justify-between gap-3">
-          <div>
+          <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
-              <h2 className="font-display mr-1 text-2xl tracking-tight">{team.name}</h2>
+              <h2 className="font-display mr-1 max-w-full break-all text-2xl tracking-tight">
+                {team.name}
+              </h2>
               <TrackBadge track={team.track} />
               {team.recruiting !== "NONE" && (
                 <Badge tone="info">{RECRUIT_LABEL[team.recruiting]}</Badge>
               )}
             </div>
             {team.recruitNote && (
-              <p className="mt-2 text-sm leading-relaxed text-muted">{team.recruitNote}</p>
+              <p className="mt-2 break-words text-sm leading-relaxed text-muted">
+                {team.recruitNote}
+              </p>
             )}
           </div>
-          <span className="text-sm text-muted">{team.memberCount}명</span>
+          <span className="shrink-0 text-sm text-muted">{team.memberCount}명</span>
         </div>
 
         <div className="mt-6 border-t-2 border-current/10 pt-5">
@@ -311,7 +315,9 @@ function TeamCard({ team }: { team: Team }) {
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="font-display mr-1 text-lg tracking-tight">{team.name}</span>
+            <span className="font-display mr-1 max-w-full break-all text-lg tracking-tight">
+              {team.name}
+            </span>
             <TrackBadge track={team.track} />
             {team.recruiting !== "NONE" && (
               <Badge tone="info">{RECRUIT_LABEL[team.recruiting]}</Badge>
@@ -319,10 +325,14 @@ function TeamCard({ team }: { team: Team }) {
             <span className="text-xs text-subtle">{TRACK_TAGLINE[team.track]}</span>
           </div>
           {team.recruitNote && (
-            <p className="mt-2 text-sm leading-relaxed text-muted">{team.recruitNote}</p>
+            <p className="mt-2 break-words text-sm leading-relaxed text-muted">
+              {team.recruitNote}
+            </p>
           )}
         </div>
-        <Badge tone="neutral">{team.memberCount}명</Badge>
+        <span className="shrink-0">
+          <Badge tone="neutral">{team.memberCount}명</Badge>
+        </span>
       </div>
 
       <div className="mt-4 border-t-2 border-current/10 pt-3">
