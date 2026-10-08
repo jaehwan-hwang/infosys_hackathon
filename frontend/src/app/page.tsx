@@ -149,6 +149,33 @@ const PROFESSORS = [
   },
 ] as const;
 
+/**
+ * 트랙별 상금. 시상 등수는 Track 열거형이 쥔 awardCount와 같아야 한다 —
+ * Spark는 1등만, Sprint와 Summit은 3등까지다.
+ */
+const PRIZES = [
+  {
+    track: "Spark",
+    rows: [{ rank: "1등", amount: "20만원" }],
+  },
+  {
+    track: "Sprint",
+    rows: [
+      { rank: "1등", amount: "30만원" },
+      { rank: "2등", amount: "15만원" },
+      { rank: "3등", amount: "10만원" },
+    ],
+  },
+  {
+    track: "Summit",
+    rows: [
+      { rank: "1등", amount: "40만원" },
+      { rank: "2등", amount: "20만원" },
+      { rank: "3등", amount: "10만원" },
+    ],
+  },
+] as const;
+
 const JOIN = {
   title: "어느 트랙에 참가해야 할까요",
   lede: "SPARK, SPRINT, SUMMIT 중 무엇에 참가해야 할지 몇 가지 설문을 통해 확인할 수 있습니다.",
@@ -176,6 +203,7 @@ export default function HomePage() {
           <DaySlide key={day.title} day={day} inverted={i % 2 === 1} first={i === 0} />
         ))}
         <Professors />
+        <Prizes />
         <Join />
       </div>
       <LandingAccountLink />
@@ -538,16 +566,84 @@ function Professors() {
   );
 }
 
+/**
+ * 상금. 교수 슬라이드가 흰 바탕이므로 이 장은 파란 바탕 차례다.
+ *
+ * 세 트랙을 가로로 나란히 둔다. 트랙 이름과 금액 사이에 세로선을 세워, 어느 금액이
+ * 어느 트랙 것인지 눈이 한 번에 가른다. Spark는 1등만이라 칸이 비는데, 금액을 세로
+ * 가운데에 맞춰 두면 빈자리가 실수로 보이지 않는다.
+ */
+function Prizes() {
+  return (
+    <Slide id="prize" nav="prize" inverted={true}>
+      <p className="text-[11px] font-bold tracking-[0.22em] opacity-55 lg:text-[13px]">
+        PRIZE
+      </p>
+      <h2
+        className="font-display mt-[min(16px,2dvh)] leading-[0.95] tracking-tight"
+        style={{ fontSize: "clamp(2.4rem, min(7.8vw, 12.5dvh), 7rem)" }}
+      >
+        상금 안내
+      </h2>
+
+      <hr className="mt-[min(48px,4.5dvh)] h-0.5 border-0 bg-current opacity-20" />
+
+      {/* 가로로 긴 상자 셋을 위아래로 쌓는다. 트랙 이름은 왼쪽에 고정폭으로 세워
+          세 상자의 세로선이 한 줄로 떨어지게 한다 — 줄이 들쭉날쭉하면 표로 읽히지 않는다. */}
+      <ul className="mt-[min(40px,3.6dvh)] space-y-3 sm:space-y-[min(20px,2.2dvh)]">
+        {PRIZES.map((p) => (
+          <li
+            key={p.track}
+            className="flex items-center gap-5 rounded-2xl border-2 border-current/45 px-5 py-4 sm:gap-10 sm:rounded-3xl sm:px-10 sm:py-[min(24px,2.6dvh)] lg:gap-16 lg:px-14"
+          >
+            {/* min-w-fit이 없으면 좁은 화면에서 칸이 글자보다 좁아져 "Summit"이 두 줄로 쪼개진다 */}
+            <p className="font-display w-[30%] min-w-fit max-w-[260px] shrink-0 whitespace-nowrap text-[20px] tracking-tight sm:text-[26px] lg:text-[34px]">
+              {p.track}
+            </p>
+
+            {/* 이름과 금액을 가르는 세로선. 칸 높이에 맞춰 늘어난다.
+                shrink-0이 없으면 칸이 좁을 때 2px가 0으로 눌려 선이 사라진다. */}
+            <span
+              aria-hidden="true"
+              className="w-0.5 shrink-0 self-stretch bg-current opacity-40"
+            />
+
+            <dl className="space-y-1 sm:space-y-[min(10px,1.1dvh)] sm:pl-4 lg:pl-10">
+              {p.rows.map((r) => (
+                <div key={r.rank} className="flex items-baseline gap-4 sm:gap-8">
+                  <dt className="w-7 shrink-0 text-[14px] opacity-70 sm:w-9 sm:text-[16px] lg:text-[19px]">
+                    {r.rank}
+                  </dt>
+                  <dd className="text-[16px] font-bold tabular-nums sm:text-[19px] lg:text-[24px]">
+                    {r.amount}
+                  </dd>
+                </div>
+              ))}
+            </dl>
+          </li>
+        ))}
+      </ul>
+    </Slide>
+  );
+}
+
 function Join() {
   return (
     <section
       id="join"
       data-nav="join"
-      className={cx(SLIDE_FRAME, "bg-grad-brand text-white")}
+      // 상금 슬라이드가 파란 바탕이므로 이 장은 흰 바탕 차례다
+      className={cx(SLIDE_FRAME, "bg-[var(--bg)] text-[var(--text)]")}
     >
+      {/* 흰 바탕에서는 검은 사자라야 보인다. 어두운 테마에서는 반대로 흰 사자를 쓴다. */}
       <Lion
         faint
-        className="absolute z-0 right-4 bottom-[76px] w-[min(230px,56vw)] md:right-10 md:bottom-[100px] md:w-[min(340px,30vw)] xl:right-8 xl:bottom-6 xl:w-[min(360px,24vw)] 2xl:right-12 2xl:w-[min(460px,28vw)]"
+        tone="black"
+        className="absolute z-0 right-4 bottom-[76px] w-[min(230px,56vw)] md:right-10 md:bottom-[100px] md:w-[min(340px,30vw)] xl:right-8 xl:bottom-6 xl:w-[min(360px,24vw)] 2xl:right-12 2xl:w-[min(460px,28vw)] dark:hidden"
+      />
+      <Lion
+        faint
+        className="absolute z-0 right-4 bottom-[76px] hidden w-[min(230px,56vw)] md:right-10 md:bottom-[100px] md:w-[min(340px,30vw)] xl:right-8 xl:bottom-6 xl:w-[min(360px,24vw)] 2xl:right-12 2xl:w-[min(460px,28vw)] dark:block"
       />
       <SlideFit className="relative z-10 mx-auto w-full max-w-[1296px]">
         <p className="text-[11px] font-bold tracking-[0.22em] opacity-55 lg:text-[13px]">REGISTER</p>
@@ -567,15 +663,17 @@ function Join() {
         </p>
 
         <div className="mt-[min(36px,3.5dvh)] flex flex-col gap-2.5 sm:flex-row sm:gap-3.5">
+          {/* 색을 채운 쪽이 이 화면에서 하길 바라는 일이다 — 자가진단은 트랙을 고르는
+              도움말이고, 실제로 해야 하는 것은 팀 등록이다. */}
           <Link
             href="/self-check"
-            className="inline-flex h-12 items-center justify-center rounded-full bg-white px-10 text-[15px] font-bold text-[var(--accent)] transition-opacity hover:opacity-90 sm:h-14 lg:h-[60px] lg:text-[17px]"
+            className="inline-flex h-12 items-center justify-center rounded-full border-2 border-current/35 px-10 text-[15px] font-bold transition-colors hover:bg-current/5 sm:h-14 lg:h-[60px] lg:text-[17px]"
           >
             자가진단 시작하기
           </Link>
           <Link
             href="/team"
-            className="inline-flex h-12 items-center justify-center rounded-full border-2 border-white/40 px-10 text-[15px] font-bold transition-colors hover:bg-white/10 sm:h-14 lg:h-[60px] lg:text-[17px]"
+            className="bg-grad-brand inline-flex h-12 items-center justify-center rounded-full px-10 text-[15px] font-bold text-white transition-opacity hover:opacity-90 sm:h-14 lg:h-[60px] lg:text-[17px]"
           >
             팀 등록하기
           </Link>

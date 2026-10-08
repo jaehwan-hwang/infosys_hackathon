@@ -19,6 +19,7 @@ export const LANDING_NAV = [
   { key: "tracks", label: "TRACK" },
   { key: "schedule", label: "SCHEDULE" },
   { key: "professor", label: "PROFESSOR" },
+  { key: "prize", label: "PRIZE" },
   { key: "join", label: "REGISTER" },
 ] as const;
 
