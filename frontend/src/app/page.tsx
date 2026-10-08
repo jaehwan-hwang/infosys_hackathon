@@ -588,33 +588,36 @@ function Prizes() {
 
       <hr className="mt-[min(48px,4.5dvh)] h-0.5 border-0 bg-current opacity-20" />
 
-      {/* 가로로 긴 상자 셋을 위아래로 쌓는다. 트랙 이름은 왼쪽에 고정폭으로 세워
-          세 상자의 세로선이 한 줄로 떨어지게 한다 — 줄이 들쭉날쭉하면 표로 읽히지 않는다. */}
+      {/* 가로로 긴 상자 셋을 위아래로 쌓는다.
+          상자를 세로선으로 정확히 반 나누고(양쪽 flex-1) 트랙 이름과 상금을 각자
+          자기 칸 한가운데에 둔다 — 이름 길이가 제각각이라 왼쪽에 붙이면 선까지의
+          거리가 상자마다 달라 보인다.
+          등수는 한 줄로 늘어놓되, 반 칸에 셋이 들어가지 않는 좁은 화면에서는 접는다. */}
       <ul className="mt-[min(40px,3.6dvh)] space-y-3 sm:space-y-[min(20px,2.2dvh)]">
         {PRIZES.map((p) => (
           <li
             key={p.track}
-            className="flex items-center gap-5 rounded-2xl border-2 border-current/45 px-5 py-4 sm:gap-10 sm:rounded-3xl sm:px-10 sm:py-[min(24px,2.6dvh)] lg:gap-16 lg:px-14"
+            className="flex items-stretch rounded-2xl border-2 border-current/45 px-3 py-4 sm:rounded-3xl sm:px-5 sm:py-[min(22px,2.4dvh)] min-h-[min(96px,11dvh)] sm:min-h-[min(124px,14dvh)]"
           >
-            {/* min-w-fit이 없으면 좁은 화면에서 칸이 글자보다 좁아져 "Summit"이 두 줄로 쪼개진다 */}
-            <p className="font-display w-[30%] min-w-fit max-w-[260px] shrink-0 whitespace-nowrap text-[20px] tracking-tight sm:text-[26px] lg:text-[34px]">
-              {p.track}
-            </p>
+            <div className="flex flex-1 items-center justify-center">
+              <p className="font-display whitespace-nowrap text-[20px] tracking-tight sm:text-[26px] lg:text-[34px]">
+                {p.track}
+              </p>
+            </div>
 
-            {/* 이름과 금액을 가르는 세로선. 칸 높이에 맞춰 늘어난다.
-                shrink-0이 없으면 칸이 좁을 때 2px가 0으로 눌려 선이 사라진다. */}
+            {/* 이름과 금액을 가르는 세로선. shrink-0이 없으면 2px가 0으로 눌려 사라진다. */}
             <span
               aria-hidden="true"
               className="w-0.5 shrink-0 self-stretch bg-current opacity-40"
             />
 
-            <dl className="space-y-1 sm:space-y-[min(10px,1.1dvh)] sm:pl-4 lg:pl-10">
+            <dl className="flex flex-1 flex-wrap items-center justify-center gap-x-4 gap-y-1 sm:gap-x-5 md:gap-x-7 lg:gap-x-12">
               {p.rows.map((r) => (
-                <div key={r.rank} className="flex items-baseline gap-4 sm:gap-8">
-                  <dt className="w-7 shrink-0 text-[14px] opacity-70 sm:w-9 sm:text-[16px] lg:text-[19px]">
+                <div key={r.rank} className="flex items-baseline gap-1.5 sm:gap-2 lg:gap-3">
+                  <dt className="text-[13px] opacity-70 sm:text-[14px] md:text-[15px] lg:text-[18px]">
                     {r.rank}
                   </dt>
-                  <dd className="text-[16px] font-bold tabular-nums sm:text-[19px] lg:text-[24px]">
+                  <dd className="whitespace-nowrap text-[15px] font-bold tabular-nums sm:text-[17px] md:text-[18px] lg:text-[24px]">
                     {r.amount}
                   </dd>
                 </div>
@@ -647,17 +650,21 @@ function Join() {
       />
       <SlideFit className="relative z-10 mx-auto w-full max-w-[1296px]">
         <p className="text-[11px] font-bold tracking-[0.22em] opacity-55 lg:text-[13px]">REGISTER</p>
+        {/* 넓은 화면에서는 한 줄로 편다. max-w를 걸면 폭이 남아도 그 선에서 접히므로 쓰지 않는다.
+            좁은 화면에서는 접혀도 된다 — 한 줄을 고집하면 글자가 읽을 수 없이 작아진다. */}
         <h2
-          className="font-display mt-[min(16px,2dvh)] max-w-4xl leading-[1.02] tracking-tight"
+          className="font-display mt-[min(16px,2dvh)] leading-[1.02] tracking-tight lg:whitespace-nowrap"
           style={{ fontSize: "clamp(2rem, min(6vw, 10dvh), 5.5rem)" }}
         >
           {JOIN.title}
         </h2>
-        <p className="mt-[min(28px,3dvh)] max-w-[660px] text-[15px] leading-[1.6] opacity-80 sm:text-[21px] sm:leading-[1.65]">
+        {/* 설명은 넓은 화면에서만 한 줄로 편다. 좁은 화면에서 한 줄을 고집하면
+            글자가 읽을 수 없을 만큼 작아진다. */}
+        <p className="mt-[min(28px,3dvh)] text-[15px] leading-[1.6] opacity-80 sm:text-[19px] sm:leading-[1.65] lg:whitespace-nowrap lg:text-[21px]">
           {JOIN.lede}
         </p>
 
-        <p className="mt-[min(18px,2dvh)] max-w-[660px] text-[13px] leading-[1.6] opacity-70 sm:text-[16px]">
+        <p className="mt-[min(18px,2dvh)] text-[13px] leading-[1.6] opacity-70 sm:text-[15px] lg:whitespace-nowrap lg:text-[16px]">
           신청은 조장 한 명만 하면 됩니다. 팀원은 따로 신청하지 않고, 조장이 적어 넣은 한양대학교
           이메일로 로그인만 하면 자동으로 팀에 연결됩니다.
         </p>
@@ -681,7 +688,9 @@ function Join() {
 
         <hr className="mt-[min(64px,5dvh)] h-0.5 border-0 bg-current opacity-20" />
 
-        <div className="mt-[min(20px,2.4dvh)] flex flex-col gap-1 text-[13px] opacity-60 sm:flex-row sm:gap-14 lg:text-[15px]">
+        {/* 세 줄을 가로로 펴고 가운데에 모은다. 좁은 화면에서는 접히되,
+            접힌 뒤에도 가운데 정렬이라 줄 끝이 들쭉날쭉해 보이지 않는다. */}
+        <div className="mt-[min(20px,2.4dvh)] flex flex-wrap items-center justify-center gap-x-8 gap-y-1.5 text-center text-[13px] opacity-60 sm:gap-x-14 lg:gap-x-20 lg:text-[15px]">
           {JOIN.footer.map((f) => (
             <span key={f}>{f}</span>
           ))}
