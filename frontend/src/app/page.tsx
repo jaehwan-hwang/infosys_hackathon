@@ -688,11 +688,11 @@ function Join() {
           </Link>
         </div>
 
-        <hr className="mt-[min(32px,4dvh)] h-0.5 border-0 bg-current opacity-20" />
+        <hr className="mt-[min(26px,3.3dvh)] h-0.5 border-0 bg-current opacity-20" />
 
         {/* 세 줄을 가로로 펴고 가운데에 모은다. 좁은 화면에서는 접히되,
             접힌 뒤에도 가운데 정렬이라 줄 끝이 들쭉날쭉해 보이지 않는다. */}
-        <div className="mt-[min(20px,2.6dvh)] flex flex-wrap items-center justify-center gap-x-12 gap-y-2 text-center text-[13px] opacity-60 sm:gap-x-24 lg:gap-x-40 lg:text-[15px]">
+        <div className="mt-[min(18px,2.3dvh)] flex flex-wrap items-center justify-center gap-x-12 gap-y-2 text-center text-[13px] opacity-60 sm:gap-x-28 lg:gap-x-[180px] lg:text-[15px]">
           {JOIN.footer.map((f) => (
             <span key={f}>{f}</span>
           ))}
