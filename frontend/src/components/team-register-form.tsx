@@ -18,8 +18,9 @@ import type { RecruitStatus, TeamMemberInput, Track } from "@/lib/types";
  * 받는 것은 팀명·트랙·팀원·팀장·모집 상태뿐이다. 주제나 소개는 받지 않는다 —
  * 신청 시점에는 아직 정해지지 않은 경우가 많고, 결과물 제출 단계에서 다시 받는다.
  *
- * 혼자 신청하거나 인원이 모자란 팀도 그대로 등록한다. 모집 상태를 함께 받아 두면,
+ * 인원이 모자란 팀도 최소 인원만 넘으면 그대로 등록한다. 모집 상태를 함께 받아 두면,
  * 등록 뒤 "팀" 화면에서 서로 필요한 것이 반대인 팀을 찾아 합치기를 신청할 수 있다.
+ * 최소 인원은 운영진이 행사 설정에서 정하므로, 화면 문구도 그 값을 보고 적는다.
  */
 const TRACKS: { track: Track; description: string }[] = [
   {
@@ -199,9 +200,15 @@ export function TeamRegisterForm({
 
           <fieldset>
             <legend className="text-base font-bold">3. 팀원 정보</legend>
+            {/*
+              최소 인원은 운영진이 행사 설정에서 정한다. "혼자 신청해도 된다"고 적어 두면
+              최소 인원이 2명 이상일 때 거짓말이 된다 — 그대로 내고 나서야 막힌다.
+            */}
             <p className="mt-1.5 text-sm leading-relaxed text-muted">
-              본인을 포함해 {minTeamSize}~{maxTeamSize}명까지 등록할 수 있습니다. 혼자
-              신청해도 되고, 뒤에서 다른 팀과 합칠 수 있습니다.
+              본인을 포함해 {minTeamSize}~{maxTeamSize}명까지 등록할 수 있습니다.{" "}
+              {minTeamSize <= 1
+                ? "혼자 신청해도 되고, 뒤에서 다른 팀과 합칠 수 있습니다."
+                : `최소 ${minTeamSize}명이 모여야 신청할 수 있고, 등록한 뒤에 다른 팀과 합칠 수 있습니다.`}
             </p>
             <p className="mt-1.5 text-sm leading-relaxed text-muted">
               학생회비를 낸 재학생은 참가비가 없습니다. 미납자와 휴학생만{" "}

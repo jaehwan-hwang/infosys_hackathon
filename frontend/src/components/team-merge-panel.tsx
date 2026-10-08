@@ -424,7 +424,7 @@ function OpenRequestCard({
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               maxLength={LIMITS.joinMessage}
-              placeholder="예: 혼자 신청했습니다. 어느 트랙이든 괜찮습니다."
+              placeholder="예: 인원이 모자랍니다. 어느 트랙이든 괜찮습니다."
             />
           )}
         </Field>
