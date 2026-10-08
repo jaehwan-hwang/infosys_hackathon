@@ -613,7 +613,7 @@ function Prizes() {
               className="w-0.5 shrink-0 self-stretch bg-current opacity-40"
             />
 
-            <dl className="flex flex-[1.3] flex-wrap items-center justify-center gap-x-5 gap-y-1 sm:gap-x-6 md:gap-x-8 lg:gap-x-14">
+            <dl className="flex flex-[1.3] flex-wrap items-center justify-center gap-x-6 gap-y-1 sm:gap-x-7 md:gap-x-10 lg:gap-x-20">
               {p.rows.map((r) => (
                 <div key={r.rank} className="flex items-baseline gap-1.5 sm:gap-2 lg:gap-3">
                   <dt className="text-[14px] opacity-70 sm:text-[16px] md:text-[17px] lg:text-[21px]">
@@ -688,11 +688,11 @@ function Join() {
           </Link>
         </div>
 
-        <hr className="mt-[min(52px,6.5dvh)] h-0.5 border-0 bg-current opacity-20" />
+        <hr className="mt-[min(32px,4dvh)] h-0.5 border-0 bg-current opacity-20" />
 
         {/* 세 줄을 가로로 펴고 가운데에 모은다. 좁은 화면에서는 접히되,
             접힌 뒤에도 가운데 정렬이라 줄 끝이 들쭉날쭉해 보이지 않는다. */}
-        <div className="mt-[min(30px,3.8dvh)] flex flex-wrap items-center justify-center gap-x-10 gap-y-2 text-center text-[13px] opacity-60 sm:gap-x-20 lg:gap-x-32 lg:text-[15px]">
+        <div className="mt-[min(20px,2.6dvh)] flex flex-wrap items-center justify-center gap-x-12 gap-y-2 text-center text-[13px] opacity-60 sm:gap-x-24 lg:gap-x-40 lg:text-[15px]">
           {JOIN.footer.map((f) => (
             <span key={f}>{f}</span>
           ))}
