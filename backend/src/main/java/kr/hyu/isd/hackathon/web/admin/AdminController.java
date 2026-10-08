@@ -11,6 +11,7 @@ import kr.hyu.isd.hackathon.common.dto.response.ApiResponse;
 import kr.hyu.isd.hackathon.common.exception.ErrorCode;
 import kr.hyu.isd.hackathon.common.exception.HackathonException;
 import kr.hyu.isd.hackathon.domain.team.Track;
+import kr.hyu.isd.hackathon.domain.user.Role;
 import kr.hyu.isd.hackathon.web.admin.dto.*;
 import kr.hyu.isd.hackathon.web.auth.dto.UserResponse;
 import kr.hyu.isd.hackathon.web.match.dto.JoinRequestResponse;
@@ -209,11 +210,17 @@ public class AdminController {
         return ApiResponse.success(adminService.getStaff());
     }
 
-    /** 교수·운영진 권한 부여. 최고 관리자만. */
+    /** 교수·운영진 권한 부여·해제. 최고 관리자만. */
     @PutMapping("/staff")
     public ApiResponse<UserResponse> updateRole(@CurrentUser AuthPrincipal principal,
                                                 @Valid @RequestBody RoleUpdateRequest request) {
         requireSuperAdmin(principal);
+        // 자기 권한을 스스로 거두면 그 자리에서 대시보드 밖으로 밀려나고 되돌릴 사람이 없다
+        if (request.role() == Role.STUDENT
+                && request.email().equalsIgnoreCase(principal.email())) {
+            throw new HackathonException(ErrorCode.INSUFFICIENT_PERMISSION,
+                    "자기 권한은 스스로 거둘 수 없습니다.");
+        }
         return ApiResponse.success(adminService.updateRole(request));
     }
 

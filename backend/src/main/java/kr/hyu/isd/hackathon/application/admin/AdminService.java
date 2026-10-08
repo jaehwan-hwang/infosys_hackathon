@@ -421,11 +421,35 @@ public class AdminService {
 
     // ---- 권한 ----
 
-    /** 교수·운영진 권한을 부여한다. 아직 로그인 전인 이메일도 미리 등록할 수 있다. */
+    /**
+     * 교수·운영진 권한을 부여하거나 거둔다. 아직 로그인 전인 이메일도 미리 등록할 수 있다.
+     *
+     * STUDENT로 바꾸면 해제다. 두 가지는 거부한다 —
+     * 최고 관리자는 설정 파일에 적힌 사람이라 화면에서 내려도 다음 로그인에 되돌아오고,
+     * 설정 목록(app.auth.admin-emails 등)에 적힌 사람도 마찬가지다. 되돌아올 변경을
+     * 성공했다고 보여 주면 거둔 줄 알고 넘어간다.
+     */
     @Transactional
     public UserResponse updateRole(RoleUpdateRequest request) {
         String email = request.email().toLowerCase();
+
+        if (request.role() == Role.STUDENT) {
+            if (authProperties.isSuperAdmin(email)) {
+                throw new HackathonException(ErrorCode.INSUFFICIENT_PERMISSION,
+                        "최고 관리자의 권한은 화면에서 거둘 수 없습니다. "
+                                + "서버 설정(SUPER_ADMIN_EMAILS)에서 빼야 합니다.");
+            }
+            if (isRoleFixedByConfig(email)) {
+                throw new HackathonException(ErrorCode.INSUFFICIENT_PERMISSION,
+                        "서버 설정에 권한이 박혀 있는 계정입니다. 여기서 거둬도 다음 로그인에 "
+                                + "되돌아오므로, 서버 설정(ADMIN_EMAILS·PROFESSOR_EMAILS)에서 먼저 빼 주세요.");
+            }
+        }
+
         Optional<User> existing = userRepository.findByEmail(email);
+        if (request.role() == Role.STUDENT && existing.isEmpty()) {
+            throw new HackathonException(ErrorCode.USER_NOT_FOUND);
+        }
 
         User user = existing.orElseGet(() ->
                 userRepository.save(User.create(email, email.split("@")[0], request.role())));
@@ -433,6 +457,16 @@ public class AdminService {
 
         log.info("권한 변경: email={}, role={}", email, request.role());
         return UserResponse.from(user, authProperties.isSuperAdmin(user.getEmail()));
+    }
+
+    /** 설정 파일이 매 로그인마다 다시 씌우는 권한인가 */
+    private boolean isRoleFixedByConfig(String email) {
+        return containsIgnoreCase(authProperties.adminEmails(), email)
+                || containsIgnoreCase(authProperties.professorEmails(), email);
+    }
+
+    private static boolean containsIgnoreCase(List<String> list, String email) {
+        return list.stream().anyMatch(e -> e.equalsIgnoreCase(email));
     }
 
     @Transactional(readOnly = true)

@@ -76,6 +76,13 @@ public class GoodsService {
                 .orElseGet(() -> goodsOrderRepository.save(GoodsOrder.create(event, user)));
 
         order.updateQuantities(request.quantities());
+        order.updateKeycap(request.keycapSlots(), request.keycapDesigns());
+
+        String problem = order.validateKeycap();
+        if (problem != null) {
+            throw new HackathonException(ErrorCode.INVALID_INPUT, problem);
+        }
+
         log.info("굿즈 신청: user={}, 비었나={}", user.getEmail(), order.isEmpty());
 
         return GoodsOrderResponse.from(order);

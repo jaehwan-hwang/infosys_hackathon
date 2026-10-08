@@ -190,10 +190,18 @@ export const api = {
     request<GoodsOrder>("/api/v1/goods/me", { token, signal }),
 
   /** 신청 저장. 다시 내면 수량을 덮어쓴다. */
-  saveGoodsOrder: (token: string, quantities: Record<GoodsItem, number>) =>
+  saveGoodsOrder: (
+    token: string,
+    quantities: Record<GoodsItem, number>,
+    keycap: { slots: number | null; designs: Record<number, number> },
+  ) =>
     request<GoodsOrder>("/api/v1/goods/me", {
       method: "PUT",
-      body: { quantities },
+      body: {
+        quantities,
+        keycapSlots: keycap.slots,
+        keycapDesigns: keycap.designs,
+      },
       token,
     }),
 
@@ -398,7 +406,8 @@ export const api = {
       );
     },
 
-    updateStaffRole: (token: string, email: string, role: "PROFESSOR" | "ADMIN") =>
+    /** STUDENT를 넘기면 권한 해제다. 서버가 최고 관리자·설정 계정은 거부한다. */
+    updateStaffRole: (token: string, email: string, role: "PROFESSOR" | "ADMIN" | "STUDENT") =>
       request<User>("/api/v1/admin/staff", {
         method: "PUT",
         body: { email, role },

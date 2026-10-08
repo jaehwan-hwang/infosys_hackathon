@@ -614,7 +614,7 @@ function ResultsPanel() {
 }
 
 function StaffPanel() {
-  const { token, isSuperAdmin } = useAuth();
+  const { token, isSuperAdmin, user: me } = useAuth();
   const staffQuery = useApiQuery(token ? () => api.admin.getStaff(token) : null, [token]);
 
   const [email, setEmail] = useState("");
@@ -706,19 +706,83 @@ function StaffPanel() {
                     <span className="text-sm font-medium">{user.name}</span>
                     <span className="ml-2 text-sm text-muted">{user.email}</span>
                   </div>
-                  <Badge
-                    tone={
-                      user.superAdmin ? "danger" : user.role === "ADMIN" ? "warning" : "info"
-                    }
-                  >
-                    {user.roleLabel}
-                  </Badge>
+                  <div className="flex items-center gap-2">
+                    <Badge
+                      tone={
+                        user.superAdmin ? "danger" : user.role === "ADMIN" ? "warning" : "info"
+                      }
+                    >
+                      {user.roleLabel}
+                    </Badge>
+                    {/* 최고 관리자는 설정 파일이 정하므로 화면에서 거둘 수 없고,
+                        자기 자신을 거두면 그 자리에서 대시보드 밖으로 밀려난다 */}
+                    {isSuperAdmin && !user.superAdmin && user.email !== me?.email && (
+                      <RevokeButton email={user.email} onDone={staffQuery.reload} />
+                    )}
+                  </div>
                 </Card>
               </li>
             ))}
           </ul>
         )}
       </div>
+    </div>
+  );
+}
+
+/**
+ * 권한 해제. 한 번 더 물어보고 거둔다.
+ *
+ * 팀 삭제와 같은 두 단계를 쓴다 — 목록에서 줄이 사라지는 동작이라, 잘못 누르면
+ * 그 사람이 대시보드에서 밀려나고 누가 왜 빠졌는지 화면에 남지 않는다.
+ *
+ * 서버 설정에 권한이 박힌 계정은 서버가 거절한다. 그 사유가 그대로 뜬다.
+ */
+function RevokeButton({ email, onDone }: { email: string; onDone: () => void }) {
+  const { token } = useAuth();
+  const [confirming, setConfirming] = useState(false);
+
+  const { run, pending, error } = useApiMutation(async () => {
+    if (!token) throw new Error("no token");
+    return api.admin.updateStaffRole(token, email, "STUDENT");
+  });
+
+  if (!confirming) {
+    return (
+      <Button
+        variant="secondary"
+        className="h-9 px-3 text-sm text-red-600"
+        onClick={() => setConfirming(true)}
+      >
+        권한 해제
+      </Button>
+    );
+  }
+
+  return (
+    <div className="flex flex-wrap items-center gap-2">
+      <span className="text-xs text-amber-600">참가자로 되돌립니다</span>
+      <Button
+        variant="secondary"
+        className="h-9 px-3 text-sm"
+        onClick={() => setConfirming(false)}
+      >
+        취소
+      </Button>
+      <Button
+        className="h-9 bg-red-600 px-3 text-sm hover:bg-red-700"
+        loading={pending}
+        onClick={async () => {
+          const result = await run();
+          if (result) {
+            setConfirming(false);
+            onDone();
+          }
+        }}
+      >
+        정말 해제
+      </Button>
+      {error && <span className="text-xs text-red-600">{error.message}</span>}
     </div>
   );
 }

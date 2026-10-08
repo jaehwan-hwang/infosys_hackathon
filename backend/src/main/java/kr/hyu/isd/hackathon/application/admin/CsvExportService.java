@@ -5,6 +5,7 @@ import kr.hyu.isd.hackathon.application.result.ResultService;
 import kr.hyu.isd.hackathon.domain.event.HackathonEvent;
 import kr.hyu.isd.hackathon.domain.goods.GoodsItem;
 import kr.hyu.isd.hackathon.domain.goods.GoodsOrder;
+import kr.hyu.isd.hackathon.domain.goods.KeycapOption;
 import kr.hyu.isd.hackathon.domain.submission.Submission;
 import kr.hyu.isd.hackathon.domain.team.Team;
 import kr.hyu.isd.hackathon.domain.team.TeamMember;
@@ -88,6 +89,9 @@ public class CsvExportService {
 
         sb.append("성명,학번,이메일,전화번호");
         for (GoodsItem item : GoodsItem.values()) sb.append(',').append(item.getLabel());
+        // 키캡은 수량(세트 수)만으로는 무엇을 몇 개 만들지 알 수 없다. 구성과 도안별 개수를 함께 적는다.
+        sb.append(",키캡 구성");
+        for (int no = 1; no <= KeycapOption.DESIGN_COUNT; no++) sb.append(",키캡 ").append(no).append("안");
         sb.append(",예상금액,신청일시\n");
 
         for (GoodsOrder order : goodsOrderRepository.findAllByEventId(event.getId())) {
@@ -98,6 +102,11 @@ public class CsvExportService {
                     nullSafe(user.getEmail()), nullSafe(user.getPhone())));
             for (GoodsItem item : GoodsItem.values()) {
                 row.add(String.valueOf(order.quantityOf(item)));
+            }
+            KeycapOption option = order.keycapOption();
+            row.add(option == null ? "" : option.getLabel());
+            for (int no = 1; no <= KeycapOption.DESIGN_COUNT; no++) {
+                row.add(String.valueOf(order.getKeycapDesigns().getOrDefault(no, 0)));
             }
             row.add(String.valueOf(order.estimatedTotal()));
             row.add(format(order.getUpdatedAt()));

@@ -8,7 +8,7 @@ export type Track = "SPARK" | "SPRINT" | "SUMMIT";
 export type RecruitStatus = "NONE" | "MEMBERS" | "LEADER";
 export type JoinRequestStatus = "PENDING" | "MERGED" | "REJECTED";
 export type Role = "STUDENT" | "PROFESSOR" | "ADMIN";
-export type GoodsItem = "HOODIE" | "STICKER" | "KEYRING";
+export type GoodsItem = "STICKER" | "KEYRING" | "KEYCAP";
 export type EvaluatorType = "STUDENT" | "PROFESSOR";
 export type TeamMemberRole = "LEADER" | "MEMBER";
 
@@ -191,15 +191,32 @@ export interface TeamRegisterInput {
   duesPaid: boolean;
 }
 
-/** 굿즈 한 품목. 가격은 수량에 따라 조정될 수 있는 예상값이다. */
-export interface GoodsItemInfo {
-  item: GoodsItem;
+/** 1구·3구처럼 한 품목 안에서 값이 갈리는 구성 */
+export interface GoodsOption {
+  /** 한 세트에 담기는 개수 */
+  slots: number;
   label: string;
   price: number;
 }
 
+/** 굿즈 한 품목. 가격은 수량에 따라 조정될 수 있는 예상값이다. */
+export interface GoodsItemInfo {
+  item: GoodsItem;
+  label: string;
+  /** 한 개 값. 구성을 고르는 품목에서는 최저가다. */
+  price: number;
+  /** 비어 있으면 그냥 수량만 고르는 품목이다 */
+  options: GoodsOption[];
+  /** 고를 수 있는 도안 수. 도안이 없으면 0. */
+  designCount: number;
+}
+
 export interface GoodsOrder {
   quantities: Record<GoodsItem, number>;
+  /** 키캡 한 세트의 구 수(1 또는 3). 신청하지 않았으면 null. */
+  keycapSlots: number | null;
+  /** 도안 번호(1~5)별 개수 */
+  keycapDesigns: Record<number, number>;
   /** 예상 금액. 확정 금액은 단톡방에서 안내된다. */
   estimatedTotal: number;
   updatedAt: string | null;
