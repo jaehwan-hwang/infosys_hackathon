@@ -599,7 +599,9 @@ function Prizes() {
             key={p.track}
             className="flex items-stretch rounded-2xl border-2 border-current/45 px-3 py-4 sm:rounded-3xl sm:px-5 sm:py-[min(22px,2.4dvh)] min-h-[min(96px,11dvh)] sm:min-h-[min(124px,14dvh)]"
           >
-            <div className="flex flex-1 items-center justify-center">
+            {/* 선을 가운데가 아니라 왼쪽으로 당긴다(40:60). 이름은 한 단어뿐이라 반 칸이
+                남고, 금액 셋은 반 칸에 빠듯해 붙어 보인다. */}
+            <div className="flex flex-[0.8] items-center justify-center">
               <p className="font-display whitespace-nowrap text-[20px] tracking-tight sm:text-[26px] lg:text-[34px]">
                 {p.track}
               </p>
@@ -611,7 +613,7 @@ function Prizes() {
               className="w-0.5 shrink-0 self-stretch bg-current opacity-40"
             />
 
-            <dl className="flex flex-1 flex-wrap items-center justify-center gap-x-4 gap-y-1 sm:gap-x-5 md:gap-x-7 lg:gap-x-12">
+            <dl className="flex flex-[1.2] flex-wrap items-center justify-center gap-x-5 gap-y-1 sm:gap-x-7 md:gap-x-10 lg:gap-x-16">
               {p.rows.map((r) => (
                 <div key={r.rank} className="flex items-baseline gap-1.5 sm:gap-2 lg:gap-3">
                   <dt className="text-[13px] opacity-70 sm:text-[14px] md:text-[15px] lg:text-[18px]">
@@ -660,16 +662,16 @@ function Join() {
         </h2>
         {/* 설명은 넓은 화면에서만 한 줄로 편다. 좁은 화면에서 한 줄을 고집하면
             글자가 읽을 수 없을 만큼 작아진다. */}
-        <p className="mt-[min(28px,3dvh)] text-[15px] leading-[1.6] opacity-80 sm:text-[19px] sm:leading-[1.65] lg:whitespace-nowrap lg:text-[21px]">
+        <p className="mt-[min(38px,5dvh)] text-[15px] leading-[1.8] opacity-80 sm:text-[19px] lg:whitespace-nowrap lg:text-[21px]">
           {JOIN.lede}
         </p>
 
-        <p className="mt-[min(18px,2dvh)] text-[13px] leading-[1.6] opacity-70 sm:text-[15px] lg:whitespace-nowrap lg:text-[16px]">
+        <p className="mt-[min(26px,3.4dvh)] text-[13px] leading-[1.85] opacity-70 sm:text-[15px] lg:whitespace-nowrap lg:text-[16px]">
           신청은 조장 한 명만 하면 됩니다. 팀원은 따로 신청하지 않고, 조장이 적어 넣은 한양대학교
           이메일로 로그인만 하면 자동으로 팀에 연결됩니다.
         </p>
 
-        <div className="mt-[min(36px,3.5dvh)] flex flex-col gap-2.5 sm:flex-row sm:gap-3.5">
+        <div className="mt-[min(48px,6dvh)] flex flex-col gap-2.5 sm:flex-row sm:gap-3.5">
           {/* 색을 채운 쪽이 이 화면에서 하길 바라는 일이다 — 자가진단은 트랙을 고르는
               도움말이고, 실제로 해야 하는 것은 팀 등록이다. */}
           <Link
@@ -686,11 +688,11 @@ function Join() {
           </Link>
         </div>
 
-        <hr className="mt-[min(64px,5dvh)] h-0.5 border-0 bg-current opacity-20" />
+        <hr className="mt-[min(104px,13dvh)] h-0.5 border-0 bg-current opacity-20" />
 
         {/* 세 줄을 가로로 펴고 가운데에 모은다. 좁은 화면에서는 접히되,
             접힌 뒤에도 가운데 정렬이라 줄 끝이 들쭉날쭉해 보이지 않는다. */}
-        <div className="mt-[min(20px,2.4dvh)] flex flex-wrap items-center justify-center gap-x-8 gap-y-1.5 text-center text-[13px] opacity-60 sm:gap-x-14 lg:gap-x-20 lg:text-[15px]">
+        <div className="mt-[min(30px,3.8dvh)] flex flex-wrap items-center justify-center gap-x-10 gap-y-2 text-center text-[13px] opacity-60 sm:gap-x-20 lg:gap-x-32 lg:text-[15px]">
           {JOIN.footer.map((f) => (
             <span key={f}>{f}</span>
           ))}
