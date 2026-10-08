@@ -31,11 +31,11 @@ const TRACKS: Track[] = ["SPARK", "SPRINT", "SUMMIT"];
 
 type Tab =
   | "overview"
+  | "exports"
   | "participants"
   | "teams"
   | "merge"
   | "submissions"
-  | "exports"
   | "goods"
   | "results"
   | "settings"
@@ -72,11 +72,11 @@ function AdminDashboard() {
 
   const tabs: { id: Tab; label: string }[] = [
     { id: "overview", label: "현황" },
+    { id: "exports", label: "CSV" },
     { id: "participants", label: "참가자" },
     { id: "teams", label: "팀 관리" },
     { id: "merge", label: "팀 합치기" },
     { id: "submissions", label: "제출물" },
-    { id: "exports", label: "집계" },
     { id: "goods", label: "굿즈 신청내역" },
     { id: "results", label: "점수 집계" },
     { id: "settings", label: "행사 설정" },
@@ -95,11 +95,11 @@ function AdminDashboard() {
       </div>
 
       {tab === "overview" && <Overview dashboard={dashboardQuery} onGoTo={setTab} />}
+      {tab === "exports" && <ExportPanel />}
       {tab === "participants" && <AdminParticipantsPanel />}
       {tab === "teams" && <TeamsPanel />}
       {tab === "merge" && <AdminMergePanel />}
       {tab === "submissions" && <AdminSubmissionsPanel />}
-      {tab === "exports" && <ExportPanel />}
       {tab === "goods" && <AdminGoodsPanel />}
       {tab === "results" && <ResultsPanel />}
       {tab === "settings" && <AdminEventForm />}
