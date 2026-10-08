@@ -12,7 +12,7 @@ package kr.hyu.isd.hackathon.domain.goods;
  */
 public enum GoodsItem {
 
-    STICKER("스티커", 3_000),
+    STICKER("스티커", 2_000),
     KEYRING("쿠션 키링", 8_000),
     KEYCAP("키캡 키링", KeycapOption.ONE.getPrice());
 

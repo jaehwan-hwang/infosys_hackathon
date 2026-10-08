@@ -57,6 +57,7 @@ public class AdminService {
     private final JoinRequestRepository joinRequestRepository;
     private final AuthProperties authProperties;
     private final TeamMemberRepository teamMemberRepository;
+    private final GoodsOrderRepository goodsOrderRepository;
     private final EventService eventService;
 
     // ---- 대시보드 ----
@@ -417,6 +418,21 @@ public class AdminService {
             throw new HackathonException(ErrorCode.AWARD_NOT_FOUND);
         }
         awardRepository.deleteById(awardId);
+    }
+
+    // ---- 굿즈 ----
+
+    /**
+     * 굿즈 신청 전체. 아무것도 고르지 않은(= 신청을 거둔) 건은 빼고 보낸다 —
+     * 받을 물건이 없는 줄까지 목록에 서 있으면 세어야 할 사람 수가 어긋난다.
+     */
+    @Transactional(readOnly = true)
+    public List<GoodsOrderAdminResponse> getGoodsOrders() {
+        HackathonEvent event = eventService.getActiveEvent();
+        return goodsOrderRepository.findAllByEventId(event.getId()).stream()
+                .filter(order -> !order.isEmpty())
+                .map(GoodsOrderAdminResponse::from)
+                .toList();
     }
 
     // ---- 권한 ----

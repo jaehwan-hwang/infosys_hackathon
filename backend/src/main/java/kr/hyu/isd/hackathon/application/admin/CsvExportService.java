@@ -120,6 +120,17 @@ public class CsvExportService {
     }
 
     /**
+     * 점수 칸.
+     *
+     * 교수 평가가 없는 트랙에서는 교수 평균이 비어 있다. String.valueOf에 그대로 넘기면
+     * "null"이라는 네 글자가 칸에 박혀, Excel에서 숫자로 읽히지도 않고 0과 구별되지도
+     * 않는다. 없는 값은 빈 칸으로 둔다.
+     */
+    private static String number(java.math.BigDecimal value) {
+        return value != null ? value.toPlainString() : "";
+    }
+
+    /**
      * 제출 현황. 미제출 팀도 한 행으로 남겨 누락을 바로 확인할 수 있게 한다.
      */
     @Transactional(readOnly = true)
@@ -137,14 +148,14 @@ public class CsvExportService {
         for (Team team : teamRepository.findAllByEventIdWithMembers(event.getId())) {
             Submission s = byTeam.get(team.getId());
             if (s == null) {
-                appendRow(sb, team.getName(), team.getTrack().name(), "미제출", "N", "",
+                appendRow(sb, team.getName(), team.getTrack().getLabel(), "미제출", "N", "",
                         "", "", "", "", "", "", "", "", "", "", "");
                 continue;
             }
             List<String> missing = s.findMissingRequirements();
             appendRow(sb,
                     team.getName(),
-                    team.getTrack().name(),
+                    team.getTrack().getLabel(),
                     "제출",
                     missing.isEmpty() ? "Y" : "N",
                     String.join(" / ", missing),
@@ -174,16 +185,16 @@ public class CsvExportService {
         for (TrackResultResponse track : resultService.getResultsForAdmin()) {
             for (TeamResultResponse r : track.results()) {
                 appendRow(sb,
-                        track.track().name(),
+                        track.track().getLabel(),
                         track.formula(),
                         String.valueOf(r.rank()),
                         r.teamName(),
                         r.projectName(),
-                        String.valueOf(r.studentAverage()),
+                        number(r.studentAverage()),
                         String.valueOf(r.studentVoterCount()),
-                        String.valueOf(r.professorAverage()),
+                        number(r.professorAverage()),
                         String.valueOf(r.professorVoterCount()),
-                        String.valueOf(r.finalScore()),
+                        number(r.finalScore()),
                         r.awardName());
             }
         }

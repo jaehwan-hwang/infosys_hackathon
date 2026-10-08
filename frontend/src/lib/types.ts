@@ -211,6 +211,31 @@ export interface GoodsItemInfo {
   designCount: number;
 }
 
+/**
+ * 운영진이 보는 굿즈 신청 한 건.
+ *
+ * 물건을 건네고 입금을 대조해야 해서 학번·전화번호가 가려지지 않은 채로 온다.
+ * 금액 계산은 서버가 끝내서 내려 주므로 화면이 가격 규칙을 다시 알 필요가 없다.
+ */
+export interface AdminGoodsOrder {
+  userId: number;
+  name: string;
+  studentId: string | null;
+  phone: string | null;
+  email: string;
+  lines: {
+    label: string;
+    /** 1구·3구처럼 품목 안에서 갈리는 구성. 없으면 null. */
+    option: string | null;
+    quantity: number;
+    unit: number;
+    amount: number;
+  }[];
+  keycapDesigns: Record<number, number>;
+  estimatedTotal: number;
+  updatedAt: string | null;
+}
+
 export interface GoodsOrder {
   quantities: Record<GoodsItem, number>;
   /** 키캡 한 세트의 구 수(1 또는 3). 신청하지 않았으면 null. */

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { AdminEventForm } from "@/components/admin-event-form";
+import { AdminGoodsPanel } from "@/components/admin-goods-panel";
 import { AdminMergePanel } from "@/components/admin-merge-panel";
 import { AdminParticipantsPanel } from "@/components/admin-participants-panel";
 import { AdminSubmissionsPanel } from "@/components/admin-submissions-panel";
@@ -30,10 +31,12 @@ const TRACKS: Track[] = ["SPARK", "SPRINT", "SUMMIT"];
 
 type Tab =
   | "overview"
-  | "teams"
   | "participants"
-  | "submissions"
+  | "teams"
   | "merge"
+  | "submissions"
+  | "exports"
+  | "goods"
   | "results"
   | "settings"
   | "staff";
@@ -69,11 +72,13 @@ function AdminDashboard() {
 
   const tabs: { id: Tab; label: string }[] = [
     { id: "overview", label: "현황" },
-    { id: "teams", label: "팀 관리" },
     { id: "participants", label: "참가자" },
-    { id: "submissions", label: "제출물" },
+    { id: "teams", label: "팀 관리" },
     { id: "merge", label: "팀 합치기" },
-    { id: "results", label: "집계" },
+    { id: "submissions", label: "제출물" },
+    { id: "exports", label: "집계" },
+    { id: "goods", label: "굿즈 신청내역" },
+    { id: "results", label: "점수 집계" },
     { id: "settings", label: "행사 설정" },
     { id: "staff", label: "권한" },
   ];
@@ -90,10 +95,12 @@ function AdminDashboard() {
       </div>
 
       {tab === "overview" && <Overview dashboard={dashboardQuery} onGoTo={setTab} />}
-      {tab === "teams" && <TeamsPanel />}
       {tab === "participants" && <AdminParticipantsPanel />}
-      {tab === "submissions" && <AdminSubmissionsPanel />}
+      {tab === "teams" && <TeamsPanel />}
       {tab === "merge" && <AdminMergePanel />}
+      {tab === "submissions" && <AdminSubmissionsPanel />}
+      {tab === "exports" && <ExportPanel />}
+      {tab === "goods" && <AdminGoodsPanel />}
       {tab === "results" && <ResultsPanel />}
       {tab === "settings" && <AdminEventForm />}
       {tab === "staff" && <StaffPanel />}
@@ -300,8 +307,6 @@ function Overview({
           </div>
         )}
       </Card>
-
-      <ExportPanel />
     </div>
   );
 }

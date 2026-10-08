@@ -40,10 +40,11 @@ export function LandingAccountLink() {
     <Link
       href="/team"
       className={cx(
-        // 좁은 화면에서는 제목과 겹치지 않도록 작게 줄인다
-        "fixed right-3 top-3 z-50 inline-flex items-center rounded-full",
+        // 좁은 화면에서는 제목과 겹치지 않도록 작게 줄인다.
+        // 오른쪽 여백은 스크롤 막대가 서는 화면에서 붙어 보이지 않을 만큼 띄운다.
+        "fixed right-7 top-4 z-50 inline-flex items-center rounded-full",
         "h-8 px-3 text-[11px] font-bold whitespace-nowrap text-white",
-        "sm:h-10 sm:px-4 sm:text-[13px] md:right-7 md:top-7 md:h-11 md:px-5 md:text-[15px]",
+        "sm:h-10 sm:px-4 sm:text-[13px] md:right-12 md:top-8 md:h-11 md:px-5 md:text-[15px]",
         "backdrop-blur-[14px] backdrop-saturate-150 transition-opacity hover:opacity-90",
       )}
       style={{ background: BAR_BG, textShadow: LABEL_GLOW }}

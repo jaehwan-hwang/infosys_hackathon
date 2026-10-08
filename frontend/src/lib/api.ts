@@ -1,4 +1,5 @@
 import type {
+  AdminGoodsOrder,
   ApiErrorData,
   ApiResponse,
   Criterion,
@@ -413,6 +414,9 @@ export const api = {
         body: { email, role },
         token,
       }),
+
+    getGoodsOrders: (token: string) =>
+      request<AdminGoodsOrder[]>("/api/v1/admin/goods", { token }),
 
     getStaff: (token: string) => request<User[]>("/api/v1/admin/staff", { token }),
 

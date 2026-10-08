@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { Button } from "@/components/form";
 import { Alert, Card, cx } from "@/components/ui";
 import { api } from "@/lib/api";
@@ -477,7 +478,14 @@ function GoodsImage({
   );
 }
 
-/** 사진 크게 보기. 어디를 눌러도, Esc를 눌러도 닫힌다. */
+/**
+ * 사진 크게 보기. 어디를 눌러도, Esc를 눌러도 닫힌다.
+ *
+ * body에 직접 붙인다(포털). fixed는 화면을 기준으로 잡히는 게 보통이지만, 위쪽 어딘가에
+ * transform이 걸린 요소가 하나라도 있으면 기준이 그 요소로 바뀐다. 화면 전환 효과를 주는
+ * .page-enter가 바로 그런 요소라, 그 효과가 도는 동안 열면 확대 창이 화면이 아니라 페이지
+ * 전체에 맞춰져 아래로 밀려났다. 배경을 잠가 둬서 내려 볼 수도 없었다.
+ */
 function Lightbox({
   src,
   alt,
@@ -487,6 +495,10 @@ function Lightbox({
   alt: string;
   onClose: () => void;
 }) {
+  // 서버에는 document가 없다. 붙을 자리가 생긴 뒤에 그린다.
+  const [host, setHost] = useState<HTMLElement | null>(null);
+  useEffect(() => setHost(document.body), []);
+
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
@@ -501,19 +513,27 @@ function Lightbox({
     };
   }, [onClose]);
 
-  return (
+  if (!host) return null;
+
+  return createPortal(
     <div
       role="dialog"
       aria-modal="true"
       aria-label={`${alt} 사진`}
       onClick={onClose}
-      className="fixed inset-0 z-50 grid place-items-center bg-black/80 p-4 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm"
     >
+      {/*
+        크기를 화면에 맞춰 직접 묶는다. 바깥 칸에 맞추라고만 하면(max-h-full) 그 칸의
+        높이를 사진이 정하는 구조라 기준이 돌고 돌아 아무 데도 걸리지 않고, 사진이
+        화면을 넘겨 버린다. 넘긴 뒤에는 뒤 배경을 잠가 둬서 내려 볼 수도 없다.
+        dvh를 쓰는 이유는 휴대폰에서 주소창이 접혔다 펴져도 기준이 흔들리지 않게 하려고.
+      */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={src}
         alt={alt}
-        className="max-h-full max-w-full rounded-2xl bg-white object-contain shadow-2xl"
+        className="max-h-[80dvh] w-auto max-w-[min(90vw,30rem)] rounded-2xl bg-white object-contain shadow-2xl"
       />
       <button
         type="button"
@@ -523,7 +543,8 @@ function Lightbox({
       >
         ×
       </button>
-    </div>
+    </div>,
+    host,
   );
 }
 

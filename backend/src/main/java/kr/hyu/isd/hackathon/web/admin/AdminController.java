@@ -203,6 +203,14 @@ public class AdminController {
         return ApiResponse.successWithMsg("수상 내역을 삭제했습니다.");
     }
 
+    // ---- 굿즈 ----
+
+    /** 굿즈 신청 내역. 물건을 건네고 입금을 대조해야 해서 학번·전화번호를 그대로 담는다. */
+    @GetMapping("/goods")
+    public ApiResponse<List<GoodsOrderAdminResponse>> getGoodsOrders() {
+        return ApiResponse.success(adminService.getGoodsOrders());
+    }
+
     // ---- 권한 ----
 
     @GetMapping("/staff")
