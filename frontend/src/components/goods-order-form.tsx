@@ -31,7 +31,7 @@ const MAX_QUANTITY = 20;
  * 신청해 놓고 나중에 취소를 통보받으면 당황하므로, 고르는 자리에서 미리 적어 둔다.
  */
 const ITEM_NOTES: Partial<Record<GoodsItem, string>> = {
-  KEYRING: "* 최소주문수량 미달시 공동구매가 취소될 수 있습니다.",
+  KEYRING: "최소주문수량 미달시 공동구매가 취소될 수 있습니다.",
 };
 
 export function GoodsOrderForm({
@@ -318,8 +318,14 @@ function GoodsCard({
         />
       </div>
 
+      {/* 별표만 강조색으로 띄운다 — 굿즈 화면 위쪽 "꼭 읽어 주세요" 상자와 같은 모양이다 */}
       {note && (
-        <p className="mt-3 text-xs leading-relaxed text-subtle">{note}</p>
+        <p className="mt-3 flex gap-1.5 text-[13px] leading-relaxed text-subtle">
+          <span aria-hidden="true" className="text-[var(--accent)]">
+            *
+          </span>
+          <span>{note}</span>
+        </p>
       )}
     </Card>
   );
