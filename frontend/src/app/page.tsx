@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { LandingAccountLink } from "@/components/landing-account-link";
+import { HeroFit } from "@/components/hero-fit";
 import { LandingNav } from "@/components/landing-nav";
 import { SlideFit } from "@/components/slide-fit";
 import { TrackJumpList } from "@/components/track-jump";
@@ -30,11 +31,10 @@ const EYEBROW = "2026 정보시스템학과 제16대 학생회 ‘휘연’";
  * 제목이 단을 정확히 채운다 — 디자인 파일에서 제목이 단 끝까지 가는 것과 같다.
  * 화면이 아주 낮을 때만 걸리도록 dvh 상한을 느슨하게 둔다.
  *
- * 다만 딱 맞추면 여백이 0이라, 글꼴이 아직 안 받아졌거나 기기마다 글자 폭이 조금만
- * 달라져도 마지막 글자가 잘린다(좁은 화면에서 "HACKATHOI"로 보였다). 5%를 덜어
- * 숨 쉴 자리를 둔다 — 디자인상 단 끝에 닿는 느낌은 그대로다.
+ * 이 값은 Inter Display Black을 쓸 때만 맞는다. 글꼴이 아직 안 받아졌을 때 쓰이는
+ * 대체 글꼴은 글자가 더 넓어 그대로 두면 단을 넘친다 — 그 처리는 HeroFit이 한다.
  */
-const HEADLINE_SIZE = "min(15.3cqw, 40dvh)";
+const HEADLINE_SIZE = "min(16.08cqw, 40dvh)";
 
 const TRACKS_INTRO = {
   title: "Three Tracks",
@@ -210,6 +210,7 @@ export default function HomePage() {
         <Prizes />
         <Join />
       </div>
+      <HeroFit />
       <LandingAccountLink />
       <LandingNav />
     </>
@@ -313,10 +314,14 @@ function HeroContent({ gradient = false }: { gradient?: boolean }) {
       {/* 첫 줄은 단의 68%쯤에서 끝나고, 남는 오른쪽을 사자가 채운다 (디자인 그대로) */}
       <div
         className="font-hero-display mt-[0.6cqw] leading-[0.77] tracking-[-0.03em]"
-        style={{ fontSize: HEADLINE_SIZE }}
+        style={{ fontSize: `calc(${HEADLINE_SIZE} * var(--hero-fit, 1))` }}
       >
-        <p className={cx("whitespace-nowrap", tint)}>INFOSYS</p>
-        <p className={cx("whitespace-nowrap", tint)}>HACKATHON</p>
+        <p data-headline-line className={cx("whitespace-nowrap", tint)}>
+          INFOSYS
+        </p>
+        <p data-headline-line className={cx("whitespace-nowrap", tint)}>
+          HACKATHON
+        </p>
       </div>
     </div>
   );
