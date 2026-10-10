@@ -29,8 +29,12 @@ const EYEBROW = "2026 정보시스템학과 제16대 학생회 ‘휘연’";
  * "HACKATHON"의 가로폭을 재 보면 글자 크기의 6.22배다. 100/6.22 ≈ 16.08cqw면
  * 제목이 단을 정확히 채운다 — 디자인 파일에서 제목이 단 끝까지 가는 것과 같다.
  * 화면이 아주 낮을 때만 걸리도록 dvh 상한을 느슨하게 둔다.
+ *
+ * 다만 딱 맞추면 여백이 0이라, 글꼴이 아직 안 받아졌거나 기기마다 글자 폭이 조금만
+ * 달라져도 마지막 글자가 잘린다(좁은 화면에서 "HACKATHOI"로 보였다). 5%를 덜어
+ * 숨 쉴 자리를 둔다 — 디자인상 단 끝에 닿는 느낌은 그대로다.
  */
-const HEADLINE_SIZE = "min(16.08cqw, 40dvh)";
+const HEADLINE_SIZE = "min(15.3cqw, 40dvh)";
 
 const TRACKS_INTRO = {
   title: "Three Tracks",

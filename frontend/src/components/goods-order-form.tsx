@@ -24,6 +24,16 @@ import type { GoodsItem, GoodsItemInfo, GoodsOption, GoodsOrder } from "@/lib/ty
  */
 const MAX_QUANTITY = 20;
 
+/**
+ * 품목 칸 아래에 따로 붙는 주의 문구.
+ *
+ * 쿠션 키링은 공동구매로 들여오므로 수량이 모자라면 아예 들어오지 않는다.
+ * 신청해 놓고 나중에 취소를 통보받으면 당황하므로, 고르는 자리에서 미리 적어 둔다.
+ */
+const ITEM_NOTES: Partial<Record<GoodsItem, string>> = {
+  KEYRING: "* 최소주문수량 미달시 공동구매가 취소될 수 있습니다.",
+};
+
 export function GoodsOrderForm({
   items,
   order,
@@ -262,6 +272,7 @@ function GoodsCard({
   const checked = quantity > 0;
   const checkboxId = `goods-${info.item}`;
   const hasOptions = info.options.length > 0;
+  const note = ITEM_NOTES[info.item];
 
   return (
     <Card className={cx("flex h-full flex-col", checked && "border-[var(--accent)]")}>
@@ -306,6 +317,10 @@ function GoodsCard({
           onChange={onChange}
         />
       </div>
+
+      {note && (
+        <p className="mt-3 text-xs leading-relaxed text-subtle">{note}</p>
+      )}
     </Card>
   );
 }

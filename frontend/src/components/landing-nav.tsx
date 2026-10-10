@@ -72,7 +72,9 @@ export function LandingNav() {
     // 예전에는 좁은 화면에서 좌우로 늘어나 글자가 양 끝에 흩어져 깨져 보였다.
     <nav
       aria-label="섹션 이동"
-      className="pointer-events-none fixed inset-x-0 bottom-4 z-50 flex justify-center px-3 md:bottom-7"
+      // 아래 여백은 기기가 알려 주는 안전 영역(홈 바, 인앱 브라우저 하단 막대)보다
+      // 항상 크게 둔다. 그냥 16px로 두면 그 막대에 깔려 아랫부분이 잘린다.
+      className="pointer-events-none fixed inset-x-0 z-50 flex justify-center px-3 bottom-[max(1rem,env(safe-area-inset-bottom))] md:bottom-[max(1.75rem,env(safe-area-inset-bottom))]"
     >
       <ul
         className={cx(
