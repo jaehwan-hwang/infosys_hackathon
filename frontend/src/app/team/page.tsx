@@ -184,6 +184,10 @@ function MyTeamTab({
       (m) => m.role === "LEADER" && m.userId !== null && String(m.userId) === user?.id,
     );
 
+  // 팀원을 넣고 빼는 건 팀장 본인만 한다. 팀명·모집 상태는 등록한 사람도 고칠 수 있다.
+  const leaderMember = team.members.find((m) => m.role === "LEADER");
+  const isLeader = leaderMember?.userId != null && String(leaderMember.userId) === user?.id;
+
   const style = trackStyle(team.track);
 
   return (
@@ -214,7 +218,7 @@ function MyTeamTab({
           <div className="mt-3">
             <TeamMembersEditor
               team={team}
-              canManage={canManage}
+              canManage={isLeader}
               registrationOpen={registrationOpen}
               minTeamSize={minTeamSize}
               maxTeamSize={maxTeamSize}

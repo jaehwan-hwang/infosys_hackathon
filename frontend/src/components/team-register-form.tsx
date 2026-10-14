@@ -7,6 +7,7 @@ import { Alert, Card, Section, TrackBadge, cx, trackStyle } from "@/components/u
 import { api } from "@/lib/api";
 import { EMPTY_SELF_CHECK, TRACK_GOAL, TRACK_LABEL, TRACK_TAGLINE } from "@/lib/track-rules";
 import { entryFeeOf, formatFee } from "@/lib/fee";
+import { emailDomainHint, isAllowedEmail } from "@/lib/email";
 import { LIMITS, remainingHint } from "@/lib/limits";
 import { RECRUIT_OPTIONS } from "@/lib/recruit";
 import { useApiMutation, useAuth } from "@/lib/use-auth";
@@ -92,7 +93,7 @@ export function TeamRegisterForm({
   const totalMembers = members.length + 1;
   const sizeValid = totalMembers >= minTeamSize && totalMembers <= maxTeamSize;
   const membersFilled = members.every(
-    (m) => m.name.trim() && m.studentId.trim() && m.email.trim(),
+    (m) => m.name.trim() && m.studentId.trim() && isAllowedEmail(m.email),
   );
   const canSubmit = name.trim().length > 0 && sizeValid && membersFilled;
 
@@ -286,7 +287,11 @@ export function TeamRegisterForm({
                       )}
                     </Field>
 
-                    <Field label="이메일" required error={fieldError(`members[${index}].email`)}>
+                    <Field
+                      label="이메일"
+                      required
+                      error={fieldError(`members[${index}].email`) ?? emailDomainHint(member.email)}
+                    >
                       {(id) => (
                         <TextInput
                           id={id}
@@ -296,7 +301,9 @@ export function TeamRegisterForm({
                           maxLength={120}
                           required
                           placeholder="id@hanyang.ac.kr"
-                          invalid={Boolean(fieldError(`members[${index}].email`))}
+                          invalid={Boolean(
+                            fieldError(`members[${index}].email`) ?? emailDomainHint(member.email),
+                          )}
                         />
                       )}
                     </Field>

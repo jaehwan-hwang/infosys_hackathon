@@ -5,6 +5,7 @@ import { Button, Field, TextInput } from "@/components/form";
 import { DuesChoice } from "@/components/team-register-form";
 import { Alert, Card } from "@/components/ui";
 import { api } from "@/lib/api";
+import { emailDomainHint, isAllowedEmail } from "@/lib/email";
 import { maskStudentId } from "@/lib/format";
 import { LIMITS } from "@/lib/limits";
 import { useApiMutation, useAuth } from "@/lib/use-auth";
@@ -73,6 +74,14 @@ export function TeamMembersEditor({
       {canManage && !registrationOpen && (
         <p className="mt-4 text-xs text-subtle">
           신청 기간이 끝나 팀원을 바꿀 수 없습니다. 바꿔야 하면 운영진에게 문의해 주세요.
+        </p>
+      )}
+
+      {/* 팀장이 아니면 왜 버튼이 없는지 알려 준다 */}
+      {!canManage && registrationOpen && (
+        <p className="mt-4 text-xs text-subtle">
+          팀원 추가·삭제는 팀장({team.members.find((m) => m.role === "LEADER")?.name ?? "팀장"})만
+          할 수 있습니다.
         </p>
       )}
     </div>
@@ -233,7 +242,7 @@ function AddMemberForm({ team, onAdded }: { team: Team; onAdded: () => void }) {
               />
             )}
           </Field>
-          <Field label="이메일" required error={fieldError("email")}>
+          <Field label="이메일" required error={fieldError("email") ?? emailDomainHint(input.email)}>
             {(id) => (
               <TextInput
                 id={id}
@@ -243,7 +252,7 @@ function AddMemberForm({ team, onAdded }: { team: Team; onAdded: () => void }) {
                 maxLength={120}
                 required
                 placeholder="id@hanyang.ac.kr"
-                invalid={Boolean(fieldError("email"))}
+                invalid={Boolean(fieldError("email") ?? emailDomainHint(input.email))}
               />
             )}
           </Field>
@@ -264,7 +273,7 @@ function AddMemberForm({ team, onAdded }: { team: Team; onAdded: () => void }) {
         )}
 
         <div className="mt-4 flex gap-2">
-          <Button type="submit" loading={pending}>
+          <Button type="submit" loading={pending} disabled={!isAllowedEmail(input.email)}>
             추가하기
           </Button>
           <Button

@@ -1,6 +1,7 @@
 package kr.hyu.isd.hackathon.application.team;
 
 import kr.hyu.isd.hackathon.application.event.EventService;
+import kr.hyu.isd.hackathon.common.auth.AuthProperties;
 import kr.hyu.isd.hackathon.common.dto.response.ApiErrorData;
 import kr.hyu.isd.hackathon.common.exception.ErrorCode;
 import kr.hyu.isd.hackathon.common.exception.HackathonException;
@@ -44,6 +45,7 @@ public class TeamService {
     private final TeamMemberRepository teamMemberRepository;
     private final UserRepository userRepository;
     private final EventService eventService;
+    private final AuthProperties authProperties;
 
     /**
      * 자가진단 결과 미리보기. 저장하지 않고 계산만 한다.
@@ -101,6 +103,7 @@ public class TeamService {
                 ? request.members() : List.of();
         validateTeamSize(event, memberRequests.size() + 1);
         validateNoDuplicates(leader, memberRequests);
+        validateMemberDomains(memberRequests);
         for (TeamMemberRequest m : memberRequests) {
             requireNotInAnotherTeam(event, m.email(), null);
         }
@@ -228,13 +231,17 @@ public class TeamService {
     @Transactional
     public TeamResponse addMember(Long userId, Long teamId, TeamMemberRequest request) {
         Team team = findTeamWithMembers(teamId);
-        requireLeader(team, userId);
+        requireLeaderMember(team, userId);
         HackathonEvent event = team.getEvent();
         requireRegistrationOpen(event);
 
         validateTeamSize(event, team.memberCount() + 1);
 
         String email = request.email().trim().toLowerCase();
+        if (!authProperties.isDomainAllowed(email)) {
+            throw new HackathonException(ErrorCode.INVALID_INPUT,
+                    List.of(new ApiErrorData("email", domainMessage(), email)));
+        }
         if (team.hasMemberEmail(email)) {
             throw new HackathonException(ErrorCode.DUPLICATE_MEMBER, "이미 우리 팀에 있는 이메일입니다.");
         }
@@ -267,7 +274,7 @@ public class TeamService {
     @Transactional
     public TeamResponse removeMember(Long userId, Long teamId, Long teamMemberId) {
         Team team = findTeamWithMembers(teamId);
-        requireLeader(team, userId);
+        requireLeaderMember(team, userId);
         HackathonEvent event = team.getEvent();
         requireRegistrationOpen(event);
 
@@ -290,6 +297,50 @@ public class TeamService {
         log.info("팀원 삭제: team={}, email={}", team.getName(), member.getEmail());
 
         return TeamResponse.from(team);
+    }
+
+    /**
+     * 팀장 본인인가. 팀원 추가·삭제는 팀장만 한다.
+     *
+     * 다른 팀 관리(팀명·모집 상태)는 팀을 등록한 사람에게도 열어 두지만, 사람을 넣고
+     * 빼는 일은 팀을 이끄는 한 사람에게만 맡긴다 — 등록만 대신 해 준 사람이 팀 구성을
+     * 바꿀 수 있으면 팀장이 모르는 사이에 팀원이 바뀐다.
+     * 지정된 팀장이 아직 로그인하지 않았으면 계정이 연결되지 않아 아무도 할 수 없다.
+     */
+    private void requireLeaderMember(Team team, Long userId) {
+        TeamMember leader = team.leaderMember();
+        boolean isLeader = leader != null && leader.getUser() != null
+                && leader.getUser().getId().equals(userId);
+        if (!isLeader) {
+            throw new HackathonException(ErrorCode.NOT_TEAM_LEADER,
+                    leader != null && leader.getUser() == null
+                            ? "팀원 추가·삭제는 팀장만 할 수 있습니다. 팀장(%s)이 먼저 로그인해야 합니다."
+                                    .formatted(leader.getName())
+                            : "팀원 추가·삭제는 팀장만 할 수 있습니다.");
+        }
+    }
+
+    /**
+     * 팀원 이메일이 학교 메일인지 확인한다.
+     *
+     * 로그인은 학교 계정으로만 되므로, 다른 메일로 적힌 팀원 자리는 영영 계정과 이어지지
+     * 않는다 — 그 사람은 팀에 이름만 있고 투표도 결과 확인도 못 한다.
+     */
+    private void validateMemberDomains(List<TeamMemberRequest> members) {
+        List<ApiErrorData> errors = new ArrayList<>();
+        for (int i = 0; i < members.size(); i++) {
+            String email = members.get(i).email().trim();
+            if (!authProperties.isDomainAllowed(email)) {
+                errors.add(new ApiErrorData("members[%d].email".formatted(i), domainMessage(), email));
+            }
+        }
+        if (!errors.isEmpty()) {
+            throw new HackathonException(ErrorCode.INVALID_INPUT, errors);
+        }
+    }
+
+    private String domainMessage() {
+        return "한양대학교 메일(@%s)만 적을 수 있습니다.".formatted(authProperties.allowedDomains().get(0));
     }
 
     private void requireRegistrationOpen(HackathonEvent event) {
