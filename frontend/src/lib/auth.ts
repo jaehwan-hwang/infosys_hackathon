@@ -9,6 +9,39 @@ const ALLOWED_DOMAIN = process.env.NEXT_PUBLIC_ALLOWED_EMAIL_DOMAIN ?? "hanyang.
 const SYNC_INTERVAL_MS = 5 * 60 * 1000;
 
 /**
+ * 프로필이 아직 덜 찬 사람을 다시 읽는 주기.
+ *
+ * 그 상태에서는 관문에 걸려 아무것도 못 하므로 자주 확인해야 하지만, 조건 없이
+ * 매번 읽으면 페이지를 열 때마다 백엔드 왕복이 하나씩 붙는다. 백엔드가 깨어나는
+ * 중이면 그 왕복 하나가 15초라, 화면이 통째로 그만큼 늦어진다.
+ */
+const PROFILE_SYNC_INTERVAL_MS = 30 * 1000;
+
+/**
+ * 사용자 정보를 다시 읽을 때 기다려 줄 시간.
+ *
+ * 이 호출은 서버에서 화면을 그리는 도중에 일어난다. 끝나야 HTML이 나가므로,
+ * 백엔드가 잠에서 깨는 20초를 그대로 기다리면 화면이 20초 동안 안 뜨거나 아예
+ * 실패한다("사이트에 연결할 수 없습니다"). 못 받아 오면 들고 있던 값으로 그린다 —
+ * 조금 묵은 정보로 화면이 뜨는 쪽이, 안 뜨는 쪽보다 낫다.
+ */
+const REFRESH_TIMEOUT_MS = 4000;
+
+/**
+ * 로그인 교환을 기다려 줄 시간.
+ *
+ * 이쪽은 짧게 끊으면 안 된다. 실패하면 들고 있을 값이 아예 없어서 로그인 자체가
+ * 안 되기 때문이다. 백엔드가 깨어나는 시간(20초 안팎)을 넘겨 잡되, 영영 매달리지는
+ * 않도록 상한만 둔다.
+ */
+const LOGIN_TIMEOUT_MS = 25000;
+
+/** 정해진 시간 안에 답이 없으면 포기하는 fetch */
+function fetchWithTimeout(url: string, ms: number, init?: RequestInit) {
+  return fetch(url, { ...init, signal: AbortSignal.timeout(ms) });
+}
+
+/**
  * Google 로그인 → 백엔드 토큰 교환.
  *
  * 흐름:
@@ -53,7 +86,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       // 최초 로그인 시에만 account가 채워진다. 이때 백엔드 토큰으로 교환한다.
       if (account?.id_token) {
         try {
-          const res = await fetch(`${API_BASE_URL}/api/v1/auth/google`, {
+          const res = await fetchWithTimeout(`${API_BASE_URL}/api/v1/auth/google`, LOGIN_TIMEOUT_MS, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ idToken: account.id_token }),
@@ -88,13 +121,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       //   1. 화면에서 update()를 부른 직후 — 방금 바뀐 것이 확실하다
       //   2. 프로필 미완료로 남아 있을 때 — 관문에 걸려 아무것도 못 하는 상태라 매번 확인한다
       //   3. 마지막 확인이 오래됐을 때 — 권한 변경이 재로그인 없이 반영되도록
-      const stale =
-        !token.profileCompleted ||
-        Date.now() - ((token.syncedAt as number) ?? 0) > SYNC_INTERVAL_MS;
+      const sinceSync = Date.now() - ((token.syncedAt as number) ?? 0);
+      const stale = token.profileCompleted
+        ? sinceSync > SYNC_INTERVAL_MS
+        : sinceSync > PROFILE_SYNC_INTERVAL_MS;
 
       if (token.accessToken && (trigger === "update" || stale)) {
         try {
-          const res = await fetch(`${API_BASE_URL}/api/v1/auth/me`, {
+          const res = await fetchWithTimeout(`${API_BASE_URL}/api/v1/auth/me`, REFRESH_TIMEOUT_MS, {
             headers: { Authorization: `Bearer ${token.accessToken}` },
           });
           if (res.ok) {
