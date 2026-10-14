@@ -148,6 +148,29 @@ public class Team extends BaseTimeEntity {
         this.members.clear();
     }
 
+    /** 이 팀의 팀원 자리. 다른 팀 것이면 null */
+    public TeamMember findMember(Long teamMemberId) {
+        return this.members.stream()
+                .filter(m -> m.getId().equals(teamMemberId))
+                .findFirst()
+                .orElse(null);
+    }
+
+    /** 팀원 자리를 뺀다. 목록에서 빠지면 orphanRemoval로 행도 지워진다. */
+    public void removeMember(TeamMember member) {
+        this.members.remove(member);
+    }
+
+    /** 이 이메일·학번이 이미 이 팀에 있는가 */
+    public boolean hasMemberEmail(String email) {
+        return this.members.stream().anyMatch(m -> m.getEmail().equalsIgnoreCase(email));
+    }
+
+    public boolean hasMemberStudentId(String studentId) {
+        return this.members.stream()
+                .anyMatch(m -> m.getStudentId() != null && m.getStudentId().equals(studentId));
+    }
+
     public int memberCount() {
         return this.members.size();
     }

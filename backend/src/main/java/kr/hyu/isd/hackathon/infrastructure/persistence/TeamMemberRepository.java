@@ -23,4 +23,22 @@ public interface TeamMemberRepository extends JpaRepository<TeamMember, Long> {
              where m.team.id = :fromTeamId
             """)
     int moveAllToTeam(@Param("fromTeamId") Long fromTeamId, @Param("toTeamId") Long toTeamId);
+
+    /**
+     * 이 행사의 다른 팀에 같은 이메일의 팀원 자리가 있는가.
+     *
+     * 한 이메일이 두 팀에 들어가면 그 사람이 처음 로그인할 때 "어느 팀 자리에 연결할지"를
+     * 찾는 조회가 결과 둘을 받아 실패한다 — 로그인 자체가 막힌다. 넣기 전에 막는다.
+     *
+     * @param exceptTeamId 이 팀은 빼고 본다. 등록처럼 아직 팀이 없으면 null.
+     */
+    @Query("""
+            select count(m) > 0 from TeamMember m
+             where m.team.event.id = :eventId
+               and lower(m.email) = lower(:email)
+               and (:exceptTeamId is null or m.team.id <> :exceptTeamId)
+            """)
+    boolean existsInEventByEmail(@Param("eventId") Long eventId,
+                                 @Param("email") String email,
+                                 @Param("exceptTeamId") Long exceptTeamId);
 }

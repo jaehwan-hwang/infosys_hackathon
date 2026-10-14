@@ -494,7 +494,8 @@ function TeamsPanel() {
                         취소
                       </Button>
                       <Button
-                        className="h-9 bg-red-600 px-3 text-sm hover:bg-red-700"
+                        variant="danger"
+                        className="h-9 px-3 text-sm"
                         loading={deleteMutation.pending}
                         onClick={async () => {
                           await deleteMutation.run(team.teamId);
@@ -775,7 +776,8 @@ function RevokeButton({ email, onDone }: { email: string; onDone: () => void }) 
         취소
       </Button>
       <Button
-        className="h-9 bg-red-600 px-3 text-sm hover:bg-red-700"
+        variant="danger"
+                        className="h-9 px-3 text-sm"
         loading={pending}
         onClick={async () => {
           const result = await run();

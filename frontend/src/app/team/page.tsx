@@ -22,7 +22,7 @@ import type { TrackFilterValue } from "@/components/ui";
 import { TextInput } from "@/components/form";
 import { api, publicApi } from "@/lib/api";
 import { TeamMemberList } from "@/components/team-member-list";
-import { maskStudentId } from "@/lib/format";
+import { TeamMembersEditor } from "@/components/team-members-editor";
 import { RECRUIT_LABEL } from "@/lib/recruit";
 import { TRACK_LABEL, TRACK_TAGLINE } from "@/lib/track-rules";
 import { useApiQuery, useAuth } from "@/lib/use-auth";
@@ -103,6 +103,7 @@ function TeamContent() {
     <RegisteredView
       team={teamQuery.data}
       registrationOpen={event?.registrationOpen ?? false}
+      minTeamSize={event?.minTeamSize ?? 1}
       maxTeamSize={event?.maxTeamSize ?? 5}
       onTeamChanged={teamQuery.reload}
     />
@@ -114,11 +115,13 @@ type Tab = "mine" | "merge" | "others";
 function RegisteredView({
   team,
   registrationOpen,
+  minTeamSize,
   maxTeamSize,
   onTeamChanged,
 }: {
   team: Team;
   registrationOpen: boolean;
+  minTeamSize: number;
   maxTeamSize: number;
   onTeamChanged: () => void;
 }) {
@@ -143,6 +146,8 @@ function RegisteredView({
         <MyTeamTab
           team={team}
           registrationOpen={registrationOpen}
+          minTeamSize={minTeamSize}
+          maxTeamSize={maxTeamSize}
           onTeamChanged={onTeamChanged}
         />
       )}
@@ -162,10 +167,14 @@ function RegisteredView({
 function MyTeamTab({
   team,
   registrationOpen,
+  minTeamSize,
+  maxTeamSize,
   onTeamChanged,
 }: {
   team: Team;
   registrationOpen: boolean;
+  minTeamSize: number;
+  maxTeamSize: number;
   onTeamChanged: () => void;
 }) {
   const { user } = useAuth();
@@ -202,26 +211,16 @@ function MyTeamTab({
 
         <div className="mt-6 border-t-2 border-current/10 pt-5">
           <h3 className="text-sm font-bold">팀원</h3>
-          <ul className="mt-3 space-y-2">
-            {team.members.map((member) => (
-              <li
-                key={member.teamMemberId}
-                className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm"
-              >
-                {member.role === "LEADER" && (
-                  <span className="rounded-full bg-grad-brand px-2 py-0.5 text-[10px] font-bold text-white">
-                    팀장
-                  </span>
-                )}
-                <span className="font-bold">{member.name}</span>
-                {member.studentId && (
-                  <span className="text-subtle">{maskStudentId(member.studentId)}</span>
-                )}
-                {member.email && <span className="text-subtle">{member.email}</span>}
-                {!member.linked && <span className="text-xs text-amber-600">로그인 대기</span>}
-              </li>
-            ))}
-          </ul>
+          <div className="mt-3">
+            <TeamMembersEditor
+              team={team}
+              canManage={canManage}
+              registrationOpen={registrationOpen}
+              minTeamSize={minTeamSize}
+              maxTeamSize={maxTeamSize}
+              onChanged={onTeamChanged}
+            />
+          </div>
         </div>
       </Card>
 

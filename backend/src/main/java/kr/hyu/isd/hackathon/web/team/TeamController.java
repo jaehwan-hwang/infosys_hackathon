@@ -84,4 +84,22 @@ public class TeamController {
                                                 @Valid @RequestBody TeamUpdateRequest request) {
         return ApiResponse.success(teamService.updateTeam(principal.userId(), teamId, request));
     }
+
+    /** 팀원 추가 (팀장 전용, 신청 기간에만) */
+    @PostMapping("/{teamId}/members")
+    public ApiResponse<TeamResponse> addMember(@CurrentUser AuthPrincipal principal,
+                                               @PathVariable Long teamId,
+                                               @Valid @RequestBody TeamMemberRequest request) {
+        return ApiResponse.successWithMsg(
+                teamService.addMember(principal.userId(), teamId, request), "팀원을 추가했습니다.");
+    }
+
+    /** 팀원 삭제 (팀장 전용, 신청 기간에만). 팀장과 팀을 등록한 사람은 뺄 수 없다. */
+    @DeleteMapping("/{teamId}/members/{teamMemberId}")
+    public ApiResponse<TeamResponse> removeMember(@CurrentUser AuthPrincipal principal,
+                                                  @PathVariable Long teamId,
+                                                  @PathVariable Long teamMemberId) {
+        return ApiResponse.successWithMsg(
+                teamService.removeMember(principal.userId(), teamId, teamMemberId), "팀원을 뺐습니다.");
+    }
 }

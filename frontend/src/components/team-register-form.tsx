@@ -486,7 +486,7 @@ export function TeamRegisterForm({
 }
 
 /** 학생회비 납부 여부. 미납·휴학이면 참가비 1만원 대상이 된다. */
-function DuesChoice({
+export function DuesChoice({
   name,
   value,
   onChange,

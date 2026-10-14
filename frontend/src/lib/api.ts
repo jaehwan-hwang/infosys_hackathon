@@ -14,6 +14,7 @@ import type {
   Submission,
   SubmissionInput,
   Team,
+  TeamMemberInput,
   TeamAdmin,
   TeamRegisterInput,
   Track,
@@ -229,6 +230,21 @@ export const api = {
     request<Team>(`/api/v1/teams/${teamId}`, {
       method: "PUT",
       body: input,
+      token,
+    }),
+
+  /** 팀원 추가. 팀장만, 신청 기간에만. */
+  addTeamMember: (token: string, teamId: number, input: TeamMemberInput) =>
+    request<Team>(`/api/v1/teams/${teamId}/members`, {
+      method: "POST",
+      body: input,
+      token,
+    }),
+
+  /** 팀원 삭제. 팀장과 팀을 등록한 사람은 뺄 수 없다. */
+  removeTeamMember: (token: string, teamId: number, teamMemberId: number) =>
+    request<Team>(`/api/v1/teams/${teamId}/members/${teamMemberId}`, {
+      method: "DELETE",
       token,
     }),
 

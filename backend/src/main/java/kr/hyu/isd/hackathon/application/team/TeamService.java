@@ -13,6 +13,7 @@ import kr.hyu.isd.hackathon.domain.team.TeamMemberRole;
 import kr.hyu.isd.hackathon.domain.team.Track;
 import kr.hyu.isd.hackathon.domain.user.Role;
 import kr.hyu.isd.hackathon.domain.user.User;
+import kr.hyu.isd.hackathon.infrastructure.persistence.TeamMemberRepository;
 import kr.hyu.isd.hackathon.infrastructure.persistence.TeamRepository;
 import kr.hyu.isd.hackathon.infrastructure.persistence.UserRepository;
 import kr.hyu.isd.hackathon.web.team.dto.RecruitUpdateRequest;
@@ -40,6 +41,7 @@ import java.util.Set;
 public class TeamService {
 
     private final TeamRepository teamRepository;
+    private final TeamMemberRepository teamMemberRepository;
     private final UserRepository userRepository;
     private final EventService eventService;
 
@@ -99,6 +101,9 @@ public class TeamService {
                 ? request.members() : List.of();
         validateTeamSize(event, memberRequests.size() + 1);
         validateNoDuplicates(leader, memberRequests);
+        for (TeamMemberRequest m : memberRequests) {
+            requireNotInAnotherTeam(event, m.email(), null);
+        }
 
         Team team = Team.create(event, request.name(), leader, request.appliedTrack(),
                 request.selfCheck() != null ? request.selfCheck().toDomain() : SelfCheck.empty(),
@@ -212,6 +217,97 @@ public class TeamService {
         if (value == null) return null;
         String trimmed = value.trim();
         return trimmed.isEmpty() ? null : trimmed;
+    }
+
+    /**
+     * 팀원을 한 명 더한다. 팀장 또는 등록한 사람만, 신청 기간에만 할 수 있다.
+     *
+     * 등록 때와 같은 규칙을 그대로 건다 — 인원 상한, 팀 안 중복, 다른 팀 소속.
+     * 이미 가입한 사람이면 계정을 바로 잇고, 아니면 그 사람이 처음 로그인할 때 이어진다.
+     */
+    @Transactional
+    public TeamResponse addMember(Long userId, Long teamId, TeamMemberRequest request) {
+        Team team = findTeamWithMembers(teamId);
+        requireLeader(team, userId);
+        HackathonEvent event = team.getEvent();
+        requireRegistrationOpen(event);
+
+        validateTeamSize(event, team.memberCount() + 1);
+
+        String email = request.email().trim().toLowerCase();
+        if (team.hasMemberEmail(email)) {
+            throw new HackathonException(ErrorCode.DUPLICATE_MEMBER, "이미 우리 팀에 있는 이메일입니다.");
+        }
+        if (team.hasMemberStudentId(request.studentId())) {
+            throw new HackathonException(ErrorCode.DUPLICATE_MEMBER, "이미 우리 팀에 있는 학번입니다.");
+        }
+        requireNotInAnotherTeam(event, email, team.getId());
+
+        // 운영진·교수는 팀에 들어갈 수 없다 — 등록 때 본인에게 거는 규칙과 같다
+        User linked = userRepository.findByEmail(email).orElse(null);
+        if (linked != null && linked.getRole() != Role.STUDENT) {
+            throw new HackathonException(ErrorCode.INSUFFICIENT_PERMISSION,
+                    "운영진과 교수는 팀원으로 넣을 수 없습니다.");
+        }
+
+        team.addMember(TeamMember.create(team, linked, request.name().trim(), request.studentId(),
+                email, TeamMemberRole.MEMBER, request.duesPaid()));
+        log.info("팀원 추가: team={}, email={}, 연결됨={}", team.getName(), email, linked != null);
+
+        return TeamResponse.from(team);
+    }
+
+    /**
+     * 팀원을 뺀다. 팀장 또는 등록한 사람만, 신청 기간에만 할 수 있다.
+     *
+     * 두 사람은 뺄 수 없다. 팀장은 결과물을 낼 사람이라 빠지면 팀이 제출할 수 없게 되고,
+     * 등록한 사람은 팀 기록이 그 계정을 가리키고 있어 빼면 팀에 없는 사람이 팀을
+     * 관리하게 된다. 둘 다 운영진에게 요청하도록 안내한다.
+     */
+    @Transactional
+    public TeamResponse removeMember(Long userId, Long teamId, Long teamMemberId) {
+        Team team = findTeamWithMembers(teamId);
+        requireLeader(team, userId);
+        HackathonEvent event = team.getEvent();
+        requireRegistrationOpen(event);
+
+        TeamMember member = team.findMember(teamMemberId);
+        if (member == null) {
+            throw new HackathonException(ErrorCode.TEAM_NOT_FOUND, "우리 팀 팀원이 아닙니다.");
+        }
+        if (member.isLeader()) {
+            throw new HackathonException(ErrorCode.INVALID_INPUT,
+                    "팀장은 뺄 수 없습니다. 팀장을 바꾸려면 운영진에게 문의해 주세요.");
+        }
+        if (member.getUser() != null && team.isLedBy(member.getUser().getId())) {
+            throw new HackathonException(ErrorCode.INVALID_INPUT,
+                    "팀을 등록한 사람은 뺄 수 없습니다. 운영진에게 문의해 주세요.");
+        }
+
+        validateTeamSize(event, team.memberCount() - 1);
+
+        team.removeMember(member);
+        log.info("팀원 삭제: team={}, email={}", team.getName(), member.getEmail());
+
+        return TeamResponse.from(team);
+    }
+
+    private void requireRegistrationOpen(HackathonEvent event) {
+        if (!event.isRegistrationOpen(Instant.now())) {
+            throw new HackathonException(ErrorCode.REGISTRATION_CLOSED,
+                    "신청 기간이 끝나 팀원을 바꿀 수 없습니다. 운영진에게 문의해 주세요.");
+        }
+    }
+
+    /**
+     * 같은 이메일이 다른 팀에 이미 있으면 막는다.
+     * 두 팀에 걸치면 그 사람의 첫 로그인에서 팀 연결이 실패해 로그인 자체가 막힌다.
+     */
+    private void requireNotInAnotherTeam(HackathonEvent event, String email, Long exceptTeamId) {
+        if (teamMemberRepository.existsInEventByEmail(event.getId(), email.trim(), exceptTeamId)) {
+            throw new HackathonException(ErrorCode.ALREADY_IN_TEAM,
+                    "%s 은(는) 이미 다른 팀에 들어가 있습니다.".formatted(email.trim()));
+        }
     }
 
     /** 모집 상태 변경. 팀장 또는 등록한 사람만 할 수 있다. */
