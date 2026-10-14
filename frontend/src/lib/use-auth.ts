@@ -40,6 +40,23 @@ export function useAuth() {
   };
 }
 
+/**
+ * 토큰이 죽었다는 응답을 받으면 세션을 다시 읽게 한다.
+ *
+ * 세션 쿠키는 30일 가지만 그 안의 백엔드 토큰은 12시간이면 만료된다. 그 사이에는
+ * 화면상 로그인된 채로 모든 요청이 "로그인이 필요합니다"로 막혀, 무엇을 해야 할지
+ * 알 수 없었다. 다시 읽으면 jwt 콜백이 백엔드에서 401을 받아 만료 사유를 세션에
+ * 심고, AuthGate가 그걸 보고 "다시 로그인하기"를 띄운다.
+ */
+function useExpiredSessionHandler() {
+  const { update } = useSession();
+  const updateRef = useRef(update);
+  updateRef.current = update;
+  return useCallback((e: unknown) => {
+    if (e instanceof ApiError && e.isSessionExpired) void updateRef.current({});
+  }, []);
+}
+
 type AsyncState<T> = {
   data: T | undefined;
   error: string | undefined;
@@ -64,6 +81,7 @@ export function useApiQuery<T>(
   const [nonce, setNonce] = useState(0);
   const fetcherRef = useRef(fetcher);
   fetcherRef.current = fetcher;
+  const onExpired = useExpiredSessionHandler();
 
   useEffect(() => {
     const run = fetcherRef.current;
@@ -84,6 +102,7 @@ export function useApiQuery<T>(
         if (controller.signal.aborted) return;
         // 취소된 요청은 오류로 표시하지 않는다
         if (e instanceof DOMException && e.name === "AbortError") return;
+        onExpired(e);
         setState({
           data: undefined,
           error: e instanceof ApiError ? e.message : "데이터를 불러오지 못했습니다.",
@@ -108,6 +127,7 @@ export function useApiMutation<TArgs extends unknown[], TResult>(
 ) {
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<ApiError | undefined>();
+  const onExpired = useExpiredSessionHandler();
 
   const run = useCallback(
     async (...args: TArgs): Promise<TResult | undefined> => {
@@ -116,6 +136,7 @@ export function useApiMutation<TArgs extends unknown[], TResult>(
       try {
         return await action(...args);
       } catch (e) {
+        onExpired(e);
         setError(
           e instanceof ApiError
             ? e
@@ -126,7 +147,7 @@ export function useApiMutation<TArgs extends unknown[], TResult>(
         setPending(false);
       }
     },
-    [action],
+    [action, onExpired],
   );
 
   return { run, pending, error, clearError: () => setError(undefined) };

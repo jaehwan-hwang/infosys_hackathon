@@ -35,6 +35,12 @@ public class CurrentUserArgumentResolver implements HandlerMethodArgumentResolve
         if (annotation != null && !annotation.required()) {
             return null;
         }
-        throw new HackathonException(ErrorCode.UNAUTHENTICATED);
+
+        // 공개 경로(/api/v1/auth/** 등)는 보안 설정의 인증 실패 응답을 거치지 않고 여기서
+        // 걸러진다. 토큰이 왔는데 만료·위조였다면 그 이유를 그대로 돌려줘야, 화면이
+        // "처음부터 로그인 안 함"과 "만료됨"을 구별해 다시 로그인하라고 안내할 수 있다.
+        Object reason = webRequest.getAttribute(
+                JwtAuthenticationFilter.AUTH_ERROR_ATTRIBUTE, NativeWebRequest.SCOPE_REQUEST);
+        throw new HackathonException(reason instanceof ErrorCode code ? code : ErrorCode.UNAUTHENTICATED);
     }
 }

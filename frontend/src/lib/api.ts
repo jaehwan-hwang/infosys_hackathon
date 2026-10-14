@@ -51,6 +51,16 @@ export class ApiError extends Error {
   get isUnauthenticated(): boolean {
     return this.status === 401;
   }
+
+  /**
+   * 들고 있던 토큰이 만료·위조로 거절된 경우.
+   *
+   * 처음부터 로그인 안 한 경우(ISD022)와 구별한다. 이쪽은 화면상 로그인된 채로
+   * 모든 요청만 막히는 상태라, 다시 로그인하라고 안내해야 빠져나올 수 있다.
+   */
+  get isSessionExpired(): boolean {
+    return this.code === "ISD020-401" || this.code === "ISD021-401";
+  }
 }
 
 interface RequestOptions {

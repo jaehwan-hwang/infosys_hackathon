@@ -77,8 +77,12 @@ public class SecurityConfig {
                         .anyRequest().authenticated())
 
                 .exceptionHandling(ex -> ex
-                        .authenticationEntryPoint((request, response, authException) ->
-                                writeError(response, ErrorCode.UNAUTHENTICATED))
+                        // 토큰이 왔는데 만료·위조였으면 그 이유를, 아예 없었으면 "로그인이 필요합니다"를
+                        .authenticationEntryPoint((request, response, authException) -> {
+                            Object reason = request.getAttribute(JwtAuthenticationFilter.AUTH_ERROR_ATTRIBUTE);
+                            writeError(response,
+                                    reason instanceof ErrorCode code ? code : ErrorCode.UNAUTHENTICATED);
+                        })
                         .accessDeniedHandler((request, response, deniedException) ->
                                 writeError(response, ErrorCode.INSUFFICIENT_PERMISSION)))
 

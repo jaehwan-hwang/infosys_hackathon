@@ -27,6 +27,16 @@ import java.util.List;
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
+    /**
+     * 토큰이 왔는데 쓸 수 없었던 이유(만료·위조)를 담아 두는 요청 속성 이름.
+     *
+     * 여기서는 응답을 끊지 않으므로 이유를 그냥 버리면, 인증이 필요한 경로에서
+     * "로그인이 필요합니다" 하나로 뭉개진다. 그러면 화면은 토큰이 만료된 사람과
+     * 처음부터 로그인 안 한 사람을 구별할 수 없어 다시 로그인하라고 안내할 수 없다.
+     * SecurityConfig의 인증 실패 응답이 이 값을 읽어 그대로 내보낸다.
+     */
+    public static final String AUTH_ERROR_ATTRIBUTE = JwtAuthenticationFilter.class.getName() + ".error";
+
     private static final String HEADER = "Authorization";
     private static final String PREFIX = "Bearer ";
 
@@ -47,6 +57,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 SecurityContextHolder.getContext().setAuthentication(authentication);
             } catch (HackathonException e) {
                 SecurityContextHolder.clearContext();
+                request.setAttribute(AUTH_ERROR_ATTRIBUTE, e.getErrorCode());
             }
         }
 

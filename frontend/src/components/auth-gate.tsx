@@ -37,7 +37,11 @@ export function AuthGate({
         <Alert tone="error" title="로그인을 완료하지 못했습니다">
           {authError}
         </Alert>
-        <Button className="mt-4 w-full" onClick={() => signIn("google")}>
+        {/* 만료돼서 다시 로그인하는 사람은 보던 화면으로 돌려보낸다 */}
+        <Button
+          className="mt-4 w-full"
+          onClick={() => signIn("google", { callbackUrl: pathname })}
+        >
           다시 로그인하기
         </Button>
       </div>
