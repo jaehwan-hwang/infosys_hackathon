@@ -126,7 +126,7 @@ public class GoodsOrder extends BaseTimeEntity {
 
         for (Map.Entry<Integer, Integer> e : this.keycapDesigns.entrySet()) {
             int no = e.getKey();
-            if (no < 1 || no > KeycapOption.DESIGN_COUNT) {
+            if (KeycapDesign.ofNo(no) == null) {
                 return "없는 키캡 도안입니다.";
             }
         }

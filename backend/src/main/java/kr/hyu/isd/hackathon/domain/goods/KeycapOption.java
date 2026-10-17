@@ -14,9 +14,6 @@ public enum KeycapOption {
     ONE(1, "1구", 2_500),
     THREE(3, "3구", 7_000);
 
-    /** 고를 수 있는 도안 수. 프론트의 keycap_1 ~ keycap_5 이미지와 짝이다. */
-    public static final int DESIGN_COUNT = 5;
-
     /** 한 세트에 담기는 키캡 수 */
     private final int slots;
     private final String label;

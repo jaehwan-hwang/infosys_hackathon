@@ -207,8 +207,21 @@ export interface GoodsItemInfo {
   price: number;
   /** 비어 있으면 그냥 수량만 고르는 품목이다 */
   options: GoodsOption[];
-  /** 고를 수 있는 도안 수. 도안이 없으면 0. */
-  designCount: number;
+  /** 고를 수 있는 도안. 도안이 없는 품목은 빈 목록. 이 순서대로 보여 준다. */
+  designs: GoodsDesign[];
+}
+
+/**
+ * 키캡 도안 하나.
+ *
+ * no는 저장에 쓰는 번호라 화면 순서와 다르다 — 도안이 늘면서 옛 번호를 그대로 두고
+ * 새 도안이 뒤 번호를 받았기 때문이다. 화면에는 이름만 보인다.
+ */
+export interface GoodsDesign {
+  no: number;
+  name: string;
+  /** public/goods/ 아래 사진 파일 이름 */
+  image: string;
 }
 
 /**
@@ -231,7 +244,8 @@ export interface AdminGoodsOrder {
     unit: number;
     amount: number;
   }[];
-  keycapDesigns: Record<number, number>;
+  /** 고른 도안과 개수. 도안 목록 순서대로, 고르지 않은 도안은 빠져 있다. */
+  keycapDesigns: { name: string; count: number }[];
   estimatedTotal: number;
   updatedAt: string | null;
 }

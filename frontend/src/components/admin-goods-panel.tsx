@@ -61,7 +61,8 @@ export function GoodsOrdersView({ orders }: { orders: AdminGoodsOrder[] }) {
 /** 발주에 쓰는 총합. 품목은 수량으로, 키캡은 도안별로 센다. */
 function GoodsSummary({ orders }: { orders: AdminGoodsOrder[] }) {
   const byItem = new Map<string, number>();
-  const byDesign = new Map<number, number>();
+  // Map은 처음 넣은 순서를 지킨다. 서버가 도안 목록 순서대로 보내므로 그 순서가 된다.
+  const byDesign = new Map<string, number>();
   let total = 0;
 
   for (const order of orders) {
@@ -70,12 +71,12 @@ function GoodsSummary({ orders }: { orders: AdminGoodsOrder[] }) {
       const key = line.option ? `${line.label} ${line.option}` : line.label;
       byItem.set(key, (byItem.get(key) ?? 0) + line.quantity);
     }
-    for (const [no, count] of Object.entries(order.keycapDesigns)) {
-      byDesign.set(Number(no), (byDesign.get(Number(no)) ?? 0) + count);
+    for (const { name, count } of order.keycapDesigns) {
+      byDesign.set(name, (byDesign.get(name) ?? 0) + count);
     }
   }
 
-  const designs = [...byDesign.entries()].sort((a, b) => a[0] - b[0]);
+  const designs = [...byDesign.entries()];
 
   return (
     <Card>
@@ -101,9 +102,9 @@ function GoodsSummary({ orders }: { orders: AdminGoodsOrder[] }) {
             키캡 도안별
           </p>
           <dl className="mt-2 flex flex-wrap gap-x-6 gap-y-2 text-sm">
-            {designs.map(([no, count]) => (
-              <div key={no} className="flex items-baseline gap-2">
-                <dt className="text-muted">{no}안</dt>
+            {designs.map(([name, count]) => (
+              <div key={name} className="flex items-baseline gap-2">
+                <dt className="text-muted">{name}</dt>
                 <dd className="font-bold tabular-nums">{count}개</dd>
               </div>
             ))}
@@ -115,9 +116,7 @@ function GoodsSummary({ orders }: { orders: AdminGoodsOrder[] }) {
 }
 
 function GoodsOrderCard({ order }: { order: AdminGoodsOrder }) {
-  const designs = Object.entries(order.keycapDesigns)
-    .map(([no, count]) => [Number(no), count] as const)
-    .sort((a, b) => a[0] - b[0]);
+  const designs = order.keycapDesigns;
 
   return (
     <Card>
@@ -177,9 +176,9 @@ function GoodsOrderCard({ order }: { order: AdminGoodsOrder }) {
           <span className="text-xs font-bold uppercase tracking-[0.16em] text-subtle">
             키캡 도안
           </span>
-          {designs.map(([no, count]) => (
-            <span key={no}>
-              <span className="text-muted">{no}안</span>{" "}
+          {designs.map(({ name, count }) => (
+            <span key={name}>
+              <span className="text-muted">{name}</span>{" "}
               <span className="font-bold tabular-nums">{count}개</span>
             </span>
           ))}

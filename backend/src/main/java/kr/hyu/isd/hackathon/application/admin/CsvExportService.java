@@ -5,6 +5,7 @@ import kr.hyu.isd.hackathon.application.result.ResultService;
 import kr.hyu.isd.hackathon.domain.event.HackathonEvent;
 import kr.hyu.isd.hackathon.domain.goods.GoodsItem;
 import kr.hyu.isd.hackathon.domain.goods.GoodsOrder;
+import kr.hyu.isd.hackathon.domain.goods.KeycapDesign;
 import kr.hyu.isd.hackathon.domain.goods.KeycapOption;
 import kr.hyu.isd.hackathon.domain.submission.Submission;
 import kr.hyu.isd.hackathon.domain.team.Team;
@@ -91,7 +92,8 @@ public class CsvExportService {
         for (GoodsItem item : GoodsItem.values()) sb.append(',').append(item.getLabel());
         // 키캡은 수량(세트 수)만으로는 무엇을 몇 개 만들지 알 수 없다. 구성과 도안별 개수를 함께 적는다.
         sb.append(",키캡 구성");
-        for (int no = 1; no <= KeycapOption.DESIGN_COUNT; no++) sb.append(",키캡 ").append(no).append("안");
+        // 도안 열은 이름 그대로 둔다. 바로 앞이 "키캡 구성" 열이라 무엇의 개수인지 헷갈리지 않는다.
+        for (KeycapDesign d : KeycapDesign.values()) sb.append(",").append(d.getLabel());
         sb.append(",예상금액,신청일시\n");
 
         for (GoodsOrder order : goodsOrderRepository.findAllByEventId(event.getId())) {
@@ -105,8 +107,8 @@ public class CsvExportService {
             }
             KeycapOption option = order.keycapOption();
             row.add(option == null ? "" : option.getLabel());
-            for (int no = 1; no <= KeycapOption.DESIGN_COUNT; no++) {
-                row.add(String.valueOf(order.getKeycapDesigns().getOrDefault(no, 0)));
+            for (KeycapDesign d : KeycapDesign.values()) {
+                row.add(String.valueOf(order.getKeycapDesigns().getOrDefault(d.getNo(), 0)));
             }
             row.add(String.valueOf(order.estimatedTotal()));
             row.add(format(order.getUpdatedAt()));

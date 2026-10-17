@@ -2,6 +2,7 @@ package kr.hyu.isd.hackathon.web.admin.dto;
 
 import kr.hyu.isd.hackathon.domain.goods.GoodsItem;
 import kr.hyu.isd.hackathon.domain.goods.GoodsOrder;
+import kr.hyu.isd.hackathon.domain.goods.KeycapDesign;
 import kr.hyu.isd.hackathon.domain.goods.KeycapOption;
 import kr.hyu.isd.hackathon.domain.user.User;
 
@@ -26,8 +27,8 @@ public record GoodsOrderAdminResponse(
         String phone,
         String email,
         List<Line> lines,
-        /** 키캡 도안 번호별 개수. 고르지 않았으면 빈 값. */
-        Map<Integer, Integer> keycapDesigns,
+        /** 고른 키캡 도안과 개수. 도안 목록 순서대로, 고르지 않은 도안은 뺀다. */
+        List<DesignCount> keycapDesigns,
         int estimatedTotal,
         Instant updatedAt
 ) {
@@ -37,6 +38,10 @@ public record GoodsOrderAdminResponse(
      * @param unit   한 개(세트) 값
      */
     public record Line(String label, String option, int quantity, int unit, int amount) {
+    }
+
+    /** 도안 이름까지 실어 보낸다 — 화면이 번호를 이름으로 다시 바꿀 필요가 없도록 */
+    public record DesignCount(String name, int count) {
     }
 
     public static GoodsOrderAdminResponse from(GoodsOrder order) {
@@ -65,8 +70,17 @@ public record GoodsOrderAdminResponse(
                 user.getPhone(),
                 user.getEmail(),
                 lines,
-                Map.copyOf(order.getKeycapDesigns()),
+                designCounts(order.getKeycapDesigns()),
                 order.estimatedTotal(),
                 order.getUpdatedAt());
+    }
+
+    private static List<DesignCount> designCounts(Map<Integer, Integer> picked) {
+        List<DesignCount> result = new ArrayList<>();
+        for (KeycapDesign d : KeycapDesign.values()) {
+            int count = picked.getOrDefault(d.getNo(), 0);
+            if (count > 0) result.add(new DesignCount(d.getLabel(), count));
+        }
+        return result;
     }
 }

@@ -7,7 +7,7 @@ import { Alert, Card, cx } from "@/components/ui";
 import { api } from "@/lib/api";
 import { formatFee } from "@/lib/fee";
 import { useApiMutation, useAuth } from "@/lib/use-auth";
-import type { GoodsItem, GoodsItemInfo, GoodsOption, GoodsOrder } from "@/lib/types";
+import type { GoodsDesign, GoodsItem, GoodsItemInfo, GoodsOption, GoodsOrder } from "@/lib/types";
 
 /**
  * 굿즈 사전 신청.
@@ -154,7 +154,7 @@ export function GoodsOrderForm({
       {keycapInfo && keycapSets > 0 && chosenOption && (
         <div className="mt-6">
           <KeycapDesignPicker
-            designCount={keycapInfo.designCount}
+            catalog={keycapInfo.designs}
             designs={keycapDesigns}
             slots={designSlots}
             picked={designPicked}
@@ -377,14 +377,14 @@ function OptionPicker({
  * 남은 수를 계속 보여 준다 — 저장을 눌러서야 모자란 걸 알게 되면 위로 되돌아가야 한다.
  */
 function KeycapDesignPicker({
-  designCount,
+  catalog,
   designs,
   slots,
   picked,
   onChange,
   onZoom,
 }: {
-  designCount: number;
+  catalog: GoodsDesign[];
   designs: Record<number, number>;
   slots: number;
   picked: number;
@@ -392,7 +392,6 @@ function KeycapDesignPicker({
   onZoom: (image: { src: string; alt: string }) => void;
 }) {
   const left = slots - picked;
-  const numbers = Array.from({ length: designCount }, (_, i) => i + 1);
 
   return (
     <Card>
@@ -413,8 +412,8 @@ function KeycapDesignPicker({
         같은 도안을 여러 개 담아도 됩니다. 사진을 누르면 크게 볼 수 있습니다.
       </p>
 
-      <ul className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-        {numbers.map((no) => {
+      <ul className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+        {catalog.map(({ no, name, image }) => {
           const count = designs[no] ?? 0;
           return (
             <li key={no}>
@@ -424,15 +423,18 @@ function KeycapDesignPicker({
                   count > 0 ? "border-[var(--accent)]" : "border-current/10",
                 )}
               >
+                {/* 파일 이름에 한글과 "!"가 있어 주소로 쓸 때 인코딩한다 */}
                 <GoodsImage
-                  src={`/goods/keycap_${no}.png`}
-                  label={`${no}안`}
+                  src={`/goods/${encodeURIComponent(image)}`}
+                  label={name}
                   onZoom={onZoom}
                 />
-                <p className="mt-2 text-center text-sm font-bold">{no}안</p>
+                <p className="mt-2 break-keep text-center text-sm font-bold leading-snug">
+                  {name}
+                </p>
                 <div className="mt-2">
                   <QuantityStepper
-                    label={`키캡 ${no}안`}
+                    label={`키캡 ${name}`}
                     unit="개"
                     value={count}
                     min={0}
