@@ -25,19 +25,20 @@ const EMPTY: TeamMemberInput = { name: "", studentId: "", email: "", duesPaid: t
 export function TeamMembersEditor({
   team,
   canManage,
-  registrationOpen,
+  editOpen,
   minTeamSize,
   maxTeamSize,
   onChanged,
 }: {
   team: Team;
   canManage: boolean;
-  registrationOpen: boolean;
+  /** 팀원 변경 기간. 신청 마감 뒤에도 행사 시작 전까지 열린다. */
+  editOpen: boolean;
   minTeamSize: number;
   maxTeamSize: number;
   onChanged: () => void;
 }) {
-  const editable = canManage && registrationOpen;
+  const editable = canManage && editOpen;
   const canRemoveMore = team.memberCount > minTeamSize;
   const canAddMore = team.memberCount < maxTeamSize;
 
@@ -71,14 +72,14 @@ export function TeamMembersEditor({
         </div>
       )}
 
-      {canManage && !registrationOpen && (
+      {canManage && !editOpen && (
         <p className="mt-4 text-xs text-subtle">
-          신청 기간이 끝나 팀원을 바꿀 수 없습니다. 바꿔야 하면 운영진에게 문의해 주세요.
+          행사가 시작돼 팀원을 바꿀 수 없습니다. 바꿔야 하면 운영진에게 문의해 주세요.
         </p>
       )}
 
       {/* 팀장이 아니면 왜 버튼이 없는지 알려 준다 */}
-      {!canManage && registrationOpen && (
+      {!canManage && editOpen && (
         <p className="mt-4 text-xs text-subtle">
           팀원 추가·삭제는 팀장({team.members.find((m) => m.role === "LEADER")?.name ?? "팀장"})만
           할 수 있습니다.

@@ -67,6 +67,8 @@ export interface HackathonEvent {
   sparkSubmitDeadline: string | null;
   devSubmitDeadline: string | null;
   registrationOpen: boolean;
+  /** 팀원을 넣고 뺄 수 있는가. 신청 마감 뒤에도 행사 시작 전까지는 열린다. */
+  teamEditOpen: boolean;
   /** 아직 제출 시작 전인가 */
   beforeSubmissionOpen: boolean;
   submissionOpen: Record<Track, boolean>;

@@ -25,6 +25,8 @@ public record EventResponse(
         Instant sparkSubmitDeadline,
         Instant devSubmitDeadline,
         boolean registrationOpen,
+        /** 팀원을 넣고 뺄 수 있는가. 신청 마감 뒤에도 행사 시작 전까지는 열린다. */
+        boolean teamEditOpen,
         /** 아직 제출 시작 전인가. "마감됐습니다"와 "곧 열립니다"를 가른다. */
         boolean beforeSubmissionOpen,
         Map<Track, Boolean> submissionOpen,
@@ -60,6 +62,7 @@ public record EventResponse(
                 event.getSparkSubmitDeadline(),
                 event.getDevSubmitDeadline(),
                 event.isRegistrationOpen(now),
+                event.isTeamEditOpen(now),
                 event.isBeforeSubmissionOpen(now),
                 Map.of(
                         Track.SPARK, event.isSubmissionOpen(Track.SPARK, now),

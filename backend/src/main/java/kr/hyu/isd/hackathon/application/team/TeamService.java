@@ -233,7 +233,7 @@ public class TeamService {
         Team team = findTeamWithMembers(teamId);
         requireLeaderMember(team, userId);
         HackathonEvent event = team.getEvent();
-        requireRegistrationOpen(event);
+        requireTeamEditOpen(event);
 
         validateTeamSize(event, team.memberCount() + 1);
 
@@ -276,7 +276,7 @@ public class TeamService {
         Team team = findTeamWithMembers(teamId);
         requireLeaderMember(team, userId);
         HackathonEvent event = team.getEvent();
-        requireRegistrationOpen(event);
+        requireTeamEditOpen(event);
 
         TeamMember member = team.findMember(teamMemberId);
         if (member == null) {
@@ -343,10 +343,11 @@ public class TeamService {
         return "한양대학교 메일(@%s)만 적을 수 있습니다.".formatted(authProperties.allowedDomains().get(0));
     }
 
-    private void requireRegistrationOpen(HackathonEvent event) {
-        if (!event.isRegistrationOpen(Instant.now())) {
+    /** 팀원 변경 기간. 신청 마감과 따로, 행사 시작 전까지 열린다 (HackathonEvent 참고). */
+    private void requireTeamEditOpen(HackathonEvent event) {
+        if (!event.isTeamEditOpen(Instant.now())) {
             throw new HackathonException(ErrorCode.REGISTRATION_CLOSED,
-                    "신청 기간이 끝나 팀원을 바꿀 수 없습니다. 운영진에게 문의해 주세요.");
+                    "행사가 시작돼 팀원을 바꿀 수 없습니다. 운영진에게 문의해 주세요.");
         }
     }
 

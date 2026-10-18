@@ -152,6 +152,20 @@ public class HackathonEvent extends BaseTimeEntity {
         };
     }
 
+    /**
+     * 지금 팀원을 넣고 뺄 수 있는가.
+     *
+     * 신청 마감과 따로 간다. 마감 뒤에도 사람이 빠지거나 뒤늦게 합류하는 일이 생기는데,
+     * 새 팀 등록은 닫더라도 이미 있는 팀의 구성은 고칠 수 있어야 한다.
+     * 대신 행사가 시작되면(결과물 제출이 열리면) 닫는다 — 행사 중에 팀원이 바뀌면
+     * "자기 팀에는 투표할 수 없다"는 판정이 흔들려, 뺀 사람이 옛 팀에 투표할 수 있게 된다.
+     */
+    public boolean isTeamEditOpen(Instant now) {
+        if (registerStartsAt != null && now.isBefore(registerStartsAt)) return false;
+        if (submitOpensAt != null && !now.isBefore(submitOpensAt)) return false;
+        return true;
+    }
+
     /** 지금 참가 신청을 받고 있는가 */
     public boolean isRegistrationOpen(Instant now) {
         if (registerStartsAt != null && now.isBefore(registerStartsAt)) return false;

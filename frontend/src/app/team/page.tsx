@@ -103,6 +103,7 @@ function TeamContent() {
     <RegisteredView
       team={teamQuery.data}
       registrationOpen={event?.registrationOpen ?? false}
+      teamEditOpen={event?.teamEditOpen ?? false}
       minTeamSize={event?.minTeamSize ?? 1}
       maxTeamSize={event?.maxTeamSize ?? 5}
       onTeamChanged={teamQuery.reload}
@@ -115,12 +116,14 @@ type Tab = "mine" | "merge" | "others";
 function RegisteredView({
   team,
   registrationOpen,
+  teamEditOpen,
   minTeamSize,
   maxTeamSize,
   onTeamChanged,
 }: {
   team: Team;
   registrationOpen: boolean;
+  teamEditOpen: boolean;
   minTeamSize: number;
   maxTeamSize: number;
   onTeamChanged: () => void;
@@ -146,6 +149,7 @@ function RegisteredView({
         <MyTeamTab
           team={team}
           registrationOpen={registrationOpen}
+          teamEditOpen={teamEditOpen}
           minTeamSize={minTeamSize}
           maxTeamSize={maxTeamSize}
           onTeamChanged={onTeamChanged}
@@ -167,12 +171,14 @@ function RegisteredView({
 function MyTeamTab({
   team,
   registrationOpen,
+  teamEditOpen,
   minTeamSize,
   maxTeamSize,
   onTeamChanged,
 }: {
   team: Team;
   registrationOpen: boolean;
+  teamEditOpen: boolean;
   minTeamSize: number;
   maxTeamSize: number;
   onTeamChanged: () => void;
@@ -219,7 +225,7 @@ function MyTeamTab({
             <TeamMembersEditor
               team={team}
               canManage={isLeader}
-              registrationOpen={registrationOpen}
+              editOpen={teamEditOpen}
               minTeamSize={minTeamSize}
               maxTeamSize={maxTeamSize}
               onChanged={onTeamChanged}
