@@ -87,7 +87,9 @@ function TrackPanel({
             <p className="rounded-2xl border-2 border-current/15 px-6 py-7 text-center text-sm leading-relaxed text-muted">
               시상 기간이 아닙니다.
               <br />
-              {TRACK_LABEL[track.track]} 트랙 시상이 끝나면 여기에 수상 팀이 올라옵니다.
+              {track.track === "SUMMIT"
+                ? "Summit은 교수 평가가 끝나면 시상하며, 그때 여기에 수상 팀이 올라옵니다."
+                : `${TRACK_LABEL[track.track]} 트랙 시상이 끝나면 여기에 수상 팀이 올라옵니다.`}
             </p>
           ) : track.teams.length === 0 ? (
             <p className="rounded-2xl border-2 border-current/15 px-6 py-7 text-center text-sm text-muted">

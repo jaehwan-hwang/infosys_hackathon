@@ -47,6 +47,10 @@ app:
     # 구글 없이 테스트 계정으로 들어가는 로그인. 로컬(H2)에서만 열린다 — 운영 DB에서 켜면 기동을 막는다.
     dev-login-enabled: ${DEV_LOGIN_ENABLED:false}
 
+  # Summit 리더보드는 이만큼의 교수가 Summit 팀을 모두 평가해야 열린다 (마지막 평가가 들어오면 저절로 열림)
+  results:
+    summit-professors-required: ${SUMMIT_PROFESSORS_REQUIRED:3}
+
   # 로컬 테스트 데이터의 상황: live(행사 중) / final(행사 끝, 리더보드 공개). 테스트 로그인이 열렸을 때만 쓴다.
   demo:
     scenario: ${DEMO_SCENARIO:live}

@@ -1,5 +1,6 @@
 package kr.hyu.isd.hackathon.application.evaluation;
 
+import kr.hyu.isd.hackathon.application.result.SummitAwardPolicy;
 import kr.hyu.isd.hackathon.application.event.EventService;
 import kr.hyu.isd.hackathon.common.exception.ErrorCode;
 import kr.hyu.isd.hackathon.common.exception.HackathonException;
@@ -25,6 +26,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -54,6 +56,7 @@ public class EvaluationService {
     private final SubmissionRepository submissionRepository;
     private final UserRepository userRepository;
     private final EventService eventService;
+    private final SummitAwardPolicy summitAwardPolicy;
 
     /**
      * 평가를 제출한다. 한 계정은 한 팀을 한 번만 평가할 수 있고, 낸 뒤에는 고칠 수 없다.
@@ -70,7 +73,12 @@ public class EvaluationService {
                 .orElseThrow(() -> new HackathonException(ErrorCode.TEAM_NOT_FOUND));
         Track track = targetTeam.getTrack();
 
-        if (!event.isVotingOpen(track)) {
+        if (evaluatorType == EvaluatorType.PROFESSOR) {
+            // 교수 평가는 참가자 투표와 따로 열린다 (Summit 제출 마감 뒤 ~ Summit 시상 공개 전)
+            if (!event.isProfessorEvaluationOpen(Instant.now())) {
+                throw new HackathonException(ErrorCode.VOTING_CLOSED, professorClosedMessage(event));
+            }
+        } else if (!event.isVotingOpen(track)) {
             throw new HackathonException(ErrorCode.VOTING_CLOSED,
                     "%s 트랙 평가가 아직 열리지 않았습니다.".formatted(track.name()));
         }
@@ -99,6 +107,11 @@ public class EvaluationService {
 
         log.info("평가 제출: evaluator={}, team={}, type={}, total={}",
                 evaluator.getEmail(), targetTeam.getName(), evaluatorType, evaluation.getTotalScore());
+
+        // 정해진 수의 교수가 Summit 팀을 다 평가했으면 그때 Summit 리더보드를 연다
+        if (evaluatorType == EvaluatorType.PROFESSOR) {
+            summitAwardPolicy.publishIfReady(event);
+        }
 
         return EvaluationResponse.from(evaluation);
     }
@@ -151,6 +164,12 @@ public class EvaluationService {
             throw new HackathonException(ErrorCode.TRACK_MISMATCH,
                     "Spark 참가자는 Spark 팀만 평가합니다.");
         }
+    }
+
+    private static String professorClosedMessage(HackathonEvent event) {
+        return event.isResultsPublished(Track.SUMMIT)
+                ? "Summit 시상이 공개되어 교수 평가가 끝났습니다."
+                : "Summit 결과물 제출이 끝나면 교수 평가가 열립니다.";
     }
 
     /**
@@ -215,6 +234,9 @@ public class EvaluationService {
         List<Track> tracks;
         Long myTeamId = null;
         if (evaluatorType == EvaluatorType.PROFESSOR) {
+            if (!event.isProfessorEvaluationOpen(Instant.now())) {
+                throw new HackathonException(ErrorCode.VOTING_CLOSED, professorClosedMessage(event));
+            }
             tracks = List.of(Track.SUMMIT);
         } else {
             Team myTeam = teamRepository.findByEventIdAndMemberUserId(event.getId(), userId)
@@ -224,7 +246,9 @@ public class EvaluationService {
             tracks = votableTracks(myTeam.getTrack());
         }
 
-        List<Track> openTracks = tracks.stream().filter(event::isVotingOpen).toList();
+        List<Track> openTracks = evaluatorType == EvaluatorType.PROFESSOR
+                ? tracks
+                : tracks.stream().filter(event::isVotingOpen).toList();
         if (openTracks.isEmpty()) {
             if (tracks.equals(List.of(Track.SPARK))) {
                 throw new HackathonException(ErrorCode.VOTING_CLOSED,

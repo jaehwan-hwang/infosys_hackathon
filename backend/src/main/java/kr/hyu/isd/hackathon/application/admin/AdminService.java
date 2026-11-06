@@ -1,5 +1,6 @@
 package kr.hyu.isd.hackathon.application.admin;
 
+import kr.hyu.isd.hackathon.application.result.SummitAwardPolicy;
 import kr.hyu.isd.hackathon.application.event.EventService;
 import kr.hyu.isd.hackathon.common.auth.AuthProperties;
 import kr.hyu.isd.hackathon.common.exception.ErrorCode;
@@ -47,6 +48,7 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class AdminService {
 
+    private final SummitAwardPolicy summitAwardPolicy;
     private final HackathonEventRepository eventRepository;
     private final TeamRepository teamRepository;
     private final SubmissionRepository submissionRepository;
@@ -92,6 +94,7 @@ public class AdminService {
 
         long professorVotes = evaluationRepository.countByEventIdAndTrackAndEvaluatorType(
                 eventId, Track.SUMMIT, EvaluatorType.PROFESSOR);
+        SummitAwardPolicy.Progress professorProgress = summitAwardPolicy.progress(event);
 
         return new DashboardResponse(
                 teamRepository.countByEventId(eventId),
@@ -102,7 +105,9 @@ public class AdminService {
                 studentVotesByTrack,
                 professorVotes,
                 resultsPublished,
-                votingOpen
+                votingOpen,
+                professorProgress.completed(),
+                professorProgress.required()
         );
     }
 
@@ -212,10 +217,23 @@ public class AdminService {
         return EventResponse.from(event, eventService.effectiveMaxUploadMb(event));
     }
 
-    /** 시상식에서 트랙 하나의 리더보드를 공개한다. */
+    /**
+     * 시상식에서 트랙 하나의 리더보드를 공개한다.
+     *
+     * Summit은 교수 평가가 다 모여야 연다 — 그 전에는 운영진도 열 수 없다.
+     * 다 모이면 마지막 교수 평가가 들어오는 순간 저절로 열리므로, 보통은 누를 일이 없다.
+     */
     @Transactional
     public EventResponse publishResults(Track track, boolean published) {
         HackathonEvent event = eventService.getActiveEvent();
+        if (track == Track.SUMMIT && published) {
+            SummitAwardPolicy.Progress progress = summitAwardPolicy.progress(event);
+            if (!progress.isReady()) {
+                throw new HackathonException(ErrorCode.BAD_REQUEST,
+                        "교수 %d명이 Summit 팀을 모두 평가해야 공개할 수 있습니다. (지금 %d명 완료)"
+                                .formatted(progress.required(), progress.completed()));
+            }
+        }
         event.setResultsPublished(track, published);
         log.info("리더보드 공개 상태 변경: track={}, published={}", track, published);
         return EventResponse.from(event, eventService.effectiveMaxUploadMb(event));

@@ -182,7 +182,8 @@ function Overview({
         <p className="mt-1 text-sm text-muted">
           1일차에는 Spark만, 2일차에는 Sprint와 Summit만 열립니다. 2일차를 누르면 Spark
           평가는 자동으로 닫힙니다 — 1일차 발표를 보지 않은 사람이 Spark에 투표하는 일을
-          막기 위한 것입니다. 발표가 끝난 뒤 눌러주세요.
+          막기 위한 것입니다. 발표가 끝난 뒤 눌러주세요. 여기서 여닫는 것은 참가자 투표이고,
+          교수 평가는 Summit 제출 마감부터 Summit 시상 공개 전까지 따로 열려 있습니다.
         </p>
         {isSuperAdmin ? (
           <div className="mt-4 flex flex-wrap gap-2">
@@ -240,11 +241,19 @@ function Overview({
                     {data.studentVotesByTrack[track] ?? 0}건
                   </dd>
                 </div>
+                {track === "SUMMIT" && (
+                  <div className="flex justify-between">
+                    <dt className="text-muted">교수 평가 완료</dt>
+                    <dd className="font-semibold tabular-nums">
+                      {data.professorsCompleted} / {data.professorsRequired}명
+                    </dd>
+                  </div>
+                )}
               </dl>
 
               <div className="mt-4 space-y-2 border-t-2 border-current/10 pt-3">
                 <div className="flex items-center justify-between gap-2">
-                  <span className="text-sm text-muted">평가</span>
+                  <span className="text-sm text-muted">참가자 평가</span>
                   {isSuperAdmin ? (
                     <Button
                       size="sm"
@@ -266,7 +275,12 @@ function Overview({
 
                 <div className="flex items-center justify-between gap-2">
                   <span className="text-sm text-muted">리더보드</span>
-                  {isSuperAdmin ? (
+                  {/* Summit은 교수 평가가 다 모여야 열린다. 그 전에는 누를 수 없고, 다 모이면 저절로 열린다 */}
+                  {track === "SUMMIT" &&
+                  !data.resultsPublished.SUMMIT &&
+                  data.professorsCompleted < data.professorsRequired ? (
+                    <Badge tone="neutral">교수 평가 후 자동 공개</Badge>
+                  ) : isSuperAdmin ? (
                     <Button
                       size="sm"
                       variant={data.resultsPublished[track] ? "danger" : "primary"}
@@ -294,9 +308,11 @@ function Overview({
         <h2 className="text-base font-bold">리더보드 공개</h2>
         <p className="mt-1 text-sm leading-relaxed text-muted">
           트랙별 <strong>시상 공개</strong>를 누르면 그 트랙의 수상 팀이{" "}
-          <code>/results</code>에 올라갑니다. 시상 순서대로 하나씩 눌러 주세요 — Spark는
-          1일차, Sprint와 Summit은 2일차입니다. 참가자에게는 <strong>등수와 팀 이름만</strong>{" "}
-          보이고 점수는 공개되지 않습니다. 수상 등수는 Spark 1등, Sprint·Summit 3등까지입니다.
+          <code>/results</code>에 올라갑니다. Spark는 1일차, Sprint는 2일차 시상 때 눌러
+          주세요. <strong>Summit은 교수 {data.professorsRequired}명이 Summit 팀을 모두 평가하면
+          저절로 공개</strong>되며, 그 전에는 열 수 없습니다. 참가자에게는 모든 팀의 등수와 낸
+          자료가 보이고, 점수는 수상 팀의 최종 점수만 보입니다. 수상 등수는 Spark 1등,
+          Sprint·Summit 3등까지입니다.
         </p>
         <p className="mt-2 text-sm text-muted">
           팀에 &ldquo;대상&rdquo; 같은 수상명을 붙이려면 집계 탭에서 확인한 뒤 등록하세요.

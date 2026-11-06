@@ -418,6 +418,10 @@ export interface Dashboard {
   professorVoteCount: number;
   resultsPublished: Record<Track, boolean>;
   votingOpen: Record<Track, boolean>;
+  /** Summit 팀을 모두 평가한 교수 수 */
+  professorsCompleted: number;
+  /** Summit 리더보드가 열리려면 필요한 교수 수. 다 모이면 저절로 열린다. */
+  professorsRequired: number;
 }
 
 /** 운영진이 보는 참가자 한 명 */

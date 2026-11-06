@@ -67,6 +67,18 @@ public interface EvaluationRepository extends JpaRepository<Evaluation, Long> {
                                                 @Param("track") Track track,
                                                 @Param("evaluatorType") EvaluatorType evaluatorType);
 
+    /** 평가자마다 이 트랙에서 평가한 팀 수. [평가자 id, 팀 수] 줄로 돌려준다. */
+    @Query("""
+            select e.evaluator.id, count(distinct e.targetTeam.id) from Evaluation e
+             where e.targetTeam.event.id = :eventId
+               and e.targetTeam.track = :track
+               and e.evaluatorType = :evaluatorType
+             group by e.evaluator.id
+            """)
+    List<Object[]> countTargetsPerEvaluator(@Param("eventId") Long eventId,
+                                           @Param("track") Track track,
+                                           @Param("evaluatorType") EvaluatorType evaluatorType);
+
     @Query("""
             select distinct e from Evaluation e
               left join fetch e.scores s

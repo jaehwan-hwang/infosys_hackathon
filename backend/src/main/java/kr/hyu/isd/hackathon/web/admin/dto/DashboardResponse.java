@@ -11,6 +11,8 @@ import java.util.Map;
  * @param teamsByTrack         트랙별 등록 팀 수
  * @param studentVotesByTrack  트랙별 학생 투표 건수
  * @param professorVoteCount   교수 평가 건수 (Summit)
+ * @param professorsCompleted  Summit 팀을 모두 평가한 교수 수
+ * @param professorsRequired   Summit 리더보드가 열리려면 필요한 교수 수
  */
 public record DashboardResponse(
         long totalTeams,
@@ -21,6 +23,8 @@ public record DashboardResponse(
         Map<Track, Long> studentVotesByTrack,
         long professorVoteCount,
         Map<Track, Boolean> resultsPublished,
-        Map<Track, Boolean> votingOpen
+        Map<Track, Boolean> votingOpen,
+        int professorsCompleted,
+        int professorsRequired
 ) {
 }

@@ -153,6 +153,19 @@ public class HackathonEvent extends BaseTimeEntity {
     }
 
     /**
+     * 지금 교수가 Summit을 평가할 수 있는가.
+     *
+     * 참가자 투표(summitVotingOpen)와 따로 간다. 참가자는 2일차 발표 날 투표하고 닫히지만,
+     * 교수님들은 일주일쯤 뒤에 평가를 마친다. 그래서 교수 평가는 Summit 결과물 제출이 끝난
+     * 뒤(또는 운영진이 Summit 평가를 연 뒤)부터 Summit 시상이 공개될 때까지 열려 있다.
+     */
+    public boolean isProfessorEvaluationOpen(Instant now) {
+        if (isResultsPublished(Track.SUMMIT)) return false;
+        if (summitVotingOpen) return true;
+        return devSubmitDeadline != null && !now.isBefore(devSubmitDeadline);
+    }
+
+    /**
      * 지금 팀원을 넣고 뺄 수 있는가.
      *
      * 신청 마감과 따로 간다. 마감 뒤에도 사람이 빠지거나 뒤늦게 합류하는 일이 생기는데,
