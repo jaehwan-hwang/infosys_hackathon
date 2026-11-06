@@ -4,6 +4,7 @@ import { useState } from "react";
 import { formatScore } from "@/lib/format";
 import { TRACK_LABEL, TRACK_TAGLINE } from "@/lib/track-rules";
 import type { PublicTeamResult, PublicTrackResult, Track } from "@/lib/types";
+import { MaterialLinks } from "@/components/material-links";
 import { cx, trackStyle } from "@/components/ui";
 
 /**
@@ -85,22 +86,17 @@ function TrackPanel({
               이 트랙에는 집계된 팀이 없습니다.
             </p>
           ) : (
-            <>
-              <ul className="space-y-2.5">
-                {track.teams.map((team) => (
-                  <li key={team.teamId}>
-                    {team.awarded ? (
-                      <WinnerRow team={team} track={track.track} />
-                    ) : (
-                      <PlainRow team={team} />
-                    )}
-                  </li>
-                ))}
-              </ul>
-              {track.formula && (
-                <p className="mt-3 text-right text-xs text-subtle">{track.formula}</p>
-              )}
-            </>
+            <ul className="space-y-2.5">
+              {track.teams.map((team) => (
+                <li key={team.teamId}>
+                  {team.awarded ? (
+                    <WinnerRow team={team} track={track.track} />
+                  ) : (
+                    <PlainRow team={team} />
+                  )}
+                </li>
+              ))}
+            </ul>
           )}
         </div>
       )}
@@ -130,16 +126,21 @@ function Chevron({ open }: { open: boolean }) {
   );
 }
 
+/**
+ * 수상 팀 한 줄: 메달 · 팀명 · 낸 자료 · 최종 점수.
+ *
+ * 점수는 최종 점수 하나만 둔다 — 교수·참가자 점수를 섞는 방식은 홈 화면에 적혀 있다.
+ * 낸 자료는 팀명과 점수 사이 가운데에 둔다. Summit은 최대 여덟 개까지 나오므로 버튼을
+ * 작게 하고 두 줄까지 감싼다. 좁은 화면에서는 자료 줄을 맨 아래로 내린다.
+ */
 function WinnerRow({ team: winner, track }: { team: PublicTeamResult; track: Track }) {
   const first = winner.rank === 1;
-  // Summit만 교수 평가가 섞이므로, 최종 점수가 어떻게 나왔는지 내역을 함께 보여준다.
-  // 교수 평가가 없는 트랙에서는 서버가 이 칸을 아예 빼고 내려보내므로 undefined도 걸러낸다.
-  const breakdown = typeof winner.professorAverage === "number";
 
   return (
     <div
       className={cx(
-        "flex flex-wrap items-center gap-x-4 gap-y-3 rounded-2xl border-2 bg-[var(--bg)] px-5 py-4",
+        "grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-4 gap-y-3 rounded-2xl border-2 bg-[var(--bg)] px-5 py-4",
+        "md:grid-cols-[auto_minmax(0,12rem)_minmax(0,1fr)_auto]",
         first ? cx("border-current/15", trackStyle(track).ring) : "border-current/15",
       )}
     >
@@ -148,8 +149,9 @@ function WinnerRow({ team: winner, track }: { team: PublicTeamResult; track: Tra
       <div className="min-w-0">
         <p
           className={cx(
-            "font-display break-all tracking-tight",
-            first ? "text-2xl" : "text-xl",
+            // 한글 팀명이 글자 중간에서 잘리지 않게 단어 단위로 감싸고, 아주 긴 이름만 쪼갠다
+            "font-display break-keep tracking-tight [overflow-wrap:anywhere]",
+            first ? "text-xl sm:text-2xl" : "text-lg sm:text-xl",
           )}
         >
           {winner.teamName}
@@ -157,32 +159,31 @@ function WinnerRow({ team: winner, track }: { team: PublicTeamResult; track: Tra
         {winner.projectName && (
           <p className="mt-0.5 text-sm text-muted">{winner.projectName}</p>
         )}
+        {winner.awardName && (
+          <span className="mt-1.5 inline-block rounded-full border-2 border-current/20 px-3 py-1 text-xs font-bold">
+            {winner.awardName}
+          </span>
+        )}
       </div>
 
-      {winner.awardName && (
-        <span className="rounded-full border-2 border-current/20 px-3 py-1 text-xs font-bold">
-          {winner.awardName}
-        </span>
-      )}
+      <div className="order-last col-span-3 empty:hidden md:order-none md:col-span-1 md:empty:block">
+        {winner.materials && (
+          <MaterialLinks links={winner.materials} compact className="justify-center" />
+        )}
+      </div>
 
-      <div className="ml-auto text-right">
+      <div className="text-right">
         <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-subtle">
           최종 점수
         </p>
         <p
           className={cx(
             "font-display tabular-nums tracking-tight",
-            first ? "text-3xl" : "text-2xl",
+            first ? "text-2xl sm:text-3xl" : "text-xl sm:text-2xl",
           )}
         >
           {formatScore(winner.finalScore)}
         </p>
-        {breakdown && (
-          <p className="mt-0.5 text-xs tabular-nums text-muted">
-            교수 {formatScore(winner.professorAverage)} · 참가자{" "}
-            {formatScore(winner.studentAverage)}
-          </p>
-        )}
       </div>
     </div>
   );

@@ -307,16 +307,11 @@ export interface UploadResult {
   sizeBytes: number;
 }
 
-export interface EvaluationTarget {
-  teamId: number;
-  teamName: string;
-  track: Track;
-  projectName: string | null;
-  summary: string | null;
-  /**
-   * 팀이 낸 자료. 링크든 올린 파일이든 열 수 있는 주소이고, 내지 않았으면 null이다.
-   * 트랙마다 필수 항목이 달라 팀마다 채워진 칸이 다르다.
-   */
+/**
+ * 팀이 낸 자료. 링크든 올린 파일이든 열 수 있는 주소이고, 내지 않았으면 null이다.
+ * 트랙마다 필수 항목이 달라 팀마다 채워진 칸이 다르다.
+ */
+export interface SubmissionLinks {
   deployUrl: string | null;
   demoUrl: string | null;
   sourceCodeUrl: string | null;
@@ -325,6 +320,14 @@ export interface EvaluationTarget {
   planFileUrl: string | null;
   architectureFileUrl: string | null;
   techSpecFileUrl: string | null;
+}
+
+export interface EvaluationTarget extends SubmissionLinks {
+  teamId: number;
+  teamName: string;
+  track: Track;
+  projectName: string | null;
+  summary: string | null;
   /** 이미 평가한 팀이면 true */
   evaluated: boolean;
 }
@@ -392,9 +395,8 @@ export interface PublicTeamResult {
   awarded: boolean;
   /** 수상 팀만 값이 온다 */
   finalScore: number | null;
-  studentAverage: number | null;
-  /** 교수 평가가 있는 Summit의 수상 팀만 값이 온다 */
-  professorAverage: number | null;
+  /** 수상 팀이 낸 자료. 수상 밖 팀이나 아무것도 내지 않은 팀은 null */
+  materials: SubmissionLinks | null;
 }
 
 /** 리더보드의 트랙 한 칸. 공개 전에는 published=false에 winners가 비어 있다. */
@@ -403,8 +405,6 @@ export interface PublicTrackResult {
   published: boolean;
   /** 이 트랙이 시상하는 등수 (Spark 1, Sprint·Summit 3) */
   awardCount: number;
-  /** 적용된 산식. 공개 전에는 null이다. */
-  formula: string | null;
   teams: PublicTeamResult[];
 }
 

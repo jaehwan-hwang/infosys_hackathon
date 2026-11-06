@@ -14,6 +14,7 @@ import type {
   Track,
 } from "@/lib/types";
 import { Button, ScoreSelector, TextArea } from "./form";
+import { MaterialLinks, materialsOf } from "./material-links";
 import {
   Alert,
   Badge,
@@ -277,11 +278,7 @@ function ScoreForm({
         </div>
 
         {materialsOf(target).length > 0 && (
-          <div className="mt-4 flex flex-wrap gap-2 border-t-2 border-current/10 pt-4">
-            {materialsOf(target).map((m) => (
-              <ExternalLink key={m.label} href={m.url} label={m.label} />
-            ))}
-          </div>
+          <MaterialLinks links={target} className="mt-4 border-t-2 border-current/10 pt-4" />
         )}
       </Card>
 
@@ -389,43 +386,5 @@ function CriterionRow({
         />
       </div>
     </Card>
-  );
-}
-
-/**
- * 팀이 낸 자료를 버튼으로 늘어놓는다. 낸 것만 — 비어 있는 항목은 버튼을 띄우지 않는다.
- *
- * 트랙마다 필수 제출물이 달라 팀마다 낸 것이 다르다. 평가자는 발표를 보며 결과물을 직접
- * 열어 봐야 하므로, 어느 트랙이든 낸 것은 전부 연다. 순서는 먼저 열어 볼 만한 것부터.
- * 소스코드가 GitHub 주소면 "GitHub"이라고 적어, 저장소로 간다는 걸 바로 알게 한다.
- */
-function materialsOf(t: EvaluationTarget): { label: string; url: string }[] {
-  const items: { label: string; url: string | null }[] = [
-    { label: "서비스 바로가기", url: t.deployUrl },
-    { label: "시연 영상", url: t.demoUrl },
-    { label: "프로토타입", url: t.prototypeUrl },
-    {
-      label: t.sourceCodeUrl && /github\.com/i.test(t.sourceCodeUrl) ? "GitHub" : "소스코드",
-      url: t.sourceCodeUrl,
-    },
-    { label: "발표 자료", url: t.deckFileUrl },
-    { label: "서비스 기획서", url: t.planFileUrl },
-    { label: "시스템 아키텍처", url: t.architectureFileUrl },
-    { label: "기술 명세서", url: t.techSpecFileUrl },
-  ];
-  return items.filter((m): m is { label: string; url: string } => Boolean(m.url?.trim()));
-}
-
-function ExternalLink({ href, label }: { href: string; label: string }) {
-  return (
-    <a
-      href={href}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="inline-flex h-9 items-center gap-1.5 rounded-full border-2 border-current/15 px-4 text-xs font-bold hover:bg-current/5"
-    >
-      {label}
-      <span aria-hidden="true">↗</span>
-    </a>
   );
 }

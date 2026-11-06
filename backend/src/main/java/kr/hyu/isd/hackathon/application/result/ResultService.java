@@ -85,19 +85,21 @@ public class ResultService {
                 .map(r -> {
                     // 동점으로 공동 수상이 나오면 그 등수까지는 모두 수상으로 본다
                     boolean awarded = r.rank() <= track.getAwardCount();
+                    // 수상 팀은 낸 자료를 리더보드에서 바로 열어 볼 수 있게 함께 보낸다
+                    PublicTeamResultResponse.Materials materials = awarded
+                            ? submissionRepository.findByTeamId(r.teamId())
+                                    .map(PublicTeamResultResponse.Materials::from).orElse(null)
+                            : null;
                     return new PublicTeamResultResponse(
                             r.rank(), r.teamId(), r.teamName(),
                             awarded ? r.projectName() : null,
                             r.awardName(),
                             awarded,
                             awarded ? r.finalScore() : null,
-                            awarded ? r.studentAverage() : null,
-                            // 교수 평가가 없는 트랙에서 0.00을 보여주면 0점을 받은 것처럼 읽힌다
-                            awarded && track == Track.SUMMIT ? r.professorAverage() : null);
+                            materials);
                 })
                 .toList();
-        return new PublicTrackResultResponse(
-                track, true, track.getAwardCount(), full.formula(), teams);
+        return new PublicTrackResultResponse(track, true, track.getAwardCount(), teams);
     }
 
     /**
