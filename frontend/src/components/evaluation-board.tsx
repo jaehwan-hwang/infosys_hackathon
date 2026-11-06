@@ -172,6 +172,8 @@ function ScoreForm({
   onSubmitted: () => void;
 }) {
   const { token } = useAuth();
+  // 코멘트는 교수만 남긴다. 참가자 화면에는 칸 자체가 없다.
+  const isProfessor = evaluatorType === "PROFESSOR";
 
   const criteriaQuery = useApiQuery(
     token ? () => api.getEvaluationCriteria(token, target.track, evaluatorType) : null,
@@ -196,7 +198,7 @@ function ScoreForm({
     return api.submitEvaluation(token, evaluatorType, {
       targetTeamId: target.teamId,
       scores: entries,
-      comment: comment.trim() || undefined,
+      comment: isProfessor ? comment.trim() || undefined : undefined,
     });
   });
 
@@ -212,14 +214,19 @@ function ScoreForm({
   const allScored =
     criteria.length > 0 && criteria.every((c) => scores[c.criterionId] !== undefined);
 
-  /** 제출 전에 총점을 미리 계산해 보여준다. 서버 계산식과 같다. */
+  /**
+   * 제출 전에 총점을 미리 계산해 보여준다. 서버 계산식과 같다 —
+   * 가중치 합으로 나누므로 배점 합이 100이 아닌 트랙도 100점 만점이 된다.
+   */
   const previewTotal = useMemo(() => {
     if (!allScored) return null;
-    const total = criteria.reduce((sum, c) => {
+    const weightSum = criteria.reduce((sum, c) => sum + c.weight, 0);
+    if (weightSum === 0) return null;
+    const weighted = criteria.reduce((sum, c) => {
       const score = scores[c.criterionId] ?? 0;
       return sum + (score / c.maxScore) * c.weight;
     }, 0);
-    return total * 100;
+    return (weighted / weightSum) * 100;
   }, [criteria, scores, allScored]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -293,22 +300,24 @@ function ScoreForm({
         ))}
       </div>
 
-      <Card className="mt-4">
-        <label htmlFor="eval-comment" className="text-sm font-semibold">
-          코멘트 <span className="font-normal text-subtle">(선택)</span>
-        </label>
-        <p className="mt-1 text-xs text-muted">
-          팀에게 전달하고 싶은 의견이 있다면 적어주세요.
-        </p>
-        <TextArea
-          id="eval-comment"
-          value={comment}
-          onChange={(e) => setComment(e.target.value)}
-          maxLength={1000}
-          disabled={locked}
-          className="mt-3"
-        />
-      </Card>
+      {isProfessor && (
+        <Card className="mt-4">
+          <label htmlFor="eval-comment" className="text-sm font-semibold">
+            코멘트 <span className="font-normal text-subtle">(선택)</span>
+          </label>
+          <p className="mt-1 text-xs text-muted">
+            팀에게 전달하고 싶은 의견이 있다면 적어주세요.
+          </p>
+          <TextArea
+            id="eval-comment"
+            value={comment}
+            onChange={(e) => setComment(e.target.value)}
+            maxLength={1000}
+            disabled={locked}
+            className="mt-3"
+          />
+        </Card>
+      )}
 
       {error && (
         <div className="mt-4">
@@ -371,8 +380,9 @@ function CriterionRow({
             </p>
           )}
         </div>
+        {/* 가중치는 평가표의 배점을 100으로 나눈 값이라, 100을 곱하면 배점이 된다 */}
         <span className="shrink-0 text-xs text-subtle">
-          가중치 {Math.round(criterion.weight * 100)}% · {criterion.maxScore}점 만점
+          배점 {Math.round(criterion.weight * 100)} · 1~{criterion.maxScore}점
         </span>
       </div>
 

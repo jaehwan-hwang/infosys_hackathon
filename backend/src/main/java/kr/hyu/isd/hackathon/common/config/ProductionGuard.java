@@ -29,10 +29,23 @@ public class ProductionGuard {
     @Value("${spring.datasource.url}")
     private String datasourceUrl;
 
+    @Value("${app.auth.dev-login-enabled:false}")
+    private boolean devLoginRequested;
+
     @EventListener(ApplicationReadyEvent.class)
     public void check() {
         boolean localDatabase = datasourceUrl.startsWith("jdbc:h2:");
         boolean defaultSecret = DEV_JWT_SECRET.equals(authProperties.jwtSecret());
+
+        // 테스트 로그인은 이메일만으로 아무 계정이나 된다. 운영 DB에서 켜졌다면 실수이므로 띄우지 않는다.
+        if (devLoginRequested && !localDatabase) {
+            throw new IllegalStateException("""
+                    DEV_LOGIN_ENABLED가 켜진 채 운영 DB에 붙으려 합니다.
+                    테스트 로그인은 로컬(H2)에서만 쓰는 기능입니다. 환경변수에서 빼고 다시 띄워 주세요.""");
+        }
+        if (devLoginRequested) {
+            log.warn("테스트 로그인이 켜져 있습니다(로컬 전용). 구글 없이 이메일로 로그인할 수 있습니다.");
+        }
 
         if (defaultSecret && !localDatabase) {
             throw new IllegalStateException("""

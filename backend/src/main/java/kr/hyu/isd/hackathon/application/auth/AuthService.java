@@ -53,6 +53,22 @@ public class AuthService {
         // 조장이 미리 입력해 둔 팀원 자리가 있으면 이 계정과 연결한다.
         linkPendingTeamMembership(user);
 
+        return issueLogin(user);
+    }
+
+    /**
+     * 구글 없이 이메일로 로그인한다 — 로컬 테스트 전용. 열려 있는지는 컨트롤러가 DevLoginGate로 본다.
+     * 미리 만들어 둔 테스트 계정만 받는다. 처음 보는 이메일로 계정을 만들지는 않는다.
+     */
+    @Transactional
+    public LoginResponse loginForTesting(String email) {
+        User user = userRepository.findByEmail(email.trim().toLowerCase())
+                .orElseThrow(() -> new HackathonException(ErrorCode.USER_NOT_FOUND,
+                        "테스트 계정이 아닙니다: " + email));
+        return issueLogin(user);
+    }
+
+    private LoginResponse issueLogin(User user) {
         String accessToken = jwtProvider.issue(user);
         return new LoginResponse(
                 accessToken,

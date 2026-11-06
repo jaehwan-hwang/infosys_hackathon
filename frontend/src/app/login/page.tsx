@@ -59,11 +59,47 @@ function LoginContent() {
           Google 계정으로 계속하기
         </Button>
 
+        {DEV_LOGIN && <DevLoginButtons callbackUrl={callbackUrl} />}
+
         <p className="mt-5 text-xs leading-relaxed text-subtle">
           로그인 시 이름과 이메일이 수집되며, 최초 1회 학번을 추가로 입력받습니다. 수집된
           정보는 해커톤 운영 목적으로만 사용되고 행사 종료 후 파기됩니다.
         </p>
       </Card>
+    </div>
+  );
+}
+
+/**
+ * 테스트 로그인 — 로컬 전용. NEXT_PUBLIC_DEV_LOGIN=true일 때만 보인다.
+ * 평가 화면과 리더보드를 학생·교수·운영진 눈으로 번갈아 보려고 둔다.
+ * 계정은 백엔드가 로컬에서만 채우는 가짜 데이터(DemoDataSeeder)에 들어 있다.
+ */
+const DEV_LOGIN = process.env.NEXT_PUBLIC_DEV_LOGIN === "true";
+
+const TEST_ACCOUNTS = [
+  { email: "test-student@hanyang.ac.kr", label: "테스트 학생", note: "Sprint 팀 소속 · 참가자 투표" },
+  { email: "test-professor@hanyang.ac.kr", label: "테스트 교수", note: "Summit 교수 평가 · 코멘트" },
+  { email: "test-admin@hanyang.ac.kr", label: "테스트 운영진", note: "평가 열기·닫기 · 리더보드 공개" },
+];
+
+function DevLoginButtons({ callbackUrl }: { callbackUrl: string }) {
+  return (
+    <div className="mt-6 rounded-2xl border-2 border-dashed border-amber-500/60 p-4">
+      <p className="text-xs font-bold text-amber-600">테스트 로그인 (로컬 전용)</p>
+      <div className="mt-3 grid gap-2">
+        {TEST_ACCOUNTS.map((a) => (
+          <Button
+            key={a.email}
+            variant="secondary"
+            className="h-auto flex-col items-start py-2.5"
+            onClick={() => signIn("dev-login", { email: a.email, callbackUrl })}
+          >
+            <span className="font-semibold">{a.label}</span>
+            <span className="text-xs font-normal text-muted">{a.note}</span>
+          </Button>
+        ))}
+      </div>
     </div>
   );
 }

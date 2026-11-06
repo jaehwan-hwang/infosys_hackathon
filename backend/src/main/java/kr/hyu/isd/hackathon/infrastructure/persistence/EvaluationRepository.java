@@ -41,6 +41,10 @@ public interface EvaluationRepository extends JpaRepository<Evaluation, Long> {
             """)
     List<Object[]> aggregateByEventId(@Param("eventId") Long eventId);
 
+    /** 이 행사에 들어온 평가가 하나라도 있는가 (평가 항목을 갈아끼워도 되는지 판단할 때 쓴다) */
+    @Query("select count(e) > 0 from Evaluation e where e.targetTeam.event.id = :eventId")
+    boolean existsByEventId(@Param("eventId") Long eventId);
+
     @Query("""
             select count(e) from Evaluation e
              where e.targetTeam.event.id = :eventId

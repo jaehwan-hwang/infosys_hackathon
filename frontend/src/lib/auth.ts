@@ -1,4 +1,5 @@
 import NextAuth from "next-auth";
+import Credentials from "next-auth/providers/credentials";
 import Google from "next-auth/providers/google";
 import type { Role } from "./types";
 
@@ -36,6 +37,20 @@ const REFRESH_TIMEOUT_MS = 4000;
  */
 const LOGIN_TIMEOUT_MS = 25000;
 
+/** 백엔드 /auth/google · /auth/dev-login 응답 */
+interface BackendLogin {
+  accessToken: string;
+  expiresIn: number;
+  user: {
+    userId: number;
+    name: string | null;
+    role: Role;
+    studentId: string | null;
+    profileCompleted: boolean;
+    superAdmin: boolean;
+  };
+}
+
 /** 정해진 시간 안에 답이 없으면 포기하는 fetch */
 function fetchWithTimeout(url: string, ms: number, init?: RequestInit) {
   return fetch(url, { ...init, signal: AbortSignal.timeout(ms) });
@@ -54,8 +69,36 @@ function fetchWithTimeout(url: string, ms: number, init?: RequestInit) {
  * 프론트 검사는 사용자에게 이유를 빨리 알려주기 위한 것이고,
  * 실제 차단은 백엔드가 담당한다.
  */
+/**
+ * 테스트 로그인 — 로컬 전용.
+ *
+ * 구글 없이 이메일 하나로 미리 만들어 둔 테스트 계정(학생·교수·운영진)에 들어간다.
+ * DEV_LOGIN=true일 때만 붙고, 그래도 백엔드가 로컬 DB일 때만 받아 준다(DevLoginGate).
+ * 운영 배포에는 이 환경변수가 없으므로 이 방식 자체가 존재하지 않는다.
+ */
+const DEV_LOGIN = process.env.DEV_LOGIN === "true";
+
+const devLogin = Credentials({
+  id: "dev-login",
+  name: "테스트 로그인",
+  credentials: { email: {} },
+  async authorize(credentials) {
+    const email = String(credentials?.email ?? "");
+    const res = await fetch(`${API_BASE_URL}/api/v1/auth/dev-login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email }),
+    });
+    if (!res.ok) return null;
+    const data = (await res.json()).data;
+    // 백엔드 응답을 그대로 실어 jwt 콜백에서 구글 로그인과 같은 자리에 채운다
+    return { id: String(data.user.userId), email, name: data.user.name, backend: data };
+  },
+});
+
 export const { handlers, auth, signIn, signOut } = NextAuth({
   providers: [
+    ...(DEV_LOGIN ? [devLogin] : []),
     Google({
       authorization: {
         params: {
@@ -73,7 +116,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   },
 
   callbacks: {
-    async signIn({ profile }) {
+    async signIn({ profile, account }) {
+      if (account?.provider === "dev-login") return DEV_LOGIN;
       const email = profile?.email;
       if (!email?.toLowerCase().endsWith(`@${ALLOWED_DOMAIN}`)) {
         // 문자열을 반환하면 해당 경로로 리디렉트된다
@@ -82,7 +126,22 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       return true;
     },
 
-    async jwt({ token, account, trigger }) {
+    async jwt({ token, account, trigger, user }) {
+      if (account?.provider === "dev-login" && user) {
+        const data = (user as unknown as { backend: BackendLogin }).backend;
+        token.accessToken = data.accessToken;
+        token.accessTokenExpiresAt = Date.now() + data.expiresIn * 1000;
+        token.userId = data.user.userId;
+        token.name = data.user.name;
+        token.role = data.user.role;
+        token.studentId = data.user.studentId;
+        token.profileCompleted = data.user.profileCompleted;
+        token.superAdmin = data.user.superAdmin;
+        token.syncedAt = Date.now();
+        token.authError = undefined;
+        return token;
+      }
+
       // 최초 로그인 시에만 account가 채워진다. 이때 백엔드 토큰으로 교환한다.
       if (account?.id_token) {
         try {

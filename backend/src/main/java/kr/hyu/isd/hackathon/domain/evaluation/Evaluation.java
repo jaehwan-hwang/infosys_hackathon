@@ -86,17 +86,25 @@ public class Evaluation extends BaseTimeEntity {
     }
 
     /**
-     * 가중 환산 총점 = Σ (점수 / 항목 만점 × 항목 가중치) × 100
-     * 항목별 만점이 달라도 100점 만점으로 정규화된다.
+     * 가중 환산 총점 = Σ (점수 / 항목 만점 × 항목 가중치) ÷ Σ 가중치 × 100
+     *
+     * 가중치 합으로 나누므로 합이 1이 아니어도 늘 100점 만점이다. 평가표의 배점 합이
+     * 100이 아닌 트랙(스프린트·써밋은 110)이 있어서다 — 그대로 더하면 만점이 110이 되어
+     * 트랙끼리, 그리고 써밋의 참가자·교수 몫끼리 비교가 어긋난다.
+     * 항목별 만점이 달라도 비율로 바꿔 더하므로 상관없다.
      */
     private static BigDecimal calculateWeightedTotal(List<EvaluationScore> scores) {
-        BigDecimal total = BigDecimal.ZERO;
+        BigDecimal weighted = BigDecimal.ZERO;
+        BigDecimal weightSum = BigDecimal.ZERO;
         for (EvaluationScore score : scores) {
             Criterion criterion = score.getCriterion();
             BigDecimal ratio = BigDecimal.valueOf(score.getScore())
                     .divide(BigDecimal.valueOf(criterion.getMaxScore()), 6, RoundingMode.HALF_UP);
-            total = total.add(ratio.multiply(criterion.getWeight()));
+            weighted = weighted.add(ratio.multiply(criterion.getWeight()));
+            weightSum = weightSum.add(criterion.getWeight());
         }
-        return total.multiply(BigDecimal.valueOf(100)).setScale(2, RoundingMode.HALF_UP);
+        if (weightSum.signum() == 0) return BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP);
+        return weighted.multiply(BigDecimal.valueOf(100))
+                .divide(weightSum, 2, RoundingMode.HALF_UP);
     }
 }

@@ -4,6 +4,7 @@ import kr.hyu.isd.hackathon.application.event.EventService;
 import kr.hyu.isd.hackathon.common.exception.ErrorCode;
 import kr.hyu.isd.hackathon.common.exception.HackathonException;
 import kr.hyu.isd.hackathon.domain.evaluation.Criterion;
+import kr.hyu.isd.hackathon.domain.evaluation.EvaluationRubric;
 import kr.hyu.isd.hackathon.domain.evaluation.Evaluation;
 import kr.hyu.isd.hackathon.domain.evaluation.EvaluationScore;
 import kr.hyu.isd.hackathon.domain.evaluation.EvaluatorType;
@@ -91,7 +92,10 @@ public class EvaluationService {
         }
 
         Evaluation evaluation = saveNewEvaluation(evaluator, targetTeam, evaluatorType);
-        evaluation.replaceScores(buildScores(evaluation, criteria, request.scores()), request.comment());
+        // 코멘트는 교수만 남긴다. 참가자끼리 남기는 글은 받지 않는다 — 화면에도 칸이 없지만,
+        // 요청에 실려 오더라도 저장하지 않는다.
+        String comment = evaluatorType == EvaluatorType.PROFESSOR ? trimToNull(request.comment()) : null;
+        evaluation.replaceScores(buildScores(evaluation, criteria, request.scores()), comment);
 
         log.info("평가 제출: evaluator={}, team={}, type={}, total={}",
                 evaluator.getEmail(), targetTeam.getName(), evaluatorType, evaluation.getTotalScore());
@@ -167,9 +171,11 @@ public class EvaluationService {
                 throw new HackathonException(ErrorCode.CRITERIA_MISMATCH,
                         "같은 항목에 점수가 두 번 들어왔습니다: " + criterion.getName());
             }
-            if (entry.score() < 0 || entry.score() > criterion.getMaxScore()) {
+            // 평가표는 1~5점 중에서 고르게 되어 있다. 0점은 "안 매김"과 구별되지 않아 받지 않는다.
+            if (entry.score() < EvaluationRubric.MIN_SCORE || entry.score() > criterion.getMaxScore()) {
                 throw new HackathonException(ErrorCode.INVALID_SCORE,
-                        "%s 항목은 0~%d점입니다.".formatted(criterion.getName(), criterion.getMaxScore()));
+                        "%s 항목은 %d~%d점입니다.".formatted(
+                                criterion.getName(), EvaluationRubric.MIN_SCORE, criterion.getMaxScore()));
             }
             scores.add(EvaluationScore.create(evaluation, criterion, entry.score()));
         }
@@ -259,5 +265,11 @@ public class EvaluationService {
                 .stream()
                 .map(CriterionResponse::from)
                 .toList();
+    }
+
+    private static String trimToNull(String value) {
+        if (value == null) return null;
+        String trimmed = value.trim();
+        return trimmed.isEmpty() ? null : trimmed;
     }
 }

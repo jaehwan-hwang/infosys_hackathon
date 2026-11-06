@@ -196,7 +196,8 @@ export function ScoreSelector({
   /** 이미 제출한 평가처럼 더는 고칠 수 없는 경우 */
   readOnly?: boolean;
 }) {
-  const options = Array.from({ length: maxScore + 1 }, (_, i) => i);
+  // 평가표는 1점부터 고른다. 0점은 "안 매김"과 구별되지 않아 두지 않는다.
+  const options = Array.from({ length: maxScore }, (_, i) => i + 1);
 
   return (
     <div role="radiogroup" aria-label={`${name} 점수`} className="flex flex-wrap gap-1.5">
