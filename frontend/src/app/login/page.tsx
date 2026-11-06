@@ -78,7 +78,9 @@ function LoginContent() {
 const DEV_LOGIN = process.env.NEXT_PUBLIC_DEV_LOGIN === "true";
 
 const TEST_ACCOUNTS = [
-  { email: "test-student@hanyang.ac.kr", label: "테스트 학생", note: "Sprint 팀 소속 · 참가자 투표" },
+  { email: "test-spark@hanyang.ac.kr", label: "테스트 학생 Spark", note: "아이디어공장 팀장 · 제출 · 참가자 투표" },
+  { email: "test-student@hanyang.ac.kr", label: "테스트 학생 Sprint", note: "버그없는팀 팀장 · 제출 · 참가자 투표" },
+  { email: "test-summit@hanyang.ac.kr", label: "테스트 학생 Summit", note: "배포완료 팀장 · 제출 · 참가자 투표" },
   { email: "test-professor@hanyang.ac.kr", label: "테스트 교수", note: "Summit 교수 평가 · 코멘트" },
   { email: "test-admin@hanyang.ac.kr", label: "테스트 운영진", note: "평가 열기·닫기 · 리더보드 공개" },
 ];

@@ -33,6 +33,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 /**
  * 로컬 테스트용 가짜 데이터. 테스트 로그인(DevLoginGate)이 열려 있을 때만 돈다 — 운영에서는 돌지 않는다.
@@ -50,7 +51,10 @@ import java.util.List;
 @RequiredArgsConstructor
 public class DemoDataSeeder {
 
-    public static final String TEST_STUDENT = "test-student@hanyang.ac.kr";
+    public static final String TEST_STUDENT = "test-student@hanyang.ac.kr"; // Sprint
+    public static final String TEST_STUDENT_SPARK = "test-spark@hanyang.ac.kr";
+    public static final String TEST_STUDENT_SUMMIT = "test-summit@hanyang.ac.kr";
+    private static final Set<String> TEST_STUDENTS = Set.of(TEST_STUDENT, TEST_STUDENT_SPARK, TEST_STUDENT_SUMMIT);
     public static final String TEST_PROFESSOR = "test-professor@hanyang.ac.kr";
     public static final String TEST_ADMIN = "test-admin@hanyang.ac.kr";
 
@@ -79,11 +83,13 @@ public class DemoDataSeeder {
         HackathonEvent event = eventRepository.findFirstByActiveTrueOrderByIdDesc().orElse(null);
         if (event == null) return;
 
-        // 지금이 행사 2일차 오후라고 친다: 신청은 끝났고, Spark 제출은 마감, Sprint·Summit 제출은 아직 열림
+        // 행사 중이라고 친다: 신청은 끝났고, 세 트랙 모두 제출과 평가가 열려 있다.
+        // 테스트 학생은 자기 트랙에서 제출부터 평가까지 직접 해 볼 수 있다.
+        // 리더보드는 Spark만 공개해 두고, 나머지는 운영진 계정으로 공개해 본다.
         Instant now = Instant.now();
         event.updateSchedule(now.minus(Duration.ofDays(30)), now.minus(Duration.ofDays(10)),
-                now.minus(Duration.ofDays(1)), now.minus(Duration.ofHours(12)), now.plus(Duration.ofHours(6)));
-        event.setVotingOpen(Track.SPARK, false);
+                now.minus(Duration.ofDays(1)), now.plus(Duration.ofHours(3)), now.plus(Duration.ofHours(6)));
+        event.setVotingOpen(Track.SPARK, true);
         event.setResultsPublished(Track.SPARK, true);
         event.setVotingOpen(Track.SPRINT, true);
         event.setVotingOpen(Track.SUMMIT, true);
@@ -92,19 +98,22 @@ public class DemoDataSeeder {
         User professor = user(TEST_PROFESSOR, "테스트 교수", Role.PROFESSOR, null);
         User profA = user("demo-prof-a@hanyang.ac.kr", "가상 교수 A", Role.PROFESSOR, null);
         User profB = user("demo-prof-b@hanyang.ac.kr", "가상 교수 B", Role.PROFESSOR, null);
-        User testStudent = user(TEST_STUDENT, "테스트 학생", Role.STUDENT, "2021000001");
+        User sprintStudent = user(TEST_STUDENT, "테스트 학생 Sprint", Role.STUDENT, "2021000001");
+        User sparkStudent = user(TEST_STUDENT_SPARK, "테스트 학생 Spark", Role.STUDENT, "2021000002");
+        User summitStudent = user(TEST_STUDENT_SUMMIT, "테스트 학생 Summit", Role.STUDENT, "2021000003");
 
-        // 팀과 결과물. 테스트 학생은 Sprint 팀에 넣는다 — 그래야 다른 Sprint 팀과 Summit 팀을 평가해 볼 수 있다.
+        // 팀과 결과물. 트랙마다 테스트 학생이 첫 팀의 팀장이다.
+        // 테스트 학생 팀은 결과물을 비워 둔다 — 트랙별 필수 제출물을 직접 내 볼 수 있게.
         List<Team> spark = List.of(
-                team(event, Track.SPARK, "아이디어공장", "캠퍼스 빈 강의실 찾기", null, 0),
+                team(event, Track.SPARK, "아이디어공장", "캠퍼스 빈 강의실 찾기", sparkStudent, 0),
                 team(event, Track.SPARK, "딸깍랩", "한 번에 끝내는 수강신청 도우미", null, 1),
                 team(event, Track.SPARK, "새벽세시", "과제 마감 알림 메이트", null, 2));
         List<Team> sprint = List.of(
-                team(event, Track.SPRINT, "버그없는팀", "학식 메뉴 실시간 평점", testStudent, 0),
+                team(event, Track.SPRINT, "버그없는팀", "학식 메뉴 실시간 평점", sprintStudent, 0),
                 team(event, Track.SPRINT, "핫픽스", "스터디 매칭 앱", null, 1),
                 team(event, Track.SPRINT, "커밋메시지", "동아리 회비 정산기", null, 2));
         List<Team> summit = List.of(
-                team(event, Track.SUMMIT, "배포완료", "졸업요건 자동 점검 서비스", null, 0),
+                team(event, Track.SUMMIT, "배포완료", "졸업요건 자동 점검 서비스", summitStudent, 0),
                 team(event, Track.SUMMIT, "무중단", "학과 행사 예약 플랫폼", null, 1),
                 team(event, Track.SUMMIT, "런칭데이", "중고 전공책 거래 장터", null, 2));
 
@@ -114,7 +123,7 @@ public class DemoDataSeeder {
             for (Team t : group) {
                 t.getMembers().stream()
                         .map(TeamMember::getUser)
-                        .filter(u -> u != null && !u.getEmail().equals(TEST_STUDENT))
+                        .filter(u -> u != null && !TEST_STUDENTS.contains(u.getEmail()))
                         .forEach(voters::add);
             }
         }
@@ -143,7 +152,7 @@ public class DemoDataSeeder {
         }
 
         log.warn("테스트 데이터를 채웠습니다 (로컬 전용). 학생={}, 교수={}, 운영진={}",
-                TEST_STUDENT, professor.getEmail(), TEST_ADMIN);
+                TEST_STUDENTS, professor.getEmail(), TEST_ADMIN);
     }
 
     private User user(String email, String name, Role role, String studentId) {
@@ -171,6 +180,7 @@ public class DemoDataSeeder {
                     TeamMemberRole.MEMBER, true));
         }
         teamRepository.save(team);
+        if (leader != null) return team; // 테스트 학생 팀은 결과물을 직접 낸다
 
         // 팀마다 낸 자료를 다르게 둔다 — 평가 화면에 "낸 것만" 버튼이 뜨는지 볼 수 있게.
         // 트랙별 필수 항목은 다 채우고(Spark 발표 자료 / Sprint 프로토타입·발표 자료 /
@@ -179,19 +189,21 @@ public class DemoDataSeeder {
         String plan = null, prototype = null, source = null, demo = null, deploy = null, arch = null, spec = null;
         switch (track) {
             case SPARK -> {
-                if (idx == 0) plan = "https://example.com/" + slug + "/plan.pdf";
-                if (idx == 1) prototype = "https://www.figma.com/file/example";
+                if (idx == 1) plan = "https://example.com/" + slug + "/plan.pdf";
+                if (idx == 2) prototype = "https://www.figma.com/file/example";
             }
             case SPRINT -> {
                 prototype = "https://example.com/" + slug + "/prototype";
-                if (idx < 2) source = "https://github.com/example/" + slug;
-                if (idx == 0) demo = "https://www.youtube.com/watch?v=example";
+                if (idx == 1) {
+                    source = "https://github.com/example/" + slug;
+                    demo = "https://www.youtube.com/watch?v=example";
+                }
             }
             case SUMMIT -> {
                 deploy = "https://example.com/" + slug;
                 source = idx == 2 ? "https://example.com/" + slug + "/source.zip" : "https://github.com/example/" + slug;
-                if (idx != 1) demo = "https://www.youtube.com/watch?v=example";
-                if (idx == 0) {
+                if (idx == 1) {
+                    demo = "https://www.youtube.com/watch?v=example";
                     arch = "https://example.com/" + slug + "/architecture.png";
                     spec = "https://example.com/" + slug + "/spec.pdf";
                 }
