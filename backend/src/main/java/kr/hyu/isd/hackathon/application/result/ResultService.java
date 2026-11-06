@@ -77,7 +77,7 @@ public class ResultService {
     /**
      * 집계 결과를 공개용으로 바꾼다.
      *
-     * 등수는 전부 보여주되 점수는 수상 팀 것만 넘긴다. 수상 밖 팀의 점수까지 내려보내면
+     * 등수·프로젝트명·낸 자료는 전부 보여주되 점수는 수상 팀 것만 넘긴다. 수상 밖 팀의 점수까지 내려보내면
      * 화면에서 가려도 응답을 열어 보면 그만이다.
      */
     private PublicTrackResultResponse toPublic(Track track, TrackResultResponse full) {
@@ -85,14 +85,14 @@ public class ResultService {
                 .map(r -> {
                     // 동점으로 공동 수상이 나오면 그 등수까지는 모두 수상으로 본다
                     boolean awarded = r.rank() <= track.getAwardCount();
-                    // 수상 팀은 낸 자료를 리더보드에서 바로 열어 볼 수 있게 함께 보낸다
-                    PublicTeamResultResponse.Materials materials = awarded
-                            ? submissionRepository.findByTeamId(r.teamId())
-                                    .map(PublicTeamResultResponse.Materials::from).orElse(null)
-                            : null;
+                    // 낸 자료는 수상과 상관없이 모든 팀 것을 보낸다 — 리더보드에서 바로 열어 볼 수 있게.
+                    // 점수만 수상 팀으로 한정한다.
+                    PublicTeamResultResponse.Materials materials = submissionRepository
+                            .findByTeamId(r.teamId())
+                            .map(PublicTeamResultResponse.Materials::from).orElse(null);
                     return new PublicTeamResultResponse(
                             r.rank(), r.teamId(), r.teamName(),
-                            awarded ? r.projectName() : null,
+                            r.projectName(),
                             r.awardName(),
                             awarded,
                             awarded ? r.finalScore() : null,

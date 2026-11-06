@@ -15,7 +15,7 @@ import java.math.BigDecimal;
  *
  * @param awarded    시상 등수 안에 든 팀인가 (Spark 1등, Sprint·Summit 3등까지)
  * @param finalScore 수상 팀만 채운다. 나머지는 null이다.
- * @param materials  수상 팀이 낸 자료. 수상 밖 팀과 아무것도 내지 않은 팀은 null이다.
+ * @param materials  팀이 낸 자료. 수상과 상관없이 모든 팀 것을 보낸다. 아무것도 내지 않았으면 null이다.
  */
 public record PublicTeamResultResponse(
         int rank,

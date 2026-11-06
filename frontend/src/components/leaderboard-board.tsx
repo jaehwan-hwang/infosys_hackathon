@@ -14,12 +14,20 @@ import { cx, trackStyle } from "@/components/ui";
  * 시상 화면이라 트랙 이름 자체가 큼직하게 보여야 하고, 세 트랙을 한꺼번에 늘어놓으면
  * 아직 시상하지 않은 트랙의 빈 칸이 자리만 차지한다.
  *
- * 한 번에 하나만 펼친다. 이미 펼친 것을 다시 누르면 접힌다.
+ * 트랙마다 따로 열고 닫는다. 누르면 펼쳐지고, 다시 누르면 접힌다 — 다른 트랙은 건드리지 않는다.
  */
 export function LeaderboardBoard({ tracks }: { tracks: PublicTrackResult[] }) {
   // 처음 열 때는 공개된 트랙 중 첫 번째를 펼쳐 둔다
-  const firstOpen = tracks.find((t) => t.published)?.track ?? null;
-  const [open, setOpen] = useState<Track | null>(firstOpen);
+  const firstOpen = tracks.find((t) => t.published)?.track;
+  const [open, setOpen] = useState<Set<Track>>(() => new Set(firstOpen ? [firstOpen] : []));
+
+  const toggle = (track: Track) =>
+    setOpen((prev) => {
+      const next = new Set(prev);
+      if (next.has(track)) next.delete(track);
+      else next.add(track);
+      return next;
+    });
 
   return (
     <div className="space-y-4">
@@ -27,8 +35,8 @@ export function LeaderboardBoard({ tracks }: { tracks: PublicTrackResult[] }) {
         <TrackPanel
           key={track.track}
           track={track}
-          open={open === track.track}
-          onToggle={() => setOpen(open === track.track ? null : track.track)}
+          open={open.has(track.track)}
+          onToggle={() => toggle(track.track)}
         />
       ))}
     </div>
@@ -190,18 +198,39 @@ function WinnerRow({ team: winner, track }: { team: PublicTeamResult; track: Tra
 }
 
 /**
- * 수상 밖 팀. 등수와 팀 이름만 적는다.
+ * 수상 밖 팀. 등수·팀명·프로젝트명과 낸 자료를 보여준다.
  *
  * 점수는 서버가 내려주지 않는다 — 몇 점 차로 못 받았는지까지 드러낼 이유가 없다.
- * 수상 줄보다 눈에 덜 띄게 두어 시상 결과와 섞이지 않게 한다.
+ * 수상 줄보다 눈에 덜 띄게 두되, 자료 칸은 수상 줄과 같은 자리에 맞춰 세로로 줄이 맞게 한다.
  */
 function PlainRow({ team }: { team: PublicTeamResult }) {
   return (
-    <div className="flex items-center gap-4 rounded-2xl border-2 border-current/10 px-5 py-3">
-      <span className="w-12 shrink-0 text-sm font-bold tabular-nums text-subtle">
+    <div
+      className={cx(
+        "grid grid-cols-[auto_minmax(0,1fr)] items-center gap-x-4 gap-y-3 rounded-2xl border-2 border-current/10 px-5 py-3.5",
+        "md:grid-cols-[auto_minmax(0,12rem)_minmax(0,1fr)_auto]",
+      )}
+    >
+      {/* 수상 줄의 메달 칸과 폭을 맞춘다 */}
+      <span className="w-[4.25rem] shrink-0 text-center text-sm font-bold tabular-nums text-subtle">
         {team.rank}등
       </span>
-      <span className="min-w-0 break-all font-bold">{team.teamName}</span>
+
+      <div className="min-w-0">
+        <p className="break-keep font-bold [overflow-wrap:anywhere]">{team.teamName}</p>
+        {team.projectName && (
+          <p className="mt-0.5 text-sm text-muted">{team.projectName}</p>
+        )}
+      </div>
+
+      <div className="order-last col-span-2 empty:hidden md:order-none md:col-span-1 md:empty:block">
+        {team.materials && (
+          <MaterialLinks links={team.materials} compact className="justify-center" />
+        )}
+      </div>
+
+      {/* 수상 줄의 점수 칸 자리. 비워 두어 자료 칸이 같은 폭으로 놓이게 한다 */}
+      <div aria-hidden="true" className="hidden w-[5.5rem] md:block" />
     </div>
   );
 }
