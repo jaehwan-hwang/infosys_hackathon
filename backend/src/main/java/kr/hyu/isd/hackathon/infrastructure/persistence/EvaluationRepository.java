@@ -41,6 +41,18 @@ public interface EvaluationRepository extends JpaRepository<Evaluation, Long> {
             """)
     List<Object[]> aggregateByEventId(@Param("eventId") Long eventId);
 
+    /** 코멘트가 달린 교수 평가 전부 (운영진 확인용). 팀·교수 이름까지 한 번에 읽는다. */
+    @Query("""
+            select e from Evaluation e
+              join fetch e.targetTeam t
+              join fetch e.evaluator u
+             where t.event.id = :eventId
+               and e.evaluatorType = kr.hyu.isd.hackathon.domain.evaluation.EvaluatorType.PROFESSOR
+               and e.comment is not null
+             order by t.track, t.name, e.evaluatedAt
+            """)
+    List<Evaluation> findProfessorCommentsByEventId(@Param("eventId") Long eventId);
+
     /** 이 행사에 들어온 평가가 하나라도 있는가 (평가 항목을 갈아끼워도 되는지 판단할 때 쓴다) */
     @Query("select count(e) > 0 from Evaluation e where e.targetTeam.event.id = :eventId")
     boolean existsByEventId(@Param("eventId") Long eventId);

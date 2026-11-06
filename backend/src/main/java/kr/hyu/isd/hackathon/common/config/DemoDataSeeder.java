@@ -96,17 +96,17 @@ public class DemoDataSeeder {
 
         // 팀과 결과물. 테스트 학생은 Sprint 팀에 넣는다 — 그래야 다른 Sprint 팀과 Summit 팀을 평가해 볼 수 있다.
         List<Team> spark = List.of(
-                team(event, Track.SPARK, "아이디어공장", "캠퍼스 빈 강의실 찾기", null),
-                team(event, Track.SPARK, "딸깍랩", "한 번에 끝내는 수강신청 도우미", null),
-                team(event, Track.SPARK, "새벽세시", "과제 마감 알림 메이트", null));
+                team(event, Track.SPARK, "아이디어공장", "캠퍼스 빈 강의실 찾기", null, 0),
+                team(event, Track.SPARK, "딸깍랩", "한 번에 끝내는 수강신청 도우미", null, 1),
+                team(event, Track.SPARK, "새벽세시", "과제 마감 알림 메이트", null, 2));
         List<Team> sprint = List.of(
-                team(event, Track.SPRINT, "버그없는팀", "학식 메뉴 실시간 평점", testStudent),
-                team(event, Track.SPRINT, "핫픽스", "스터디 매칭 앱", null),
-                team(event, Track.SPRINT, "커밋메시지", "동아리 회비 정산기", null));
+                team(event, Track.SPRINT, "버그없는팀", "학식 메뉴 실시간 평점", testStudent, 0),
+                team(event, Track.SPRINT, "핫픽스", "스터디 매칭 앱", null, 1),
+                team(event, Track.SPRINT, "커밋메시지", "동아리 회비 정산기", null, 2));
         List<Team> summit = List.of(
-                team(event, Track.SUMMIT, "배포완료", "졸업요건 자동 점검 서비스", null),
-                team(event, Track.SUMMIT, "무중단", "학과 행사 예약 플랫폼", null),
-                team(event, Track.SUMMIT, "런칭데이", "중고 전공책 거래 장터", null));
+                team(event, Track.SUMMIT, "배포완료", "졸업요건 자동 점검 서비스", null, 0),
+                team(event, Track.SUMMIT, "무중단", "학과 행사 예약 플랫폼", null, 1),
+                team(event, Track.SUMMIT, "런칭데이", "중고 전공책 거래 장터", null, 2));
 
         // 다른 가짜 참가자들이 매겨 둔 점수. 팀마다 수준을 달리해 순위가 갈리게 한다.
         List<User> voters = new ArrayList<>();
@@ -158,7 +158,7 @@ public class DemoDataSeeder {
     }
 
     /** 팀 하나와 그 결과물. leader가 없으면 가짜 참가자 셋으로 꾸린다. */
-    private Team team(HackathonEvent event, Track track, String name, String project, User leader) {
+    private Team team(HackathonEvent event, Track track, String name, String project, User leader, int idx) {
         String slug = name.hashCode() < 0 ? "t" + (-name.hashCode()) : "t" + name.hashCode();
         User head = leader != null ? leader
                 : user(slug + "-1@hanyang.ac.kr", name + " 팀장", Role.STUDENT, null);
@@ -172,12 +172,36 @@ public class DemoDataSeeder {
         }
         teamRepository.save(team);
 
+        // 팀마다 낸 자료를 다르게 둔다 — 평가 화면에 "낸 것만" 버튼이 뜨는지 볼 수 있게.
+        // 트랙별 필수 항목은 다 채우고(Spark 발표 자료 / Sprint 프로토타입·발표 자료 /
+        // Summit 프로덕트·소스코드·발표 자료), 선택 항목은 팀마다 들쭉날쭉하게.
+        String deck = "https://example.com/" + slug + "/deck.pdf";
+        String plan = null, prototype = null, source = null, demo = null, deploy = null, arch = null, spec = null;
+        switch (track) {
+            case SPARK -> {
+                if (idx == 0) plan = "https://example.com/" + slug + "/plan.pdf";
+                if (idx == 1) prototype = "https://www.figma.com/file/example";
+            }
+            case SPRINT -> {
+                prototype = "https://example.com/" + slug + "/prototype";
+                if (idx < 2) source = "https://github.com/example/" + slug;
+                if (idx == 0) demo = "https://www.youtube.com/watch?v=example";
+            }
+            case SUMMIT -> {
+                deploy = "https://example.com/" + slug;
+                source = idx == 2 ? "https://example.com/" + slug + "/source.zip" : "https://github.com/example/" + slug;
+                if (idx != 1) demo = "https://www.youtube.com/watch?v=example";
+                if (idx == 0) {
+                    arch = "https://example.com/" + slug + "/architecture.png";
+                    spec = "https://example.com/" + slug + "/spec.pdf";
+                }
+            }
+        }
         Submission submission = Submission.create(team, project, project + "를 만들었습니다.");
         submission.update(project, project + "를 만들었습니다.",
                 "테스트용 결과물입니다. 실제 팀이 아닙니다.",
-                null, "https://example.com/prototype", "https://github.com/example/demo",
-                null, "https://example.com/demo", "https://example.com",
-                null, null, List.of("Next.js", "Spring Boot"));
+                plan, prototype, source, deck, demo, deploy, arch, spec,
+                List.of("Next.js", "Spring Boot"));
         submissionRepository.save(submission);
         return team;
     }

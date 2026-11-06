@@ -200,7 +200,7 @@ export function ScoreSelector({
   const options = Array.from({ length: maxScore }, (_, i) => i + 1);
 
   return (
-    <div role="radiogroup" aria-label={`${name} 점수`} className="flex flex-wrap gap-1.5">
+    <div role="radiogroup" aria-label={`${name} 점수`} className="flex flex-wrap justify-center gap-2 sm:gap-3">
       {options.map((score) => {
         const selected = value === score;
         return (
@@ -212,7 +212,7 @@ export function ScoreSelector({
             disabled={readOnly}
             onClick={() => onChange(score)}
             className={cx(
-              "h-11 min-w-11 rounded-full border-2 text-sm font-bold transition-colors",
+              "h-12 min-w-12 rounded-full border-2 text-base font-bold transition-colors",
               selected
                 ? "border-transparent bg-grad-brand text-white"
                 : "border-current/15",

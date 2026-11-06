@@ -1,5 +1,6 @@
 import type {
   AdminGoodsOrder,
+  ProfessorComment,
   ApiErrorData,
   ApiResponse,
   Criterion,
@@ -361,6 +362,10 @@ export const api = {
 
     getResults: (token: string) =>
       request<TrackResult[]>("/api/v1/admin/results", { token }),
+
+    /** 교수 코멘트 모아 보기 (운영진 전용) */
+    getProfessorComments: (token: string) =>
+      request<ProfessorComment[]>("/api/v1/admin/professor-comments", { token }),
 
     toggleVoting: (token: string, track: Track, open: boolean) =>
       request<HackathonEvent>("/api/v1/admin/event/voting", {

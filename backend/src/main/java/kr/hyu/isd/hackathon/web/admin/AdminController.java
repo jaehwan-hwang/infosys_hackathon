@@ -160,6 +160,12 @@ public class AdminController {
         return ApiResponse.success(resultService.getResultsForAdmin());
     }
 
+    /** 교수 코멘트 모아 보기. 참가자에게는 보이지 않는다. */
+    @GetMapping("/professor-comments")
+    public ApiResponse<List<ProfessorCommentResponse>> getProfessorComments() {
+        return ApiResponse.success(adminService.getProfessorComments());
+    }
+
     @GetMapping("/results/{track}")
     public ApiResponse<TrackResultResponse> getTrackResult(@PathVariable Track track) {
         return ApiResponse.success(resultService.getTrackResultForAdmin(track));

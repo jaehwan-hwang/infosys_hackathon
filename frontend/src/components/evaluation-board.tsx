@@ -274,14 +274,11 @@ function ScoreForm({
           {target.evaluated && <Badge tone="success">평가 완료</Badge>}
         </div>
 
-        {(target.deployUrl || target.demoUrl) && (
+        {materialsOf(target).length > 0 && (
           <div className="mt-4 flex flex-wrap gap-2 border-t-2 border-current/10 pt-4">
-            {target.deployUrl && (
-              <ExternalLink href={target.deployUrl} label="배포 서비스 보기" />
-            )}
-            {target.demoUrl && (
-              <ExternalLink href={target.demoUrl} label="시연 영상 보기" />
-            )}
+            {materialsOf(target).map((m) => (
+              <ExternalLink key={m.label} href={m.url} label={m.label} />
+            ))}
           </div>
         )}
       </Card>
@@ -380,13 +377,9 @@ function CriterionRow({
             </p>
           )}
         </div>
-        {/* 가중치는 평가표의 배점을 100으로 나눈 값이라, 100을 곱하면 배점이 된다 */}
-        <span className="shrink-0 text-xs text-subtle">
-          배점 {Math.round(criterion.weight * 100)} · 1~{criterion.maxScore}점
-        </span>
       </div>
 
-      <div className="mt-3">
+      <div className="mt-4">
         <ScoreSelector
           name={criterion.name}
           value={value}
@@ -397,6 +390,30 @@ function CriterionRow({
       </div>
     </Card>
   );
+}
+
+/**
+ * 팀이 낸 자료를 버튼으로 늘어놓는다. 낸 것만 — 비어 있는 항목은 버튼을 띄우지 않는다.
+ *
+ * 트랙마다 필수 제출물이 달라 팀마다 낸 것이 다르다. 평가자는 발표를 보며 결과물을 직접
+ * 열어 봐야 하므로, 어느 트랙이든 낸 것은 전부 연다. 순서는 먼저 열어 볼 만한 것부터.
+ * 소스코드가 GitHub 주소면 "GitHub"이라고 적어, 저장소로 간다는 걸 바로 알게 한다.
+ */
+function materialsOf(t: EvaluationTarget): { label: string; url: string }[] {
+  const items: { label: string; url: string | null }[] = [
+    { label: "서비스 바로가기", url: t.deployUrl },
+    { label: "시연 영상", url: t.demoUrl },
+    { label: "프로토타입", url: t.prototypeUrl },
+    {
+      label: t.sourceCodeUrl && /github\.com/i.test(t.sourceCodeUrl) ? "GitHub" : "소스코드",
+      url: t.sourceCodeUrl,
+    },
+    { label: "발표 자료", url: t.deckFileUrl },
+    { label: "서비스 기획서", url: t.planFileUrl },
+    { label: "시스템 아키텍처", url: t.architectureFileUrl },
+    { label: "기술 명세서", url: t.techSpecFileUrl },
+  ];
+  return items.filter((m): m is { label: string; url: string } => Boolean(m.url?.trim()));
 }
 
 function ExternalLink({ href, label }: { href: string; label: string }) {

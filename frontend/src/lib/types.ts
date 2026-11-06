@@ -313,10 +313,31 @@ export interface EvaluationTarget {
   track: Track;
   projectName: string | null;
   summary: string | null;
+  /**
+   * 팀이 낸 자료. 링크든 올린 파일이든 열 수 있는 주소이고, 내지 않았으면 null이다.
+   * 트랙마다 필수 항목이 달라 팀마다 채워진 칸이 다르다.
+   */
   deployUrl: string | null;
   demoUrl: string | null;
+  sourceCodeUrl: string | null;
+  prototypeUrl: string | null;
+  deckFileUrl: string | null;
+  planFileUrl: string | null;
+  architectureFileUrl: string | null;
+  techSpecFileUrl: string | null;
   /** 이미 평가한 팀이면 true */
   evaluated: boolean;
+}
+
+/** 교수가 남긴 코멘트 한 건. 운영진만 본다. */
+export interface ProfessorComment {
+  teamId: number;
+  teamName: string;
+  track: Track;
+  professorName: string;
+  totalScore: number;
+  comment: string;
+  evaluatedAt: string;
 }
 
 export interface ScoreEntry {

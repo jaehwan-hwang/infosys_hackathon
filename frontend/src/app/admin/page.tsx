@@ -615,6 +615,70 @@ function ResultsPanel() {
           )}
         </div>
       ))}
+
+      <ProfessorComments />
+    </div>
+  );
+}
+
+/**
+ * 교수 코멘트 모아 보기.
+ *
+ * 코멘트는 교수만 남기고 참가자에게는 보이지 않는다. 시상 때 전하거나 운영진이 참고하려고
+ * 팀별로 묶어 보여 준다. 어느 교수가 몇 점을 주며 남긴 말인지 함께 적는다.
+ */
+function ProfessorComments() {
+  const { token } = useAuth();
+  const query = useApiQuery(
+    token ? () => api.admin.getProfessorComments(token) : null,
+    [token],
+  );
+
+  if (query.loading) return <Spinner />;
+  if (query.error) return <Alert tone="error">{query.error}</Alert>;
+
+  const comments = query.data ?? [];
+  // 같은 팀 코멘트를 한데 모은다. 서버가 트랙·팀 순으로 주므로 처음 나온 순서를 지킨다.
+  const byTeam = new Map<number, typeof comments>();
+  for (const c of comments) {
+    byTeam.set(c.teamId, [...(byTeam.get(c.teamId) ?? []), c]);
+  }
+
+  return (
+    <div>
+      <div className="flex flex-wrap items-center gap-3">
+        <h2 className="font-bold">교수 코멘트</h2>
+        <span className="text-xs text-subtle">참가자에게는 보이지 않습니다</span>
+      </div>
+
+      {comments.length === 0 ? (
+        <p className="mt-3 text-sm text-muted">아직 남겨진 코멘트가 없습니다.</p>
+      ) : (
+        <ul className="mt-3 space-y-3">
+          {[...byTeam.values()].map((list) => (
+            <li key={list[0].teamId}>
+              <Card>
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="font-bold">{list[0].teamName}</span>
+                  <TrackBadge track={list[0].track} />
+                </div>
+                <ul className="mt-3 space-y-3">
+                  {list.map((c, i) => (
+                    <li key={i} className="border-t-2 border-current/10 pt-3 first:border-t-0 first:pt-0">
+                      <p className="text-xs text-subtle">
+                        {c.professorName} · {formatScore(c.totalScore)}점
+                      </p>
+                      <p className="mt-1 whitespace-pre-wrap break-words text-sm leading-relaxed">
+                        {c.comment}
+                      </p>
+                    </li>
+                  ))}
+                </ul>
+              </Card>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }

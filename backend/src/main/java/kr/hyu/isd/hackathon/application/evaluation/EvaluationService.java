@@ -241,6 +241,12 @@ public class EvaluationService {
                 submission.map(Submission::getSummary).orElse(null),
                 submission.map(Submission::getDeployUrl).orElse(null),
                 submission.map(Submission::getDemoUrl).orElse(null),
+                submission.map(Submission::getSourceCodeUrl).orElse(null),
+                submission.map(Submission::getPrototypeUrl).orElse(null),
+                submission.map(Submission::getDeckFileUrl).orElse(null),
+                submission.map(Submission::getPlanFileUrl).orElse(null),
+                submission.map(Submission::getArchitectureFileUrl).orElse(null),
+                submission.map(Submission::getTechSpecFileUrl).orElse(null),
                 evaluated
         );
     }

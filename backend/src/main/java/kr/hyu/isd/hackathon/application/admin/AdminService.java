@@ -420,6 +420,17 @@ public class AdminService {
         awardRepository.deleteById(awardId);
     }
 
+    // ---- 교수 코멘트 ----
+
+    /** 교수가 남긴 코멘트 전부. 트랙·팀 순으로, 같은 팀 안에서는 남긴 순서대로. */
+    @Transactional(readOnly = true)
+    public List<ProfessorCommentResponse> getProfessorComments() {
+        HackathonEvent event = eventService.getActiveEvent();
+        return evaluationRepository.findProfessorCommentsByEventId(event.getId()).stream()
+                .map(ProfessorCommentResponse::from)
+                .toList();
+    }
+
     // ---- 굿즈 ----
 
     /**
