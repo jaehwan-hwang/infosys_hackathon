@@ -433,7 +433,6 @@ function SubmissionSlot({
           value={value}
           onChange={(e) => onChange(e.target.value)}
           disabled={disabled}
-          placeholder="https://..."
           className="flex-1"
           aria-label={`${field.label} 링크`}
         />

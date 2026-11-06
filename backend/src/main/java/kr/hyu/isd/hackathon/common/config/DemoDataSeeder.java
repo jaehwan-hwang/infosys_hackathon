@@ -1,5 +1,6 @@
 package kr.hyu.isd.hackathon.common.config;
 
+import kr.hyu.isd.hackathon.application.evaluation.EvaluationService;
 import kr.hyu.isd.hackathon.common.auth.DevLoginGate;
 import kr.hyu.isd.hackathon.domain.evaluation.Criterion;
 import kr.hyu.isd.hackathon.domain.evaluation.Evaluation;
@@ -23,6 +24,7 @@ import kr.hyu.isd.hackathon.infrastructure.persistence.TeamRepository;
 import kr.hyu.isd.hackathon.infrastructure.persistence.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -32,19 +34,24 @@ import org.springframework.transaction.support.TransactionTemplate;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
  * 로컬 테스트용 가짜 데이터. 테스트 로그인(DevLoginGate)이 열려 있을 때만 돈다 — 운영에서는 돌지 않는다.
  *
- * 평가 화면과 리더보드를 학생·교수·운영진 눈으로 둘러볼 수 있게 채운다.
- *   - Spark: 평가가 끝나고 리더보드가 공개된 상태 (다 끝난 모습)
- *   - Sprint·Summit: 평가가 열려 있고 리더보드는 아직 비공개 (직접 평가해 보고, 운영진으로 공개해 보는 용)
- * 테스트 학생과 테스트 교수는 아직 아무도 평가하지 않은 채로 둔다. 다른 가짜 참가자·교수가
- * 매겨 둔 점수가 있어서, 한 표를 더 넣으면 순위가 어떻게 움직이는지 볼 수 있다.
+ * 상황을 둘 중 하나로 채운다 (DEMO_SCENARIO 환경변수, 기본 live).
+ *   - live : 행사 중. 세 트랙 모두 제출·평가가 열려 있고, 테스트 학생 팀은 결과물이 비어 있다.
+ *            테스트 학생·교수는 아직 아무도 평가하지 않았다. 리더보드는 Spark만 공개.
+ *   - final: 행사 끝. 제출 마감, 평가 마감, 세 트랙 리더보드 모두 공개. 테스트 학생 팀도
+ *            결과물을 냈고, 테스트 학생·교수도 평가를 마쳤다.
+ *
+ * 참가자 표는 실제 규칙대로 넣는다 — 자기 팀은 빼고, Spark 참가자는 Spark 팀만.
  *
  * 테스트 학생 계정이 이미 있으면 아무것도 하지 않는다. 다시 채우려면 로컬 DB 파일을 지운다.
+ * 상황마다 DB 파일을 따로 두면 서버만 다시 띄워 오갈 수 있다.
  */
 @Slf4j
 @Configuration
@@ -67,6 +74,10 @@ public class DemoDataSeeder {
     private final EvaluationRepository evaluationRepository;
     private final TransactionTemplate transactionTemplate;
 
+    @Value("${app.demo.scenario:live}")
+    private String scenario;
+
+    private boolean finished;
     private int studentSeq = 0;
 
     @Bean
@@ -82,17 +93,25 @@ public class DemoDataSeeder {
         if (userRepository.findByEmail(TEST_STUDENT).isPresent()) return;
         HackathonEvent event = eventRepository.findFirstByActiveTrueOrderByIdDesc().orElse(null);
         if (event == null) return;
+        finished = "final".equalsIgnoreCase(scenario);
 
-        // 행사 중이라고 친다: 신청은 끝났고, 세 트랙 모두 제출과 평가가 열려 있다.
-        // 테스트 학생은 자기 트랙에서 제출부터 평가까지 직접 해 볼 수 있다.
-        // 리더보드는 Spark만 공개해 두고, 나머지는 운영진 계정으로 공개해 본다.
         Instant now = Instant.now();
-        event.updateSchedule(now.minus(Duration.ofDays(30)), now.minus(Duration.ofDays(10)),
-                now.minus(Duration.ofDays(1)), now.plus(Duration.ofHours(3)), now.plus(Duration.ofHours(6)));
-        event.setVotingOpen(Track.SPARK, true);
-        event.setResultsPublished(Track.SPARK, true);
-        event.setVotingOpen(Track.SPRINT, true);
-        event.setVotingOpen(Track.SUMMIT, true);
+        if (finished) {
+            // 2일차 저녁: 제출도 평가도 끝났고, 운영진이 세 트랙 리더보드를 모두 공개했다.
+            event.updateSchedule(now.minus(Duration.ofDays(30)), now.minus(Duration.ofDays(10)),
+                    now.minus(Duration.ofDays(2)), now.minus(Duration.ofDays(1)), now.minus(Duration.ofHours(3)));
+            for (Track t : Track.values()) {
+                event.setVotingOpen(t, false);
+                event.setResultsPublished(t, true);
+            }
+        } else {
+            // 행사 중: 신청은 끝났고, 세 트랙 모두 제출과 평가가 열려 있다.
+            // 리더보드는 Spark만 공개해 두고, 나머지는 운영진 계정으로 공개해 본다.
+            event.updateSchedule(now.minus(Duration.ofDays(30)), now.minus(Duration.ofDays(10)),
+                    now.minus(Duration.ofDays(1)), now.plus(Duration.ofHours(3)), now.plus(Duration.ofHours(6)));
+            for (Track t : Track.values()) event.setVotingOpen(t, true);
+            event.setResultsPublished(Track.SPARK, true);
+        }
 
         user(TEST_ADMIN, "테스트 운영진", Role.ADMIN, null);
         User professor = user(TEST_PROFESSOR, "테스트 교수", Role.PROFESSOR, null);
@@ -103,7 +122,6 @@ public class DemoDataSeeder {
         User summitStudent = user(TEST_STUDENT_SUMMIT, "테스트 학생 Summit", Role.STUDENT, "2021000003");
 
         // 팀과 결과물. 트랙마다 테스트 학생이 첫 팀의 팀장이다.
-        // 테스트 학생 팀은 결과물을 비워 둔다 — 트랙별 필수 제출물을 직접 내 볼 수 있게.
         List<Team> spark = List.of(
                 team(event, Track.SPARK, "아이디어공장", "캠퍼스 빈 강의실 찾기", sparkStudent, 0),
                 team(event, Track.SPARK, "딸깍랩", "한 번에 끝내는 수강신청 도우미", null, 1),
@@ -116,33 +134,36 @@ public class DemoDataSeeder {
                 team(event, Track.SUMMIT, "배포완료", "졸업요건 자동 점검 서비스", summitStudent, 0),
                 team(event, Track.SUMMIT, "무중단", "학과 행사 예약 플랫폼", null, 1),
                 team(event, Track.SUMMIT, "런칭데이", "중고 전공책 거래 장터", null, 2));
+        List<List<Team>> tracks = List.of(spark, sprint, summit);
 
-        // 다른 가짜 참가자들이 매겨 둔 점수. 팀마다 수준을 달리해 순위가 갈리게 한다.
+        // 가짜 참가자들이 매겨 둔 점수. 팀마다 수준을 달리해 순위가 갈리게 한다.
         List<User> voters = new ArrayList<>();
-        for (List<Team> group : List.of(spark, sprint, summit)) {
+        Map<Long, Track> voterTrack = new HashMap<>();
+        for (List<Team> group : tracks) {
             for (Team t : group) {
                 t.getMembers().stream()
                         .map(TeamMember::getUser)
                         .filter(u -> u != null && !TEST_STUDENTS.contains(u.getEmail()))
-                        .forEach(voters::add);
+                        .forEach(u -> {
+                            voters.add(u);
+                            voterTrack.put(u.getId(), t.getTrack());
+                        });
             }
         }
         int[][] level = {{5, 4, 3}, {4, 5, 3}, {5, 3, 4}}; // 트랙별, 팀별 기본 점수
-        List<List<Team>> tracks = List.of(spark, sprint, summit);
         for (int ti = 0; ti < tracks.size(); ti++) {
             List<Team> group = tracks.get(ti);
             for (int i = 0; i < group.size(); i++) {
                 Team target = group.get(i);
-                int base = level[ti][i];
                 int count = 0;
                 for (User voter : voters) {
-                    if (target.hasMember(voter.getId())) continue;
+                    if (!canVote(voterTrack.get(voter.getId()), voter, target)) continue;
                     if (count++ >= 5) break; // 팀마다 참가자 표 다섯 장
-                    evaluate(event, voter, target, EvaluatorType.STUDENT, base, count, null);
+                    evaluate(event, voter, target, EvaluatorType.STUDENT, level[ti][i], count, null);
                 }
             }
         }
-        // Summit은 교수 두 분이 미리 매겨 둔다. 테스트 교수는 비워 둔다.
+        // Summit은 교수 두 분이 미리 매겨 둔다.
         int[] profLevel = {4, 5, 3};
         for (int i = 0; i < summit.size(); i++) {
             evaluate(event, profA, summit.get(i), EvaluatorType.PROFESSOR, profLevel[i], 1,
@@ -151,8 +172,34 @@ public class DemoDataSeeder {
                     "핵심 기능 완성도가 인상적입니다.");
         }
 
-        log.warn("테스트 데이터를 채웠습니다 (로컬 전용). 학생={}, 교수={}, 운영진={}",
-                TEST_STUDENTS, professor.getEmail(), TEST_ADMIN);
+        // 행사가 끝난 상황이면 테스트 학생·교수도 평가를 마쳐 둔다.
+        if (finished) {
+            Map<User, Track> testStudents = Map.of(
+                    sparkStudent, Track.SPARK, sprintStudent, Track.SPRINT, summitStudent, Track.SUMMIT);
+            testStudents.forEach((student, myTrack) -> {
+                for (int ti = 0; ti < tracks.size(); ti++) {
+                    for (int i = 0; i < tracks.get(ti).size(); i++) {
+                        Team target = tracks.get(ti).get(i);
+                        if (canVote(myTrack, student, target)) {
+                            evaluate(event, student, target, EvaluatorType.STUDENT, level[ti][i], 3, null);
+                        }
+                    }
+                }
+            });
+            for (int i = 0; i < summit.size(); i++) {
+                evaluate(event, professor, summit.get(i), EvaluatorType.PROFESSOR, profLevel[i], 3,
+                        "테스트 교수 코멘트입니다. 서비스 구조 설명이 명확했습니다.");
+            }
+        }
+
+        log.warn("테스트 데이터를 채웠습니다 (로컬 전용, {}). 학생={}, 교수={}, 운영진={}",
+                finished ? "행사 종료 후" : "행사 중", TEST_STUDENTS, professor.getEmail(), TEST_ADMIN);
+    }
+
+    /** 실제 평가 규칙과 같다: 자기 팀은 못 하고, Spark 참가자는 Spark 팀만. */
+    private static boolean canVote(Track voterTrack, User voter, Team target) {
+        return !target.hasMember(voter.getId())
+                && EvaluationService.votableTracks(voterTrack).contains(target.getTrack());
     }
 
     private User user(String email, String name, Role role, String studentId) {
@@ -180,7 +227,8 @@ public class DemoDataSeeder {
                     TeamMemberRole.MEMBER, true));
         }
         teamRepository.save(team);
-        if (leader != null) return team; // 테스트 학생 팀은 결과물을 직접 낸다
+        // 행사 중이면 테스트 학생 팀은 결과물을 비워 둔다 — 트랙별 필수 제출물을 직접 내 볼 수 있게.
+        if (leader != null && !finished) return team;
 
         // 팀마다 낸 자료를 다르게 둔다 — 평가 화면에 "낸 것만" 버튼이 뜨는지 볼 수 있게.
         // 트랙별 필수 항목은 다 채우고(Spark 발표 자료 / Sprint 프로토타입·발표 자료 /

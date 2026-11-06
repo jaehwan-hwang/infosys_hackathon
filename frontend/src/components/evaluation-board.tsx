@@ -85,8 +85,9 @@ export function EvaluationBoard({ evaluatorType }: { evaluatorType: EvaluatorTyp
       description={
         isProfessor
           ? "Summit 트랙 팀을 항목별로 채점합니다. 교수 평가는 최종 점수의 40%를 차지합니다."
-          : "발표를 본 팀을 항목별로 채점해 주세요. 트랙에 관계없이 평가가 열린 팀은 모두 투표할 수 있고, 자신이 속한 팀만 목록에서 빠집니다."
+          : "발표를 본 팀을 항목별로 채점해 주세요. 자신이 속한 팀은 목록에서 빠집니다."
       }
+      wideDescription
     >
       <div className="mb-6 flex flex-wrap items-center gap-3">
         <Badge tone={evaluatedCount === targets.length ? "success" : "info"}>
@@ -94,6 +95,7 @@ export function EvaluationBoard({ evaluatorType }: { evaluatorType: EvaluatorTyp
         </Badge>
         <p className="text-sm text-muted">
           한 팀당 한 번만 평가할 수 있고, 제출 후에는 고칠 수 없습니다.
+          {!isProfessor && " Spark 참가자는 Spark 팀만 평가합니다."}
         </p>
       </div>
 
@@ -108,24 +110,24 @@ export function EvaluationBoard({ evaluatorType }: { evaluatorType: EvaluatorTyp
                   onClick={() => setSelectedTeamId(target.teamId)}
                   aria-current={target.teamId === selectedTeamId ? "true" : undefined}
                   className={cx(
-                    "w-full rounded-2xl border-2 p-3.5 text-left transition-colors",
+                    "w-full rounded-2xl border-2 px-4 py-4 text-center transition-colors",
                     target.teamId === selectedTeamId
                       ? "border-[var(--accent)] bg-[var(--accent-tint)]"
                       : "border-current/15 hover:bg-current/5",
                   )}
                 >
-                  <div className="flex items-start justify-between gap-2">
-                    <span className="min-w-0 break-all text-sm font-semibold">
+                  {/* 여러 트랙이 한 목록에 섞이므로 팀명 오른편에 트랙을 붙인다 */}
+                  <div className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1">
+                    <span className="min-w-0 break-all text-lg font-bold leading-snug">
                       {target.teamName}
                     </span>
+                    <TrackBadge track={target.track} />
                     {target.evaluated && <Badge tone="success">완료</Badge>}
                   </div>
-                  {/* 여러 트랙이 한 목록에 섞이므로 어느 트랙 팀인지 보여준다 */}
-                  <div className="mt-1.5">
-                    <TrackBadge track={target.track} />
-                  </div>
                   {target.projectName && (
-                    <p className="mt-1 text-xs text-muted">{target.projectName}</p>
+                    <p className="mt-1.5 text-[15px] leading-snug text-muted">
+                      {target.projectName}
+                    </p>
                   )}
                 </button>
               </li>
@@ -368,15 +370,13 @@ function CriterionRow({
 }) {
   return (
     <Card>
-      <div className="flex flex-wrap items-start justify-between gap-2">
-        <div>
-          <p className="text-sm font-semibold">{criterion.name}</p>
-          {criterion.description && (
-            <p className="mt-1 text-xs leading-relaxed text-muted">
-              {criterion.description}
-            </p>
-          )}
-        </div>
+      <div className="text-center">
+        <p className="text-base font-semibold leading-snug">{criterion.name}</p>
+        {criterion.description && (
+          <p className="mt-1 text-xs leading-relaxed text-muted">
+            {criterion.description}
+          </p>
+        )}
       </div>
 
       <div className="mt-4">

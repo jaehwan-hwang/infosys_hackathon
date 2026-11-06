@@ -123,8 +123,9 @@ public class EvaluationService {
     /**
      * 이 평가자가 이 팀을 평가할 자격이 있는지 검사한다.
      *
-     * 참가자: 팀에 소속돼 있어야 하고, 자기 팀만 아니면 트랙과 무관하게 평가할 수 있다.
-     *         (발표를 본 사람이 투표한다는 것이 전제다)
+     * 참가자: 팀에 소속돼 있어야 하고, 자기 팀은 평가할 수 없다.
+     *         Spark 참가자는 Spark 팀만, Sprint·Summit 참가자는 세 트랙 모두 평가한다.
+     *         (발표를 본 사람이 투표한다는 것이 전제다 — Spark는 1일차에만 참가한다)
      * 교수:   Summit 트랙만 평가한다.
      */
     private void validateEvaluatorEligibility(User evaluator, Team targetTeam,
@@ -142,11 +143,22 @@ public class EvaluationService {
             throw new HackathonException(ErrorCode.SELF_VOTE_FORBIDDEN);
         }
 
-        // 참가자여야 한다. 트랙은 가리지 않는다 — 다른 트랙 발표도 보고 투표할 수 있다.
-        if (teamRepository.findByEventIdAndMemberUserId(event.getId(), evaluator.getId()).isEmpty()) {
-            throw new HackathonException(ErrorCode.TEAM_NOT_FOUND,
-                    "참가 팀에 소속된 학생만 투표할 수 있습니다.");
+        // 참가자여야 한다.
+        Team myTeam = teamRepository.findByEventIdAndMemberUserId(event.getId(), evaluator.getId())
+                .orElseThrow(() -> new HackathonException(ErrorCode.TEAM_NOT_FOUND,
+                        "참가 팀에 소속된 학생만 투표할 수 있습니다."));
+        if (!votableTracks(myTeam.getTrack()).contains(targetTeam.getTrack())) {
+            throw new HackathonException(ErrorCode.TRACK_MISMATCH,
+                    "Spark 참가자는 Spark 팀만 평가합니다.");
         }
+    }
+
+    /**
+     * 참가자가 평가할 수 있는 트랙. Spark는 1일차에만 참가하므로 2일차 발표(Sprint·Summit)를 보지 못한다.
+     * Sprint·Summit 참가자는 1일차 Spark 발표도 보므로 세 트랙 모두 평가한다.
+     */
+    public static List<Track> votableTracks(Track myTrack) {
+        return myTrack == Track.SPARK ? List.of(Track.SPARK) : List.of(Track.values());
     }
 
     /**
@@ -192,7 +204,8 @@ public class EvaluationService {
     /**
      * 평가 화면에 뿌릴 대상 목록.
      *
-     * 참가자는 평가가 열린 모든 트랙의 팀을 받는다(자기 팀 제외). 교수는 Summit만 받는다.
+     * 참가자는 평가가 열린 트랙의 팀을 받는다(자기 팀 제외). Spark 참가자는 1일차에만 있으므로
+     * Spark 팀만, Sprint·Summit 참가자는 세 트랙 모두 받는다. 교수는 Summit만 받는다.
      * 운영진이 트랙별로 평가를 여닫으므로, 아직 발표하지 않은 트랙은 저절로 빠진다.
      */
     @Transactional(readOnly = true)
@@ -208,11 +221,15 @@ public class EvaluationService {
                     .orElseThrow(() -> new HackathonException(ErrorCode.TEAM_NOT_FOUND,
                             "참가 팀에 소속된 학생만 투표할 수 있습니다."));
             myTeamId = myTeam.getId();
-            tracks = List.of(Track.values());
+            tracks = votableTracks(myTeam.getTrack());
         }
 
         List<Track> openTracks = tracks.stream().filter(event::isVotingOpen).toList();
         if (openTracks.isEmpty()) {
+            if (tracks.equals(List.of(Track.SPARK))) {
+                throw new HackathonException(ErrorCode.VOTING_CLOSED,
+                        "Spark 참가자는 Spark 팀만 평가합니다. 지금은 Spark 평가가 열려 있지 않습니다.");
+            }
             throw new HackathonException(ErrorCode.VOTING_CLOSED);
         }
 

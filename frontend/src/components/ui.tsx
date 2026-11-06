@@ -44,6 +44,7 @@ export function Section({
   children,
   className,
   nested = false,
+  wideDescription = false,
 }: {
   id?: string;
   eyebrow?: string;
@@ -53,6 +54,8 @@ export function Section({
   className?: string;
   /** 다른 Section 안에 들어가는 묶음. 제목을 한 단 낮추고 바깥 여백을 뺀다. */
   nested?: boolean;
+  /** 설명을 좁은 폭에 가두지 않는다 — 한 줄로 길게 읽혀야 하는 문장용 */
+  wideDescription?: boolean;
 }) {
   return (
     <section
@@ -82,7 +85,8 @@ export function Section({
           {description && (
             <p
               className={cx(
-                "max-w-2xl leading-relaxed text-muted",
+                "leading-relaxed text-muted",
+                !wideDescription && "max-w-2xl",
                 nested ? "mt-2.5 text-sm" : "mt-4 text-[15px] sm:text-[17px]",
               )}
             >
