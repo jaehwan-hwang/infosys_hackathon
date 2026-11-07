@@ -22,6 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Optional;
 
 @Slf4j
@@ -118,18 +119,46 @@ public class AuthService {
         // 이미 연결된 팀이 있으면 할 일이 없다.
         if (teamRepository.findByEventIdAndMemberUserId(eventId, user.getId()).isPresent()) return;
 
-        teamRepository.findByEventIdAndMemberEmail(eventId, user.getEmail())
-                .ifPresent(team -> linkMember(team, user));
+        // 같은 이메일이 두 팀에 적혀 있을 수도 있어 목록으로 받는다. 비어 있는 자리 하나에만 잇는다.
+        for (Team team : teamRepository.findByEventIdAndMemberEmail(eventId, user.getEmail())) {
+            if (linkMember(team, user)) return;
+        }
+
+        // 이메일로 못 찾으면 학번으로 찾는다. 조장이 팀원 이메일을 틀리게(오타·개인 메일) 적은 경우다.
+        // 연결되지 않은 자리 중 학번이 같은 자리가 딱 하나일 때만 잇는다.
+        String studentId = user.getStudentId() == null ? null : user.getStudentId().trim();
+        if (studentId == null || studentId.isEmpty()) return;
+        List<TeamMember> candidates = teamRepository.findByEventIdAndUnlinkedMemberStudentId(eventId, studentId)
+                .stream()
+                .flatMap(t -> t.getMembers().stream())
+                .filter(m -> m.getUser() == null && studentId.equals(trim(m.getStudentId())))
+                .toList();
+        if (candidates.size() != 1) {
+            if (candidates.size() > 1) {
+                log.warn("학번이 같은 팀원 자리가 여럿이라 연결하지 않습니다: studentId={}", studentId);
+            }
+            return;
+        }
+        TeamMember member = candidates.get(0);
+        String typedEmail = member.getEmail();
+        member.linkUser(user);
+        log.info("팀원 계정 연결(학번): team={}, 적힌 이메일={} → 로그인 이메일={}",
+                member.getTeam().getName(), typedEmail, user.getEmail());
     }
 
-    private void linkMember(Team team, User user) {
-        team.getMembers().stream()
+    private static String trim(String s) {
+        return s == null ? null : s.trim();
+    }
+
+    private boolean linkMember(Team team, User user) {
+        Optional<TeamMember> slot = team.getMembers().stream()
                 .filter(m -> m.getUser() == null && m.getEmail().equalsIgnoreCase(user.getEmail()))
-                .findFirst()
-                .ifPresent((TeamMember member) -> {
-                    member.linkUser(user);
-                    log.info("팀원 계정 연결: team={}, email={}", team.getName(), user.getEmail());
-                });
+                .findFirst();
+        slot.ifPresent(member -> {
+            member.linkUser(user);
+            log.info("팀원 계정 연결: team={}, email={}", team.getName(), user.getEmail());
+        });
+        return slot.isPresent();
     }
 
     /** 최초 로그인 후 학번·성명을 등록한다. */
@@ -158,9 +187,16 @@ public class AuthService {
         return raw.trim();
     }
 
-    @Transactional(readOnly = true)
+    /**
+     * 내 정보. 화면이 30초마다 부르므로, 아직 팀에 연결되지 않은 계정은 여기서도 연결을 시도한다 —
+     * 이미 로그인해 둔 사람은 다시 로그인하지 않아도 팀원 자리를 찾는다.
+     */
+    @Transactional
     public UserResponse getMe(Long userId) {
         User user = findUser(userId);
+        if (user.getRole() == Role.STUDENT) {
+            linkPendingTeamMembership(user);
+        }
         return UserResponse.from(user, authProperties.isSuperAdmin(user.getEmail()));
     }
 

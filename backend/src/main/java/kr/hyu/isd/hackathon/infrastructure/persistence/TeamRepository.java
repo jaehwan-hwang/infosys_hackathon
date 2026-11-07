@@ -53,8 +53,20 @@ public interface TeamRepository extends JpaRepository<Team, Long> {
               join t.members m
              where t.event.id = :eventId and lower(m.email) = lower(:email)
             """)
-    Optional<Team> findByEventIdAndMemberEmail(@Param("eventId") Long eventId,
+    List<Team> findByEventIdAndMemberEmail(@Param("eventId") Long eventId,
                                                @Param("email") String email);
+
+    /**
+     * 아직 계정이 연결되지 않은 팀원 자리를 학번으로 찾는다.
+     * 조장이 팀원 이메일을 잘못 적었거나(오타·개인 메일) 해서 이메일로 연결되지 않을 때 쓴다.
+     */
+    @Query("""
+            select distinct t from Team t
+              join t.members m
+             where t.event.id = :eventId and m.user is null and m.studentId = :studentId
+            """)
+    List<Team> findByEventIdAndUnlinkedMemberStudentId(@Param("eventId") Long eventId,
+                                                      @Param("studentId") String studentId);
 
     /** 모집 상태로 추린 팀 목록 (팀 합치기 화면용) */
     @Query("""

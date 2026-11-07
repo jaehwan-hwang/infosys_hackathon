@@ -92,9 +92,13 @@ public class TeamMember extends BaseTimeEntity {
         return !isDuesPaid();
     }
 
-    /** 팀원이 뒤늦게 로그인했을 때 계정을 연결한다. */
+    /**
+     * 팀원이 뒤늦게 로그인했을 때 계정을 연결한다.
+     * 학번으로 연결한 경우 조장이 적은 이메일이 틀렸던 것이므로 실제 로그인 이메일로 고쳐 둔다.
+     */
     public void linkUser(User user) {
         this.user = user;
+        this.email = user.getEmail();
     }
 
     public boolean isLeader() {
