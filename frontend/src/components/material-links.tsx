@@ -1,3 +1,4 @@
+import { viewableHref } from "@/lib/file-view";
 import type { SubmissionLinks } from "@/lib/types";
 import { cx } from "./ui";
 
@@ -51,7 +52,7 @@ export function MaterialLinks({
       {items.map((m) => (
         <a
           key={m.label}
-          href={m.url}
+          href={viewableHref(m.url)}
           target="_blank"
           rel="noopener noreferrer"
           className={cx(

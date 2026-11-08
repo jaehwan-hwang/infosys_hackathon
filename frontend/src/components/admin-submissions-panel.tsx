@@ -1,5 +1,6 @@
 "use client";
 
+import { viewableHref } from "@/lib/file-view";
 import { useMemo, useState } from "react";
 import { TextInput } from "@/components/form";
 import {
@@ -175,7 +176,7 @@ function SubmissionCard({
           {links.map((link) => (
             <a
               key={link.label}
-              href={link.url ?? undefined}
+              href={link.url ? viewableHref(link.url) : undefined}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex h-9 items-center rounded-full border-2 border-current/15 px-4 text-xs font-bold hover:bg-current/5"

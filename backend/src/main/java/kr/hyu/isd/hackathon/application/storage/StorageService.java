@@ -35,11 +35,14 @@ public class StorageService {
             .connectTimeout(Duration.ofSeconds(10))
             .build();
 
-    /** 제출물로 허용하는 확장자. 실행 파일·스크립트는 받지 않는다. */
-    private static final List<String> ALLOWED_EXTENSIONS = List.of(
-            "pdf", "ppt", "pptx", "doc", "docx", "hwp", "hwpx",
-            "png", "jpg", "jpeg", "gif", "webp", "svg",
-            "zip", "txt", "md", "csv", "mp4", "mov"
+    /**
+     * 받지 않는 확장자. 팀마다 자료 형식이 제각각이라(HTML 발표 자료, keynote, apk 등) 허용 목록 대신
+     * 실행하면 곧바로 PC에서 돌아가는 것만 막는다. HTML은 저장소가 글자(text/plain)로만 내주고,
+     * 화면에서는 /view의 격리된 틀 안에서 보여주므로 받아도 된다.
+     */
+    private static final List<String> BLOCKED_EXTENSIONS = List.of(
+            "exe", "msi", "bat", "cmd", "com", "scr", "pif", "cpl",
+            "ps1", "psm1", "vbs", "vbe", "wsf", "wsh", "hta", "lnk", "reg", "dll", "sys"
     );
 
     /**
@@ -62,9 +65,13 @@ public class StorageService {
         }
 
         String extension = extractExtension(file.getOriginalFilename());
-        if (!ALLOWED_EXTENSIONS.contains(extension)) {
+        if (extension.isEmpty()) {
             throw new HackathonException(ErrorCode.UNSUPPORTED_FILE_TYPE,
-                    "허용 확장자: " + String.join(", ", ALLOWED_EXTENSIONS));
+                    "확장자가 있는 파일만 올릴 수 있습니다. (예: deck.pdf)");
+        }
+        if (BLOCKED_EXTENSIONS.contains(extension) || !extension.matches("[a-z0-9]{1,10}")) {
+            throw new HackathonException(ErrorCode.UNSUPPORTED_FILE_TYPE,
+                    "실행 파일(." + extension + ")은 올릴 수 없습니다. 압축(zip)하거나 링크로 제출해 주세요.");
         }
 
         // 원본 파일명은 경로에 쓰지 않는다. 한글·공백·경로 조작 문자를 그대로 넣으면
