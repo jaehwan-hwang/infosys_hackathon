@@ -98,6 +98,33 @@ public class Submission extends BaseTimeEntity {
         return new Submission(team, projectName, summary);
     }
 
+    /** 기술 스택 한 항목의 최대 길이 (DB 칸 크기와 같다) */
+    public static final int TECH_STACK_MAX_LENGTH = 50;
+
+    /**
+     * 기술 스택을 항목으로 나눠 정리한다.
+     *
+     * 쉼표 대신 / · ; | 줄바꿈으로 나눠 적는 팀도 있어 모두 구분자로 본다. 그래도 한 항목이
+     * 칸(50자)보다 길면 잘라서 넣는다 — 기술 스택 때문에 결과물 저장 전체가 실패하면 안 된다.
+     * 같은 항목은 한 번만, 최대 30개까지.
+     */
+    static List<String> normalizeTechStacks(List<String> raw) {
+        List<String> result = new ArrayList<>();
+        if (raw == null) return result;
+        for (String item : raw) {
+            if (item == null) continue;
+            for (String part : item.split("[,/·;|\n\r]+")) {
+                String t = part.trim();
+                if (t.isEmpty()) continue;
+                if (t.length() > TECH_STACK_MAX_LENGTH) {
+                    t = t.substring(0, TECH_STACK_MAX_LENGTH - 1).trim() + "…";
+                }
+                if (!result.contains(t) && result.size() < 30) result.add(t);
+            }
+        }
+        return result;
+    }
+
     /** 제출 내용을 통째로 갱신하고 제출 시각을 다시 찍는다. */
     public void update(String projectName, String summary, String description,
                        String planFileUrl, String prototypeUrl,
@@ -115,7 +142,7 @@ public class Submission extends BaseTimeEntity {
         this.deployUrl = deployUrl;
         this.architectureFileUrl = architectureFileUrl;
         this.techSpecFileUrl = techSpecFileUrl;
-        this.techStacks = techStacks != null ? new ArrayList<>(techStacks) : new ArrayList<>();
+        this.techStacks = normalizeTechStacks(techStacks);
         this.submittedAt = Instant.now();
     }
 

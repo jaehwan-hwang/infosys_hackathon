@@ -25,17 +25,25 @@ public record SubmissionRequest(
         String description,
 
         // Spark
+        @Size(max = 500, message = "링크는 500자까지 넣을 수 있습니다. 짧은 공유 링크로 바꿔 주세요.")
         String planFileUrl,
+        @Size(max = 500, message = "링크는 500자까지 넣을 수 있습니다. 짧은 공유 링크로 바꿔 주세요.")
         String prototypeUrl,
 
         // Sprint / Summit
+        @Size(max = 500, message = "링크는 500자까지 넣을 수 있습니다. 짧은 공유 링크로 바꿔 주세요.")
         String sourceCodeUrl,
+        @Size(max = 500, message = "링크는 500자까지 넣을 수 있습니다. 짧은 공유 링크로 바꿔 주세요.")
         String deckFileUrl,
+        @Size(max = 500, message = "링크는 500자까지 넣을 수 있습니다. 짧은 공유 링크로 바꿔 주세요.")
         String demoUrl,
 
         // Summit
+        @Size(max = 500, message = "링크는 500자까지 넣을 수 있습니다. 짧은 공유 링크로 바꿔 주세요.")
         String deployUrl,
+        @Size(max = 500, message = "링크는 500자까지 넣을 수 있습니다. 짧은 공유 링크로 바꿔 주세요.")
         String architectureFileUrl,
+        @Size(max = 500, message = "링크는 500자까지 넣을 수 있습니다. 짧은 공유 링크로 바꿔 주세요.")
         String techSpecFileUrl,
 
         List<String> techStacks

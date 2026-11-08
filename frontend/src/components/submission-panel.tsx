@@ -108,7 +108,7 @@ export function SubmissionPanel({
       summary: form.summary.trim(),
       description: form.description.trim() || undefined,
       techStacks: form.techStacks
-        .split(",")
+        .split(/[,/·;|\n\r]+/)
         .map((s) => s.trim())
         .filter(Boolean),
     };
@@ -249,7 +249,7 @@ export function SubmissionPanel({
             </Field>
 
             {team.track !== "SPARK" && (
-              <Field label="기술 스택" hint="쉼표로 구분해 입력해 주세요">
+              <Field label="기술 스택" hint="쉼표로 구분해 입력해 주세요 (한 항목 50자까지)">
                 {(id) => (
                   <TextInput
                     id={id}
