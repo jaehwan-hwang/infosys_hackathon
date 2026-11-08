@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { isStorageUrl } from "@/lib/file-view";
+import { decodeHtml, prepareDeckHtml } from "@/lib/html-deck";
 
 export const metadata: Metadata = {
   title: "자료 보기",
@@ -30,7 +31,7 @@ export default async function ViewPage({
   try {
     const res = await fetch(src, { cache: "no-store" });
     if (!res.ok) throw new Error(String(res.status));
-    html = await res.text();
+    html = prepareDeckHtml(decodeHtml(await res.arrayBuffer()));
   } catch {
     return (
       <Notice
