@@ -86,6 +86,17 @@ public class Evaluation extends BaseTimeEntity {
     }
 
     /**
+     * 항목 없이 100점 만점 점수를 바로 매긴다. 교수 평가가 이 경로를 탄다.
+     * 항목 점수는 남기지 않는다.
+     */
+    public void recordDirectScore(int score, String comment) {
+        this.scores.clear();
+        this.comment = comment;
+        this.totalScore = BigDecimal.valueOf(score).setScale(2, RoundingMode.HALF_UP);
+        this.evaluatedAt = Instant.now();
+    }
+
+    /**
      * 가중 환산 총점 = Σ (점수 / 항목 만점 × 항목 가중치) ÷ Σ 가중치 × 100
      *
      * 가중치 합으로 나누므로 합이 1이 아니어도 늘 100점 만점이다. 평가표의 배점 합이

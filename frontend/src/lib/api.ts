@@ -339,7 +339,12 @@ export const api = {
   submitEvaluation: (
     token: string,
     evaluatorType: EvaluatorType,
-    input: { targetTeamId: number; scores: ScoreEntry[]; comment?: string },
+    input: {
+      targetTeamId: number;
+      scores?: ScoreEntry[];
+      totalScore?: number;
+      comment?: string;
+    },
   ) =>
     request<Evaluation>(
       evaluatorType === "PROFESSOR"
@@ -371,6 +376,13 @@ export const api = {
       request<HackathonEvent>("/api/v1/admin/event/voting", {
         method: "POST",
         body: { track, open },
+        token,
+      }),
+
+    /** 교수 평가 열기/닫기. 참가자 투표와 따로 간다. */
+    toggleProfessorEvaluation: (token: string, open: boolean) =>
+      request<HackathonEvent>(`/api/v1/admin/event/professor-evaluation?open=${open}`, {
+        method: "POST",
         token,
       }),
 

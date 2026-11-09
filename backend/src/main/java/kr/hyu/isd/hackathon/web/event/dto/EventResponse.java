@@ -35,6 +35,10 @@ public record EventResponse(
         int minTeamSize,
         int maxTeamSize,
         int maxUploadMb,
+        /** 지금 교수가 평가하거나 낸 평가를 고칠 수 있는가 */
+        boolean professorEvaluationOpen,
+        /** 교수 평가 마감. 이때까지 교수님은 평가를 고칠 수 있다 */
+        Instant professorEvalDeadline,
         Instant serverTime
 ) {
 
@@ -82,6 +86,8 @@ public record EventResponse(
                 event.getMinTeamSize(),
                 event.getMaxTeamSize(),
                 effectiveMaxUploadMb,
+                event.isProfessorEvaluationOpen(now),
+                HackathonEvent.PROFESSOR_EVAL_DEADLINE,
                 now
         );
     }

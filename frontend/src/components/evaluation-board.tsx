@@ -13,7 +13,7 @@ import type {
   ScoreEntry,
   Track,
 } from "@/lib/types";
-import { Button, ScoreSelector, TextArea } from "./form";
+import { Button, ScoreSelector, TextArea, TextInput } from "./form";
 import { MaterialLinks, materialsOf } from "./material-links";
 import {
   Alert,
@@ -85,7 +85,7 @@ export function EvaluationBoard({ evaluatorType }: { evaluatorType: EvaluatorTyp
       title={isProfessor ? "교수 평가" : "팀 평가"}
       description={
         isProfessor
-          ? "Summit 트랙 팀을 항목별로 채점합니다. 교수 평가는 최종 점수의 40%를 차지합니다."
+          ? "Summit 트랙 팀마다 100점 만점으로 점수를 매깁니다. 교수 평가는 최종 점수의 40%를 차지합니다."
           : "발표를 본 팀을 항목별로 채점해 주세요. 자신이 속한 팀은 목록에서 빠집니다."
       }
       wideDescription
@@ -95,8 +95,9 @@ export function EvaluationBoard({ evaluatorType }: { evaluatorType: EvaluatorTyp
           {evaluatedCount} / {targets.length} 팀 평가 완료
         </Badge>
         <p className="text-sm text-muted">
-          한 팀당 한 번만 평가할 수 있고, 제출 후에는 고칠 수 없습니다.
-          {!isProfessor && " Spark 참가자는 Spark 팀만 평가합니다."}
+          {isProfessor
+            ? "제출한 평가는 11월 22일(일)까지 다시 열어 고칠 수 있습니다."
+            : "한 팀당 한 번만 평가할 수 있고, 제출 후에는 고칠 수 없습니다. Spark 참가자는 Spark 팀만 평가합니다."}
         </p>
       </div>
 
@@ -140,7 +141,11 @@ export function EvaluationBoard({ evaluatorType }: { evaluatorType: EvaluatorTyp
         <div>
           {selected ? (
             <ScoreForm
-              key={selected.teamId}
+              // 내 평가 목록이 늦게 와도 그 점수로 다시 채우도록 평가 id까지 키에 넣는다
+              key={`${selected.teamId}-${
+                myEvaluationsQuery.data?.find((e) => e.targetTeamId === selected.teamId)
+                  ?.evaluationId ?? "new"
+              }`}
               target={selected}
               evaluatorType={evaluatorType}
               existing={myEvaluationsQuery.data?.find(
@@ -154,7 +159,7 @@ export function EvaluationBoard({ evaluatorType }: { evaluatorType: EvaluatorTyp
           ) : (
             <EmptyState
               title="평가할 팀을 선택해 주세요"
-              description="왼쪽 목록에서 팀을 고르면 채점 항목이 나타납니다."
+              description={isProfessor ? "왼쪽 목록에서 팀을 고르면 점수 입력칸이 나타납니다." : "왼쪽 목록에서 팀을 고르면 채점 항목이 나타납니다."}
             />
           )}
         </div>
@@ -178,8 +183,11 @@ function ScoreForm({
   // 코멘트는 교수만 남긴다. 참가자 화면에는 칸 자체가 없다.
   const isProfessor = evaluatorType === "PROFESSOR";
 
+  // 교수는 항목 없이 100점 만점 점수 하나를 매기므로 항목을 불러오지 않는다
   const criteriaQuery = useApiQuery(
-    token ? () => api.getEvaluationCriteria(token, target.track, evaluatorType) : null,
+    token && !isProfessor
+      ? () => api.getEvaluationCriteria(token, target.track, evaluatorType)
+      : null,
     [token, target.track, evaluatorType],
   );
 
@@ -192,26 +200,40 @@ function ScoreForm({
     return initial;
   });
   const [comment, setComment] = useState(existing?.comment ?? "");
+  // 교수 점수 입력칸 (0~100 정수). 이미 냈으면 그 점수를 보여준다
+  const [directScore, setDirectScore] = useState(
+    existing ? String(Math.round(existing.totalScore)) : "",
+  );
   const [savedScore, setSavedScore] = useState<number | null>(
     existing?.totalScore ?? null,
   );
 
   const { run, pending, error } = useApiMutation(async (entries: ScoreEntry[]) => {
     if (!token) throw new Error("no token");
-    return api.submitEvaluation(token, evaluatorType, {
-      targetTeamId: target.teamId,
-      scores: entries,
-      comment: isProfessor ? comment.trim() || undefined : undefined,
-    });
+    return api.submitEvaluation(
+      token,
+      evaluatorType,
+      isProfessor
+        ? {
+            targetTeamId: target.teamId,
+            totalScore: Number(directScore),
+            comment: comment.trim() || undefined,
+          }
+        : { targetTeamId: target.teamId, scores: entries },
+    );
   });
+
+  const directScoreValid =
+    /^\d{1,3}$/.test(directScore) && Number(directScore) <= 100;
 
   const criteria = useMemo(
     () => criteriaQuery.data ?? [],
     [criteriaQuery.data],
   );
 
-  // 이미 제출했으면 점수만 보여주고 더 건드리지 못하게 한다
-  const locked = target.evaluated || savedScore !== null;
+  // 참가자는 제출하면 잠긴다. 교수는 평가가 열려 있는 동안(11/22까지) 계속 고칠 수 있다
+  const locked = !isProfessor && (target.evaluated || savedScore !== null);
+  const alreadySaved = target.evaluated || savedScore !== null;
 
   // 모든 항목을 채워야 제출할 수 있다 (서버도 같은 조건을 검사한다)
   const allScored =
@@ -245,9 +267,9 @@ function ScoreForm({
     }
   };
 
-  if (criteriaQuery.loading) return <Spinner label="평가 항목 불러오는 중" />;
+  if (!isProfessor && criteriaQuery.loading) return <Spinner label="평가 항목 불러오는 중" />;
 
-  if (criteria.length === 0) {
+  if (!isProfessor && criteria.length === 0) {
     return (
       <Alert tone="warning" title="평가 항목이 설정되지 않았습니다">
         {TRACK_LABEL[target.track]} 트랙의 평가 항목이 아직 등록되지 않았습니다. 운영진에게
@@ -282,6 +304,35 @@ function ScoreForm({
         )}
       </Card>
 
+      {isProfessor ? (
+        <Card className="mt-4">
+          <div className="text-center">
+            <label htmlFor="eval-score" className="text-base font-semibold">
+              이 팀에 몇 점을 주시겠어요?
+            </label>
+            <p className="mt-1 text-xs text-muted">100점 만점 중 점수를 적어 주세요.</p>
+            <div className="mt-4 flex items-center justify-center gap-2">
+              <TextInput
+                id="eval-score"
+                type="number"
+                inputMode="numeric"
+                min={0}
+                max={100}
+                step={1}
+                value={directScore}
+                onChange={(e) => setDirectScore(e.target.value.replace(/[^0-9]/g, "").slice(0, 3))}
+                readOnly={locked}
+                invalid={directScore !== "" && !directScoreValid}
+                className="w-28! text-center text-2xl! font-bold"
+              />
+              <span className="text-lg font-semibold text-muted">/ 100</span>
+            </div>
+            {directScore !== "" && !directScoreValid && (
+              <p className="mt-2 text-xs font-medium text-red-600">0~100 사이 정수로 적어 주세요.</p>
+            )}
+          </div>
+        </Card>
+      ) : (
       <div className="mt-4 space-y-3">
         {criteria.map((criterion) => (
           <CriterionRow
@@ -295,11 +346,12 @@ function ScoreForm({
           />
         ))}
       </div>
+      )}
 
       {isProfessor && (
         <Card className="mt-4">
           <label htmlFor="eval-comment" className="text-sm font-semibold">
-            코멘트 <span className="font-normal text-subtle">(선택)</span>
+            코멘트
           </label>
           <p className="mt-1 text-xs text-muted">
             팀에게 전달하고 싶은 의견이 있다면 적어주세요.
@@ -323,17 +375,32 @@ function ScoreForm({
         </div>
       )}
 
+      {isProfessor && savedScore !== null && !error && (
+        <div className="mt-5">
+          <Alert tone="success" title="평가를 저장했습니다">
+            저장한 점수 {formatScore(savedScore)} / 100. 11월 22일(일)까지 점수와 코멘트를
+            고쳐 다시 저장할 수 있습니다.
+          </Alert>
+        </div>
+      )}
+
       {locked ? (
         <div className="mt-5">
           <Alert tone="success" title="평가를 제출했습니다">
             이 팀의 평가는 끝났습니다. 제출한 점수는 고칠 수 없습니다.
-            {savedScore !== null && ` 환산 점수 ${formatScore(savedScore)} / 100`}
+            {savedScore !== null &&
+              ` ${isProfessor ? "점수" : "환산 점수"} ${formatScore(savedScore)} / 100`}
           </Alert>
         </div>
       ) : (
         <div className="mt-5 flex flex-wrap items-center gap-4">
-          <Button type="submit" size="lg" loading={pending} disabled={!allScored}>
-            평가 제출하기
+          <Button
+            type="submit"
+            size="lg"
+            loading={pending}
+            disabled={isProfessor ? !directScoreValid : !allScored}
+          >
+            {isProfessor && alreadySaved ? "수정한 내용 저장" : "평가 제출하기"}
           </Button>
 
           {previewTotal !== null && (
@@ -342,12 +409,14 @@ function ScoreForm({
               <strong className="text-[var(--text)]">{formatScore(previewTotal)}</strong> / 100
             </p>
           )}
-          {!allScored && (
+          {!isProfessor && !allScored && (
             <p className="text-sm text-amber-600">모든 항목에 점수를 매겨주세요.</p>
           )}
-          <p className="w-full text-xs text-amber-600">
-            제출하면 수정할 수 없습니다. 점수를 한 번 더 확인해 주세요.
-          </p>
+          {!isProfessor && (
+            <p className="w-full text-xs text-amber-600">
+              제출하면 수정할 수 없습니다. 점수를 한 번 더 확인해 주세요.
+            </p>
+          )}
         </div>
       )}
     </form>

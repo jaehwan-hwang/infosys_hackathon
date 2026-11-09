@@ -12,7 +12,9 @@ import java.util.Map;
  * @param studentVotesByTrack  트랙별 학생 투표 건수
  * @param professorVoteCount   교수 평가 건수 (Summit)
  * @param professorsCompleted  Summit 팀을 모두 평가한 교수 수
- * @param professorsRequired   Summit 리더보드가 열리려면 필요한 교수 수
+ * @param professorsRequired   평가를 마쳐야 할 교수 수 (참고용, 공개를 막지 않는다)
+ * @param professorEvaluationSwitchOn 운영진의 교수 평가 스위치
+ * @param professorEvaluationOpen     지금 교수가 실제로 평가할 수 있는가 (스위치·마감·공개 여부를 모두 따진 결과)
  */
 public record DashboardResponse(
         long totalTeams,
@@ -25,6 +27,8 @@ public record DashboardResponse(
         Map<Track, Boolean> resultsPublished,
         Map<Track, Boolean> votingOpen,
         int professorsCompleted,
-        int professorsRequired
+        int professorsRequired,
+        boolean professorEvaluationSwitchOn,
+        boolean professorEvaluationOpen
 ) {
 }

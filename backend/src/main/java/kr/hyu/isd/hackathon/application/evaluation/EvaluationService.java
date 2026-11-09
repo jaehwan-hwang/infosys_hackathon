@@ -1,6 +1,5 @@
 package kr.hyu.isd.hackathon.application.evaluation;
 
-import kr.hyu.isd.hackathon.application.result.SummitAwardPolicy;
 import kr.hyu.isd.hackathon.application.event.EventService;
 import kr.hyu.isd.hackathon.common.exception.ErrorCode;
 import kr.hyu.isd.hackathon.common.exception.HackathonException;
@@ -56,7 +55,6 @@ public class EvaluationService {
     private final SubmissionRepository submissionRepository;
     private final UserRepository userRepository;
     private final EventService eventService;
-    private final SummitAwardPolicy summitAwardPolicy;
 
     /**
      * 평가를 제출한다. 한 계정은 한 팀을 한 번만 평가할 수 있고, 낸 뒤에는 고칠 수 없다.
@@ -85,33 +83,47 @@ public class EvaluationService {
 
         validateEvaluatorEligibility(evaluator, targetTeam, evaluatorType, event);
 
-        List<Criterion> criteria = criterionRepository
-                .findByEventIdAndTrackAndEvaluatorTypeOrderByDisplayOrderAsc(
-                        event.getId(), track, evaluatorType);
-        if (criteria.isEmpty()) {
-            throw new HackathonException(ErrorCode.CRITERION_NOT_FOUND,
-                    "이 트랙에 설정된 평가 항목이 없습니다.");
+        // 교수는 항목 없이 100점 만점 점수 하나를, 참가자는 항목마다 1~5점을 매긴다
+        boolean professor = evaluatorType == EvaluatorType.PROFESSOR;
+        List<Criterion> criteria = List.of();
+        if (professor) {
+            if (request.totalScore() == null) {
+                throw new HackathonException(ErrorCode.INVALID_SCORE, "100점 만점 중 점수를 입력해 주세요.");
+            }
+        } else {
+            criteria = criterionRepository
+                    .findByEventIdAndTrackAndEvaluatorTypeOrderByDisplayOrderAsc(
+                            event.getId(), track, evaluatorType);
+            if (criteria.isEmpty()) {
+                throw new HackathonException(ErrorCode.CRITERION_NOT_FOUND,
+                        "이 트랙에 설정된 평가 항목이 없습니다.");
+            }
+            if (request.scores() == null || request.scores().isEmpty()) {
+                throw new HackathonException(ErrorCode.CRITERIA_MISMATCH, "평가 항목 점수는 필수입니다.");
+            }
         }
 
-        // 한 번 낸 평가는 그대로 둔다. 다시 매기려면 운영진이 지워 줘야 한다.
-        if (evaluationRepository.findByEvaluatorIdAndTargetTeamId(userId, targetTeam.getId()).isPresent()) {
+        // 참가자 투표는 한 번 내면 그대로 둔다. 교수 평가는 마감 전까지 고칠 수 있다.
+        Optional<Evaluation> existing =
+                evaluationRepository.findByEvaluatorIdAndTargetTeamId(userId, targetTeam.getId());
+        if (existing.isPresent() && !professor) {
             throw new HackathonException(ErrorCode.ALREADY_EVALUATED,
                     "이미 평가한 팀입니다. 평가는 팀당 한 번만 가능합니다.");
         }
 
-        Evaluation evaluation = saveNewEvaluation(evaluator, targetTeam, evaluatorType);
+        Evaluation evaluation = existing
+                .orElseGet(() -> saveNewEvaluation(evaluator, targetTeam, evaluatorType));
         // 코멘트는 교수만 남긴다. 참가자끼리 남기는 글은 받지 않는다 — 화면에도 칸이 없지만,
         // 요청에 실려 오더라도 저장하지 않는다.
-        String comment = evaluatorType == EvaluatorType.PROFESSOR ? trimToNull(request.comment()) : null;
-        evaluation.replaceScores(buildScores(evaluation, criteria, request.scores()), comment);
-
-        log.info("평가 제출: evaluator={}, team={}, type={}, total={}",
-                evaluator.getEmail(), targetTeam.getName(), evaluatorType, evaluation.getTotalScore());
-
-        // 정해진 수의 교수가 Summit 팀을 다 평가했으면 그때 Summit 리더보드를 연다
-        if (evaluatorType == EvaluatorType.PROFESSOR) {
-            summitAwardPolicy.publishIfReady(event);
+        if (professor) {
+            evaluation.recordDirectScore(request.totalScore(), trimToNull(request.comment()));
+        } else {
+            evaluation.replaceScores(buildScores(evaluation, criteria, request.scores()), null);
         }
+
+        log.info("평가 {}: evaluator={}, team={}, type={}, total={}",
+                existing.isPresent() ? "수정" : "제출",
+                evaluator.getEmail(), targetTeam.getName(), evaluatorType, evaluation.getTotalScore());
 
         return EvaluationResponse.from(evaluation);
     }
@@ -167,9 +179,10 @@ public class EvaluationService {
     }
 
     private static String professorClosedMessage(HackathonEvent event) {
-        return event.isResultsPublished(Track.SUMMIT)
-                ? "Summit 시상이 공개되어 교수 평가가 끝났습니다."
-                : "Summit 결과물 제출이 끝나면 교수 평가가 열립니다.";
+        if (event.isResultsPublished(Track.SUMMIT)) return "Summit 시상이 공개되어 교수 평가가 끝났습니다.";
+        if (!event.isProfessorEvaluationSwitchOn()) return "운영진이 교수 평가를 닫았습니다.";
+        if (!Instant.now().isBefore(HackathonEvent.PROFESSOR_EVAL_DEADLINE)) return "교수 평가 마감이 지났습니다.";
+        return "Summit 결과물 제출이 끝나면 교수 평가가 열립니다.";
     }
 
     /**

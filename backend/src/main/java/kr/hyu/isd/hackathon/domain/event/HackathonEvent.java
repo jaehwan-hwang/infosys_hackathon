@@ -80,6 +80,19 @@ public class HackathonEvent extends BaseTimeEntity {
     private boolean summitVotingOpen;
 
     /**
+     * 교수 평가 스위치. 참가자 투표와 따로 운영진이 여닫는다.
+     * 열이 새로 생긴 기존 행사는 값이 비어 있는데, 이때는 열린 것으로 본다.
+     */
+    @Column(name = "professor_evaluation_open")
+    private Boolean professorEvaluationOpen;
+
+    /**
+     * 교수 평가 마감. 이때까지 교수님은 낸 평가를 고칠 수 있다. 2026-11-22(일) 23:59:59 KST.
+     * 운영진이 스위치를 먼저 닫으면 그때 닫힌다.
+     */
+    public static final Instant PROFESSOR_EVAL_DEADLINE = Instant.parse("2026-11-22T14:59:59Z");
+
+    /**
      * 트랙별 리더보드 공개 여부. 시상식 전까지 false로 유지한다.
      *
      * Spark는 1일차에, Sprint와 Summit은 2일차에 시상하므로 한꺼번에 열 수 없다.
@@ -153,16 +166,30 @@ public class HackathonEvent extends BaseTimeEntity {
     }
 
     /**
-     * 지금 교수가 Summit을 평가할 수 있는가.
+     * 지금 교수가 Summit을 평가(또는 낸 평가를 수정)할 수 있는가.
      *
      * 참가자 투표(summitVotingOpen)와 따로 간다. 참가자는 2일차 발표 날 투표하고 닫히지만,
-     * 교수님들은 일주일쯤 뒤에 평가를 마친다. 그래서 교수 평가는 Summit 결과물 제출이 끝난
-     * 뒤(또는 운영진이 Summit 평가를 연 뒤)부터 Summit 시상이 공개될 때까지 열려 있다.
+     * 교수님들은 그 뒤로도 평가하고 고친다. 교수 평가는 Summit 결과물 제출이 끝난 뒤(또는
+     * 운영진이 Summit 평가를 연 뒤)부터 열리고, 아래 중 하나가 되면 닫힌다.
+     *   - 운영진이 교수 평가 스위치를 닫음
+     *   - 마감(PROFESSOR_EVAL_DEADLINE)이 지남
+     *   - Summit 시상이 공개됨
      */
     public boolean isProfessorEvaluationOpen(Instant now) {
+        if (!isProfessorEvaluationSwitchOn()) return false;
         if (isResultsPublished(Track.SUMMIT)) return false;
+        if (!now.isBefore(PROFESSOR_EVAL_DEADLINE)) return false;
         if (summitVotingOpen) return true;
         return devSubmitDeadline != null && !now.isBefore(devSubmitDeadline);
+    }
+
+    /** 운영진의 교수 평가 스위치. 값이 없으면 켜진 것으로 본다. */
+    public boolean isProfessorEvaluationSwitchOn() {
+        return !Boolean.FALSE.equals(professorEvaluationOpen);
+    }
+
+    public void setProfessorEvaluationOpen(boolean open) {
+        this.professorEvaluationOpen = open;
     }
 
     /**

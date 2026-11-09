@@ -29,9 +29,13 @@ function EvaluateContent() {
   if (isLoading || eventQuery.loading) return <Spinner />;
 
   const votingOpen = eventQuery.data?.votingOpen;
-  const anyOpen = votingOpen
-    ? votingOpen.SPARK || votingOpen.SPRINT || votingOpen.SUMMIT
-    : false;
+  // 교수 평가는 참가자 투표와 따로 여닫힌다
+  const anyOpen =
+    role === "PROFESSOR"
+      ? (eventQuery.data?.professorEvaluationOpen ?? false)
+      : votingOpen
+        ? votingOpen.SPARK || votingOpen.SPRINT || votingOpen.SUMMIT
+        : false;
 
   return (
     <PeriodGate

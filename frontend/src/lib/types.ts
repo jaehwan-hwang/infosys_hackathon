@@ -78,6 +78,9 @@ export interface HackathonEvent {
   maxTeamSize: number;
   maxUploadMb: number;
   /** 서버 시각. 카운트다운을 이 값에 맞춰 보정한다. */
+  /** 지금 교수가 평가하거나 낸 평가를 고칠 수 있는가 */
+  professorEvaluationOpen: boolean;
+  professorEvalDeadline: string;
   serverTime: string;
 }
 
@@ -422,6 +425,10 @@ export interface Dashboard {
   professorsCompleted: number;
   /** Summit 리더보드가 열리려면 필요한 교수 수. 다 모이면 저절로 열린다. */
   professorsRequired: number;
+  /** 운영진의 교수 평가 스위치 */
+  professorEvaluationSwitchOn: boolean;
+  /** 지금 교수가 실제로 평가할 수 있는가 (스위치·마감·공개 여부를 모두 따진 결과) */
+  professorEvaluationOpen: boolean;
 }
 
 /** 운영진이 보는 참가자 한 명 */

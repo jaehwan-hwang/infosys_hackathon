@@ -102,6 +102,14 @@ public class AdminController {
         return ApiResponse.success(adminService.toggleVoting(request));
     }
 
+    /** 교수 평가 열기/닫기. 참가자 투표와 따로 간다. 최고 관리자만. */
+    @PostMapping("/event/professor-evaluation")
+    public ApiResponse<EventResponse> toggleProfessorEvaluation(@CurrentUser AuthPrincipal principal,
+                                                                @RequestParam boolean open) {
+        requireSuperAdmin(principal);
+        return ApiResponse.success(adminService.toggleProfessorEvaluation(open));
+    }
+
     /**
      * 일차별 평가 전환. 1일차는 Spark만, 2일차는 Sprint·Summit만 열린다.
      * 토글 세 개를 손으로 맞추는 실수를 막기 위한 단축 동작이다.

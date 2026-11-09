@@ -107,7 +107,9 @@ public class AdminService {
                 resultsPublished,
                 votingOpen,
                 professorProgress.completed(),
-                professorProgress.required()
+                professorProgress.required(),
+                event.isProfessorEvaluationSwitchOn(),
+                event.isProfessorEvaluationOpen(java.time.Instant.now())
         );
     }
 
@@ -202,6 +204,15 @@ public class AdminService {
         return EventResponse.from(event, eventService.effectiveMaxUploadMb(event));
     }
 
+    /** 교수 평가를 연다/닫는다. 참가자 투표와 따로 간다. */
+    @Transactional
+    public EventResponse toggleProfessorEvaluation(boolean open) {
+        HackathonEvent event = eventService.getActiveEvent();
+        event.setProfessorEvaluationOpen(open);
+        log.info("교수 평가 토글: open={}", open);
+        return EventResponse.from(event, eventService.effectiveMaxUploadMb(event));
+    }
+
     /**
      * 일차별 투표 전환. 1일차는 Spark만, 2일차는 Sprint·Summit만 열린다.
      */
@@ -218,22 +229,12 @@ public class AdminService {
     }
 
     /**
-     * 시상식에서 트랙 하나의 리더보드를 공개한다.
-     *
-     * Summit은 교수 평가가 다 모여야 연다 — 그 전에는 운영진도 열 수 없다.
-     * 다 모이면 마지막 교수 평가가 들어오는 순간 저절로 열리므로, 보통은 누를 일이 없다.
+     * 시상식에서 트랙 하나의 리더보드를 공개한다. 운영진이 직접 누른다.
+     * Summit을 공개하면 교수 평가도 함께 닫힌다(공개된 점수가 바뀌지 않도록).
      */
     @Transactional
     public EventResponse publishResults(Track track, boolean published) {
         HackathonEvent event = eventService.getActiveEvent();
-        if (track == Track.SUMMIT && published) {
-            SummitAwardPolicy.Progress progress = summitAwardPolicy.progress(event);
-            if (!progress.isReady()) {
-                throw new HackathonException(ErrorCode.BAD_REQUEST,
-                        "교수 %d명이 Summit 팀을 모두 평가해야 공개할 수 있습니다. (지금 %d명 완료)"
-                                .formatted(progress.required(), progress.completed()));
-            }
-        }
         event.setResultsPublished(track, published);
         log.info("리더보드 공개 상태 변경: track={}, published={}", track, published);
         return EventResponse.from(event, eventService.effectiveMaxUploadMb(event));
